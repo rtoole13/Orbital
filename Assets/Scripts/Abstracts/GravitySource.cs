@@ -15,8 +15,8 @@ public abstract class GravitySource : MonoBehaviour, IGravitySource
     }
 
 
-    //static readonly float GRAVITYCONSTRANT = 1.0f;
-    public float GRAVITYCONSTRANT = 1.0f;
+    public readonly float GRAVITYCONSTRANT = 1.0f;
+    //public float GRAVITYCONSTRANT = 1.0f;
 
     private CircleCollider2D gravityCollider;
     private List<GravityAffected> gravityAffecteObjects = new List<GravityAffected>(); 
@@ -67,5 +67,10 @@ public abstract class GravitySource : MonoBehaviour, IGravitySource
     public void RemoveAffectedBody(GravityAffected body)
     {
         gravityAffecteObjects.Remove(body);
+    }
+
+    public GravitySource GetGravitySource()
+    {
+        return this;
     }
 }
