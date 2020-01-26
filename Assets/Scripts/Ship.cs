@@ -15,6 +15,8 @@ public class Ship : GravityAffected
     {
         if (Input.GetMouseButton(0))
             AddClickForce();
+        Debug.Log("Semimajor: " + calculateSemimajorAxis());
+        //Debug.Log("Semiminor: " + calculateSemimajorAxis());
     }
 
     private void AddClickForce()
