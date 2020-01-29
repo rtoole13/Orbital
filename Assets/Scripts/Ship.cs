@@ -15,8 +15,10 @@ public class Ship : GravityAffected
     {
         if (Input.GetMouseButton(0))
             AddClickForce();
-        Debug.Log("Semimajor: " + calculateSemimajorAxis());
-        //Debug.Log("Semiminor: " + calculateSemimajorAxis());
+        //Debug.Log("Eccentricity: " + CalculateEccentricity());
+        //Debug.Log("AscendingNodeDir: " + CalculateAscendingNodeDir());
+        //Debug.Log("EccentricityVector: " + CalculateEccentricityVector()); 
+        Debug.Log("Argument Of Periapse: " + CalculateArgumentOfPeriapse());
     }
 
     private void AddClickForce()
@@ -25,6 +27,15 @@ public class Ship : GravityAffected
         Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector2 distance = mousePosition - (Vector2)rigidbody.transform.position;
         rigidbody.AddForce(clickForce * distance.normalized);
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (CurrentGravitySource == null)
+            return;
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawRay(Vector3.zero, CalculateEccentricityVector());
     }
 }
 

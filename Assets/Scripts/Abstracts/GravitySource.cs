@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(CircleCollider2D))]
+[RequireComponent(typeof(CircleCollider2D), typeof(Rigidbody2D))]
 public abstract class GravitySource : MonoBehaviour, IGravitySource
 {
     [SerializeField]
     private float _mass = 5.0f;
+    private Rigidbody2D body;
 
     public float Mass
     {
@@ -14,6 +15,10 @@ public abstract class GravitySource : MonoBehaviour, IGravitySource
         private set { _mass = value; }
     }
 
+    public Vector3 Velocity
+    {
+        get { return new Vector3(body.velocity.x, body.velocity.y, 0f); }
+    }
 
     public readonly float GRAVITYCONSTRANT = 1.0f;
     //public float GRAVITYCONSTRANT = 1.0f;
@@ -21,7 +26,7 @@ public abstract class GravitySource : MonoBehaviour, IGravitySource
     private CircleCollider2D gravityCollider;
     private List<GravityAffected> gravityAffecteObjects = new List<GravityAffected>(); 
 
-    private void Start()
+    private void Awake()
     {
         // Get gravityCollider
         CircleCollider2D[] colliders = GetComponents<CircleCollider2D>();
@@ -34,6 +39,9 @@ public abstract class GravitySource : MonoBehaviour, IGravitySource
                 break;
             }
         }
+
+        // Get rigidbody
+        body = GetComponent<Rigidbody2D>();
     }
 
     private void Update()

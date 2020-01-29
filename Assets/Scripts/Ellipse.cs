@@ -54,10 +54,10 @@ public class Ellipse : MonoBehaviour
 
     private float calculateSemimajorAxis()
     {
-        if (!orbitalBody.gravitySource)
+        if (!orbitalBody.CurrentGravitySource)
             return Mathf.Infinity;
         Rigidbody2D body = orbitalBody.GetComponent<Rigidbody2D>();
-        float denom = 2 / orbitalBody.SourceDistance - body.velocity.sqrMagnitude / (orbitalBody.gravitySource.GRAVITYCONSTRANT * orbitalBody.gravitySource.Mass);
+        float denom = 2 / orbitalBody.SourceDistance - body.velocity.sqrMagnitude / (orbitalBody.CurrentGravitySource.GRAVITYCONSTRANT * orbitalBody.CurrentGravitySource.Mass);
         return 1 / denom;
     }
 
