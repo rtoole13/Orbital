@@ -17,8 +17,8 @@ public class Ship : GravityAffected
             AddClickForce();
         //Debug.Log("Eccentricity: " + CalculateEccentricity());
         //Debug.Log("AscendingNodeDir: " + CalculateAscendingNodeDir());
-        //Debug.Log("EccentricityVector: " + CalculateEccentricityVector()); 
-        Debug.Log("Argument Of Periapse: " + CalculateArgumentOfPeriapse());
+        Debug.Log("EccentricityVector: " + CalculateEccentricityVector()); 
+        //Debug.Log("Argument Of Periapse: " + CalculateArgumentOfPeriapse());
     }
 
     private void AddClickForce()

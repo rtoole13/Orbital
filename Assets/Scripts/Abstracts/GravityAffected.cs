@@ -116,7 +116,8 @@ public abstract class GravityAffected : MonoBehaviour
 
     protected Vector3 CalculateEccentricityVector()
     {
-        return Vector3.Cross(SourceRelativeVelocity, CalculateSpecificRelativeAngularMomentum() / StandardGravityParameter);
+        Vector3 relativePosition = SourceRelativePosition;
+        return (Vector3.Cross(SourceRelativeVelocity, CalculateSpecificRelativeAngularMomentum()) / StandardGravityParameter) - (relativePosition / relativePosition.magnitude);
     }
 
     protected float CalculateSpecificOrbitalEnergy()
