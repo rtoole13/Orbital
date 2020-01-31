@@ -7,60 +7,43 @@ public class Ellipse : MonoBehaviour
 {
     LineRenderer lineRenderer;
     GravityAffected orbitalBody;
-    private float _semimajorAxis;
     private float _semiminorAxis;
     private float eccentricityTolerance = 0.05f;
-    private float _argumentOfPeriapsis;
-    private float eccentricity;
-
-    public float SemimajorAxis
-    {
-        get
-        {
-            return _semimajorAxis;
-        }
-        private set
-        {
-            _semimajorAxis = value;
-        }
-    }
-    public float SemiminorAxis
-    {
-        get
-        {
-            return _semiminorAxis;
-        }
-        private set
-        {
-            _semiminorAxis = value;
-        }
-    }
-
-    public float ArgumentOfPeriapsis
-    {
-        get
-        {
-            return orbitalBody.CalculateArgumentOfPeriapse();
-        }
-    }
 
     [Range(3, 36)]
     public int segments;
-    
+
+    #region GETSET
+    public float SemimajorAxis
+    {
+        get { return orbitalBody.SemimajorAxis; }
+
+    }
+    public float SemiminorAxis
+    {
+        get { return _semiminorAxis; }
+        private set { _semiminorAxis = value; }
+    }
+    #endregion GETSET
+
+    #region UNITY
     private void Awake()
     {
         lineRenderer = GetComponent<LineRenderer>();
         orbitalBody = GetComponent<GravityAffected>();
         //BuildEllipse();
     }
-    
+
+    private void Update()
+    {
+        BuildEllipse();
+    }
+    #endregion UNITY
+
     private void BuildEllipse()
     {
-        
-        SemimajorAxis = orbitalBody.CalculateSemimajorAxis();
-        CalculateSemiminorAxis();
-        Debug.Log(ArgumentOfPeriapsis);
-        if ((SemimajorAxis < orbitalBody.CurrentGravitySource.Radius) || (SemiminorAxis < orbitalBody.CurrentGravitySource.Radius)){
+        SemiminorAxis = CalculateSemiminorAxis();
+        if ((orbitalBody.SemimajorAxis < orbitalBody.CurrentGravitySource.Radius) || (SemiminorAxis < orbitalBody.CurrentGravitySource.Radius)){
             //Ignoring when on surface-ish
             return;
         }
@@ -70,28 +53,21 @@ public class Ellipse : MonoBehaviour
         {
             float angle = ((float)i / (float)segments) * 2 * Mathf.PI;
             Vector3 vertex = new Vector3(Mathf.Sin(angle) * SemimajorAxis, Mathf.Cos(angle) * SemiminorAxis, 0);
-            vertex = TranslateVector(vertex, new Vector3(eccentricity * SemimajorAxis, 0, 0));
-            points[i] = RotateVertex(vertex, ArgumentOfPeriapsis + Mathf.PI);
+            vertex = TranslateVector(vertex, new Vector3(orbitalBody.Eccentricity * SemimajorAxis, 0, 0));
+            points[i] = RotateVertex(vertex, orbitalBody.ArgumentOfPeriapsis);
         }
         points[segments] = points[0];
         lineRenderer.positionCount = segments + 1;
         lineRenderer.SetPositions(points);
     }
 
-    private void Update()
+    private float CalculateSemiminorAxis()
     {
-        BuildEllipse();
-    }
-
-    private void CalculateSemiminorAxis()
-    {
-        eccentricity = orbitalBody.CalculateEccentricityVector().magnitude;
-        if (Mathf.Abs(eccentricity - 1f) < eccentricityTolerance)
+        if (Mathf.Abs(orbitalBody.Eccentricity - 1f) < eccentricityTolerance)
         {
-            SemiminorAxis = 0;
-            return;
+            return 0f;
         }
-        SemiminorAxis = SemimajorAxis * Mathf.Sqrt(1 - Mathf.Pow(eccentricity, 2));
+        return SemimajorAxis * Mathf.Sqrt(1 - Mathf.Pow(orbitalBody.Eccentricity, 2));
     }
 
     private Vector3 RotateVertex(Vector3 vertex, float angle)
@@ -104,4 +80,15 @@ public class Ellipse : MonoBehaviour
     {
         return new Vector3(vertex.x + distance.x, vertex.y + distance.y, 0);
     }
+
+    #region GIZMOS
+    private void OnDrawGizmos()
+    {
+        if (orbitalBody == null || orbitalBody.CurrentGravitySource == null)
+            return;
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawRay(Vector3.zero, SemimajorAxis * orbitalBody.EccentricityVector);
+    }
+    #endregion GIZMOS
 }
