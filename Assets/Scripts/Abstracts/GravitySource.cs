@@ -24,8 +24,16 @@ public abstract class GravitySource : MonoBehaviour, IGravitySource
     //public float GRAVITYCONSTRANT = 1.0f;
 
     private CircleCollider2D gravityCollider;
+    private CircleCollider2D bodyCollider;
     private List<GravityAffected> gravityAffecteObjects = new List<GravityAffected>(); 
 
+    public float Radius
+    {
+        get
+        {
+            return bodyCollider.radius;
+        }
+    }
     private void Awake()
     {
         // Get gravityCollider
@@ -36,7 +44,10 @@ public abstract class GravitySource : MonoBehaviour, IGravitySource
             if (collider.isTrigger)
             {
                 gravityCollider = collider;
-                break;
+            }
+            else
+            {
+                bodyCollider = collider;
             }
         }
 

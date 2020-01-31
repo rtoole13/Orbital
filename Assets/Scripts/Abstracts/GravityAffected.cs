@@ -91,17 +91,12 @@ public abstract class GravityAffected : MonoBehaviour
         body = GetComponent<Rigidbody2D>();
     }
 
-    protected float CalculateSemimajorAxis()
+    public float CalculateSemimajorAxis()
     {
         if (!CurrentGravitySource)
             return Mathf.Infinity;
         float denom = (2 / SourceDistance) - (body.velocity.sqrMagnitude / (CurrentGravitySource.GRAVITYCONSTRANT * CurrentGravitySource.Mass));
         return 1 / denom;
-    }
-
-    protected float CalculateEccentricity()
-    {
-        return Mathf.Sqrt(1f + (2 * CalculateSpecificOrbitalEnergy() * CalculateSpecificRelativeAngularMomentum().sqrMagnitude) / Mathf.Pow(StandardGravityParameter, 2));
     }
 
     protected Vector3 CalculateSpecificRelativeAngularMomentum()
@@ -114,7 +109,7 @@ public abstract class GravityAffected : MonoBehaviour
         return Vector3.Cross(Vector3.forward, CalculateSpecificRelativeAngularMomentum());
     }
 
-    protected Vector3 CalculateEccentricityVector()
+    public Vector3 CalculateEccentricityVector()
     {
         Vector3 relativePosition = SourceRelativePosition;
         return (Vector3.Cross(SourceRelativeVelocity, CalculateSpecificRelativeAngularMomentum()) / StandardGravityParameter) - (relativePosition / relativePosition.magnitude);
@@ -126,11 +121,12 @@ public abstract class GravityAffected : MonoBehaviour
         return -1f * StandardGravityParameter / (2f * a);
     }
 
-    protected float CalculateArgumentOfPeriapse()
+    public float CalculateArgumentOfPeriapse()
     {
         Vector3 eccentricityVector = CalculateEccentricityVector();
         return Mathf.Acos(Vector3.Dot(Vector3.right, eccentricityVector) / (1f * eccentricityVector.magnitude));
     }
+
     private float CalculateTrueAnomoly()
     {
         return 0f;

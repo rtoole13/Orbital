@@ -7,16 +7,46 @@ public class Ellipse : MonoBehaviour
 {
     LineRenderer lineRenderer;
     GravityAffected orbitalBody;
+    private float _semimajorAxis;
+    private float _semiminorAxis;
+    private float eccentricityTolerance = 0.05f;
+    private float _argumentOfPeriapsis;
+    private float eccentricity;
+
+    public float SemimajorAxis
+    {
+        get
+        {
+            return _semimajorAxis;
+        }
+        private set
+        {
+            _semimajorAxis = value;
+        }
+    }
+    public float SemiminorAxis
+    {
+        get
+        {
+            return _semiminorAxis;
+        }
+        private set
+        {
+            _semiminorAxis = value;
+        }
+    }
+
+    public float ArgumentOfPeriapsis
+    {
+        get
+        {
+            return orbitalBody.CalculateArgumentOfPeriapse();
+        }
+    }
 
     [Range(3, 36)]
     public int segments;
-    public float semimajorAxis;
-    public float semiminorAxis;
-
-    [Range(0, 2*Mathf.PI)]
-    public float angleToPeriapse;
-    public Vector2 translation;
-
+    
     private void Awake()
     {
         lineRenderer = GetComponent<LineRenderer>();
@@ -26,62 +56,52 @@ public class Ellipse : MonoBehaviour
     
     private void BuildEllipse()
     {
+        
+        SemimajorAxis = orbitalBody.CalculateSemimajorAxis();
+        CalculateSemiminorAxis();
+        Debug.Log(ArgumentOfPeriapsis);
+        if ((SemimajorAxis < orbitalBody.CurrentGravitySource.Radius) || (SemiminorAxis < orbitalBody.CurrentGravitySource.Radius)){
+            //Ignoring when on surface-ish
+            return;
+        }
+
         Vector3[] points = new Vector3[segments + 1];
         for (int i = 0; i < segments; i++)
         {
             float angle = ((float)i / (float)segments) * 2 * Mathf.PI;
-            Vector3 vertex = new Vector3(Mathf.Sin(angle) * semimajorAxis, Mathf.Cos(angle) * semiminorAxis, 0);
-            vertex = RotateVertex(vertex);
-            points[i] = TranslateVertex(vertex);
-            //points[i] = vertex;
+            Vector3 vertex = new Vector3(Mathf.Sin(angle) * SemimajorAxis, Mathf.Cos(angle) * SemiminorAxis, 0);
+            vertex = TranslateVector(vertex, new Vector3(eccentricity * SemimajorAxis, 0, 0));
+            points[i] = RotateVertex(vertex, ArgumentOfPeriapsis + Mathf.PI);
         }
         points[segments] = points[0];
         lineRenderer.positionCount = segments + 1;
         lineRenderer.SetPositions(points);
     }
 
-    /*
-    private void OnValidate()
-    {
-        BuildEllipse();
-    }
-    */
     private void Update()
     {
         BuildEllipse();
-        Debug.Log(calculateSemiminorAxis());
     }
 
-    private float calculateSemimajorAxis()
+    private void CalculateSemiminorAxis()
     {
-        if (!orbitalBody.CurrentGravitySource)
-            return Mathf.Infinity;
-        Rigidbody2D body = orbitalBody.GetComponent<Rigidbody2D>();
-        float denom = 2 / orbitalBody.SourceDistance - body.velocity.sqrMagnitude / (orbitalBody.CurrentGravitySource.GRAVITYCONSTRANT * orbitalBody.CurrentGravitySource.Mass);
-        return 1 / denom;
+        eccentricity = orbitalBody.CalculateEccentricityVector().magnitude;
+        if (Mathf.Abs(eccentricity - 1f) < eccentricityTolerance)
+        {
+            SemiminorAxis = 0;
+            return;
+        }
+        SemiminorAxis = SemimajorAxis * Mathf.Sqrt(1 - Mathf.Pow(eccentricity, 2));
     }
 
-    private float calculateSemiminorAxis()
+    private Vector3 RotateVertex(Vector3 vertex, float angle)
     {
-        Rigidbody2D body = orbitalBody.GetComponent<Rigidbody2D>();
-        float num = Mathf.Pow(body.transform.position.y, 2) * Mathf.Pow(calculateSemimajorAxis(), 2);
-        float denom = 1 - Mathf.Pow(body.transform.position.x, 2);
-        return Mathf.Sqrt(num / denom);
+        return new Vector3(vertex.x * Mathf.Cos(angle) - vertex.y * Mathf.Sin(angle),
+                       vertex.x * Mathf.Sin(angle) + vertex.y * Mathf.Cos(angle), 0);
     }
-
-    private float calculateTrueAnomoly()
+    
+    private Vector3 TranslateVector(Vector3 vertex, Vector3 distance)
     {
-        return 0f;
-    }
-
-    private Vector3 RotateVertex(Vector3 vertex)
-    {
-        return new Vector3(vertex.x * Mathf.Cos(angleToPeriapse) - vertex.y * Mathf.Sin(angleToPeriapse),
-                       vertex.x * Mathf.Sin(angleToPeriapse) + vertex.y * Mathf.Cos(angleToPeriapse), 0);
-    }
-
-    private Vector3 TranslateVertex(Vector3 vertex)
-    {
-        return new Vector3(vertex.x + translation.x, vertex.y + translation.y, 0);
+        return new Vector3(vertex.x + distance.x, vertex.y + distance.y, 0);
     }
 }
