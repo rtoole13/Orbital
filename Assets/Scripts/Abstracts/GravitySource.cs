@@ -25,7 +25,7 @@ public abstract class GravitySource : MonoBehaviour, IGravitySource
 
     private CircleCollider2D gravityCollider;
     private CircleCollider2D bodyCollider;
-    private List<GravityAffected> gravityAffecteObjects = new List<GravityAffected>(); 
+    private List<GravityAffected> gravityAffectedObjects = new List<GravityAffected>(); 
 
     public float Radius
     {
@@ -54,17 +54,17 @@ public abstract class GravitySource : MonoBehaviour, IGravitySource
         // Get rigidbody
         body = GetComponent<Rigidbody2D>();
     }
-
+    
     private void Update()
     {
         
     }
-
+    
     private void FixedUpdate()
     {
-        for (int i = 0; i < gravityAffecteObjects.Count; i++)
+        for (int i = 0; i < gravityAffectedObjects.Count; i++)
         {
-            GravityAffected affectedObject = gravityAffecteObjects[i];
+            GravityAffected affectedObject = gravityAffectedObjects[i];
             Rigidbody2D rigidbody = affectedObject.GetComponent<Rigidbody2D>();
             rigidbody.AddForce(CalculateForceAtPosition(rigidbody.transform.position, affectedObject.Mass));
         }
@@ -77,15 +77,15 @@ public abstract class GravitySource : MonoBehaviour, IGravitySource
         Vector2 force = forceMagnitude * distance.normalized;
         return force;
     }
-
+    
     public void AddAffectedBody(GravityAffected body)
     {
-        gravityAffecteObjects.Add(body);
+        gravityAffectedObjects.Add(body);
     }
 
     public void RemoveAffectedBody(GravityAffected body)
     {
-        gravityAffecteObjects.Remove(body);
+        gravityAffectedObjects.Remove(body);
     }
 
     public GravitySource GetGravitySource()

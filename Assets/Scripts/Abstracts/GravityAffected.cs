@@ -14,9 +14,19 @@ public abstract class GravityAffected : MonoBehaviour
     private float _specificOrbitalEnergy;
     private float _argumentOfPeriapsis;
     private float _semimajorAxis;
+    private float _semiminorAxis;
+    private float _period;
+    private float _orbitalPosition;
+    private enum TrajectoryType
+    {
+        Ellipse = 0,
+        Hyperbola = 1
+    }
+    private TrajectoryType currentTrajectoryType;
 
     private Rigidbody2D body;
 
+    protected bool adjustTrajectory = false;
     #region GETSET
     public float Mass {
         get { return _mass; }
@@ -97,6 +107,16 @@ public abstract class GravityAffected : MonoBehaviour
         {
             _eccentricityVector = value;
             _eccentricity = _eccentricityVector.magnitude;
+            if (_eccentricity < 1f)
+            {
+                currentTrajectoryType = TrajectoryType.Ellipse;
+            }
+            else
+            {
+                // == 1 more or less impossible, ignore parabola
+                currentTrajectoryType = TrajectoryType.Hyperbola;
+            }
+
         }
 
     }
@@ -124,6 +144,25 @@ public abstract class GravityAffected : MonoBehaviour
         get { return _semimajorAxis; }
         private set { _semimajorAxis = value; }
     }
+
+    public float SemiminorAxis
+    {
+        get { return _semiminorAxis; }
+        private set { _semiminorAxis = value; }
+    }
+
+    public float Period
+    {
+        get { return _period; }
+        private set { _period = value; }
+    }
+
+    public float OrbitalPosition
+    {
+        get { return _orbitalPosition; }
+        private set { _orbitalPosition = value; }
+    }
+
     #endregion GETSET
 
     #region UNITY
@@ -134,12 +173,17 @@ public abstract class GravityAffected : MonoBehaviour
 
     protected virtual void Update()
     {
-        CalculateOrbitalParameters();
+        if (adjustTrajectory)
+            UpdateTrajectory();
+
+        Debug.Log(GetOrbitPosition());
         /*
-        Debug.Log("SOE: " + SpecificOrbitalEnergy);
-        Debug.Log("SRAM: " + SpecificRelativeAngularMomentum);
+        CalculateOrbitalParameters();
         Debug.Log("E vec: " + EccentricityVector);
         Debug.Log("a: " + SemimajorAxis);
+        Debug.Log("SOE: " + SpecificOrbitalEnergy);
+        Debug.Log("SRAM: " + SpecificRelativeAngularMomentum);
+        
         */
     }
 
@@ -159,15 +203,30 @@ public abstract class GravityAffected : MonoBehaviour
     #endregion UNITY
 
     #region PHYSICS
+    public Vector2 GetOrbitPosition()
+    {
+        return new Vector2(SemimajorAxis * Mathf.Cos(OrbitalPosition * 2 * Mathf.PI), SemiminorAxis * Mathf.Sin(OrbitalPosition * 2 * Mathf.PI));
+    }
+
+    public void UpdateTrajectory()
+    {
+        CalculateOrbitalParameters();
+        adjustTrajectory = false;
+    }
+
     public void CalculateOrbitalParameters()
     {
         SpecificRelativeAngularMomentum = CalculateSpecificRelativeAngularMomentum();
         EccentricityVector = CalculateEccentricityVector();
         SemimajorAxis = CalculateSemimajorAxis();
+        SemiminorAxis = CalculateSemiminorAxis();
         SpecificOrbitalEnergy = CalculateSpecificOrbitalEnergy();
         ArgumentOfPeriapsis = CalculateArgumentOfPeriapse();
-
+        
+        float trueAnomaly = CalculateTrueAnomaly();
+        OrbitalPosition = trueAnomaly / (2 * Mathf.PI);
     }
+
     public Vector3 CalculateSpecificRelativeAngularMomentum()
     {
         return Vector3.Cross(SourceRelativePosition, SourceRelativeVelocity);
@@ -187,10 +246,12 @@ public abstract class GravityAffected : MonoBehaviour
     public float CalculateArgumentOfPeriapse()
     {
         float omega = Mathf.Atan2(EccentricityVector.y, EccentricityVector.x);
-        if (SpecificRelativeAngularMomentum.z > 0)
+        
+        if (SpecificRelativeAngularMomentum.z < 0)
         {
-            return 2 * Mathf.PI - omega;
+            return 2*Mathf.PI - omega;
         }
+        
         return omega;
     }
 
@@ -202,11 +263,28 @@ public abstract class GravityAffected : MonoBehaviour
         return 1 / denom;
     }
 
-    /*
-    private float CalculateTrueAnomoly()
+    public float CalculateSemiminorAxis()
     {
-        return 0f;
+        if (!CurrentGravitySource)
+            return Mathf.Infinity;
+
+        if (currentTrajectoryType == TrajectoryType.Hyperbola)
+        {
+            
+            return -1f * SemimajorAxis * Mathf.Sqrt(Mathf.Pow(Eccentricity, 2) - 1);
+        }
+        return SemimajorAxis * Mathf.Sqrt(1 - Mathf.Pow(Eccentricity, 2)); ;
     }
-    */
+
+    public float CalculateTrueAnomaly()
+    {
+        float nu = Mathf.Acos(Vector3.Dot(EccentricityVector, SourceRelativePosition) / (Eccentricity * SourceDistance));
+        if (SpecificRelativeAngularMomentum.z < 0)
+        {
+            return 2 * Mathf.PI - nu;
+        }
+        return nu;
+    }
+
     #endregion PHYSICS
 }
