@@ -16,7 +16,7 @@ public abstract class GravityAffected : MonoBehaviour
     private float _semimajorAxis;
     private float _semiminorAxis;
     private float _period;
-    private float _orbitalPosition;
+    private Vector2 _orbitalPosition;
     private enum TrajectoryType
     {
         Ellipse = 0,
@@ -157,7 +157,7 @@ public abstract class GravityAffected : MonoBehaviour
         private set { _period = value; }
     }
 
-    public float OrbitalPosition
+    public Vector2 OrbitalPosition
     {
         get { return _orbitalPosition; }
         private set { _orbitalPosition = value; }
@@ -176,7 +176,7 @@ public abstract class GravityAffected : MonoBehaviour
         if (adjustTrajectory)
             UpdateTrajectory();
 
-        Debug.Log(GetOrbitPosition());
+        
         /*
         CalculateOrbitalParameters();
         Debug.Log("E vec: " + EccentricityVector);
@@ -185,6 +185,12 @@ public abstract class GravityAffected : MonoBehaviour
         Debug.Log("SRAM: " + SpecificRelativeAngularMomentum);
         
         */
+    }
+
+    protected void FixedUpdate()
+    {
+        
+        UpdateOrbitPosition();
     }
 
     private void OnTriggerEnter2D(Collider2D collider)
@@ -203,9 +209,17 @@ public abstract class GravityAffected : MonoBehaviour
     #endregion UNITY
 
     #region PHYSICS
-    public Vector2 GetOrbitPosition()
+    public void UpdateOrbitPosition()
     {
-        return new Vector2(SemimajorAxis * Mathf.Cos(OrbitalPosition * 2 * Mathf.PI), SemiminorAxis * Mathf.Sin(OrbitalPosition * 2 * Mathf.PI));
+        if (EccentricityVector.sqrMagnitude == 0)
+        {
+            return;
+        }
+        float trueAnomaly = CalculateTrueAnomaly();
+        //Debug.Log(Mathf.Rad2Deg * trueAnomaly);
+        OrbitalPosition = new Vector2(SemimajorAxis * Mathf.Cos(trueAnomaly), SemiminorAxis * Mathf.Sin(trueAnomaly));
+        //Debug.Log("position:" + transform.position);
+        //Debug.Log(TranslateToGravitationalSource(OrbitalPosition));
     }
 
     public void UpdateTrajectory()
@@ -222,9 +236,6 @@ public abstract class GravityAffected : MonoBehaviour
         SemiminorAxis = CalculateSemiminorAxis();
         SpecificOrbitalEnergy = CalculateSpecificOrbitalEnergy();
         ArgumentOfPeriapsis = CalculateArgumentOfPeriapse();
-        
-        float trueAnomaly = CalculateTrueAnomaly();
-        OrbitalPosition = trueAnomaly / (2 * Mathf.PI);
     }
 
     public Vector3 CalculateSpecificRelativeAngularMomentum()
@@ -278,13 +289,23 @@ public abstract class GravityAffected : MonoBehaviour
 
     public float CalculateTrueAnomaly()
     {
-        float nu = Mathf.Acos(Vector3.Dot(EccentricityVector, SourceRelativePosition) / (Eccentricity * SourceDistance));
+        float eDotP = Vector3.Dot(EccentricityVector, SourceRelativePosition);
+        float det = EccentricityVector.x * SourceRelativePosition.y - EccentricityVector.y * SourceRelativePosition.x;
+        Debug.Log(Mathf.Atan2(eDotP, det));
+        float nu = Mathf.Acos(eDotP / (Eccentricity * SourceDistance));
         if (SpecificRelativeAngularMomentum.z < 0)
         {
+            
             return 2 * Mathf.PI - nu;
         }
         return nu;
     }
 
+    private Vector2 TranslateToGravitationalSource(Vector2 position)
+    {
+        
+        Vector2 offset = new Vector2(Mathf.Cos(ArgumentOfPeriapsis), Mathf.Sin(ArgumentOfPeriapsis)) * Eccentricity * SemimajorAxis;
+        return position + offset;
+    }
     #endregion PHYSICS
 }

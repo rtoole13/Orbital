@@ -60,6 +60,7 @@ public abstract class GravitySource : MonoBehaviour, IGravitySource
         
     }
     
+    
     private void FixedUpdate()
     {
         for (int i = 0; i < gravityAffectedObjects.Count; i++)
