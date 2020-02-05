@@ -108,7 +108,7 @@ public class TrajectoryPlotter : MonoBehaviour
             return;
 
         Gizmos.color = Color.green;
-        Gizmos.DrawRay(Vector3.zero, SemimajorAxis * orbitalBody.EccentricityVector);
+        Gizmos.DrawRay(Vector3.zero, SemimajorAxis * (1f - orbitalBody.Eccentricity) * orbitalBody.EccentricityVector);
         
     }
     #endregion GIZMOS

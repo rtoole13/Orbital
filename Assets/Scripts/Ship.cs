@@ -22,9 +22,7 @@ public class Ship : GravityAffected
         Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
         Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector2 distance = mousePosition - (Vector2)rigidbody.transform.position;
-        rigidbody.AddForce(clickForce * distance.normalized);
-        //rigidbody.velocity = clickForce * distance.normalized;
-        adjustTrajectory = true;
+        AddExternalForce(clickForce * distance.normalized);
     }
 }
 

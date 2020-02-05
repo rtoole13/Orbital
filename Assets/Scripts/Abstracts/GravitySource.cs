@@ -54,23 +54,8 @@ public abstract class GravitySource : MonoBehaviour, IGravitySource
         // Get rigidbody
         body = GetComponent<Rigidbody2D>();
     }
-    
-    private void Update()
-    {
-        
-    }
-    
-    private void FixedUpdate()
-    {
-        for (int i = 0; i < gravityAffectedObjects.Count; i++)
-        {
-            GravityAffected affectedObject = gravityAffectedObjects[i];
-            Rigidbody2D rigidbody = affectedObject.GetComponent<Rigidbody2D>();
-            rigidbody.AddForce(CalculateForceAtPosition(rigidbody.transform.position, affectedObject.Mass));
-        }
-    }
-    
-    private Vector2 CalculateForceAtPosition(Vector2 position, float mass)
+
+    public Vector2 CalculateGravitationalForceAtPosition(Vector2 position, float mass)
     {
         Vector2 distance = (Vector2)gravityCollider.transform.position - position;
         float forceMagnitude = GRAVITYCONSTRANT * Mass * mass / Vector2.SqrMagnitude(distance);

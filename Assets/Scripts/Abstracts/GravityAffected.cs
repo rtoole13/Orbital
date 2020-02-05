@@ -17,6 +17,7 @@ public abstract class GravityAffected : MonoBehaviour
     private float _semiminorAxis;
     private float _period;
 
+    
     private Vector2 _orbitalPosition;
     private enum TrajectoryType
     {
@@ -24,9 +25,9 @@ public abstract class GravityAffected : MonoBehaviour
         Hyperbola = 1
     }
     private TrajectoryType currentTrajectoryType;
-
     private Rigidbody2D body;
 
+    protected bool trajectoryIsDeterministic = false;
     protected bool adjustTrajectory = false;
     #region GETSET
     public float Mass {
@@ -190,8 +191,14 @@ public abstract class GravityAffected : MonoBehaviour
 
     protected void FixedUpdate()
     {
-        
-        UpdateOrbitPosition();
+        if (trajectoryIsDeterministic)
+        {
+            UpdatePositionByTrajectory();
+            return;
+        }
+
+        //Apply forces, regular rigidbody stuff.
+        UpdatePositionIteratively();
     }
 
     private void OnTriggerEnter2D(Collider2D collider)
@@ -210,6 +217,19 @@ public abstract class GravityAffected : MonoBehaviour
     #endregion UNITY
 
     #region PHYSICS
+    private void UpdatePositionByTrajectory()
+    {
+
+    }
+
+    private void UpdatePositionIteratively()
+    {
+        if (CurrentGravitySource == null)
+            return;
+        Vector2 gravitationalForce = CurrentGravitySource.CalculateGravitationalForceAtPosition(transform.position, Mass);
+        body.AddForce(gravitationalForce);
+        //Add other forces? Collisions?
+    }
     public void UpdateOrbitPosition()
     {
         if (EccentricityVector.sqrMagnitude == 0)
@@ -324,6 +344,13 @@ public abstract class GravityAffected : MonoBehaviour
         position = RotateVertex(position, ArgumentOfPeriapsis);
         Vector2 offset = new Vector2(Mathf.Cos(ArgumentOfPeriapsis), Mathf.Sin(ArgumentOfPeriapsis)) * -1f * Eccentricity * SemimajorAxis;
         return position + offset;
+    }
+
+    public void AddExternalForce(Vector2 forceVector)
+    {
+        trajectoryIsDeterministic = false;
+        adjustTrajectory = true;
+        body.AddForce(forceVector);
     }
     #endregion PHYSICS
 }
