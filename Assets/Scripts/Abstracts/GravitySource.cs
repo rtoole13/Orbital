@@ -60,7 +60,6 @@ public abstract class GravitySource : MonoBehaviour, IGravitySource
         
     }
     
-    
     private void FixedUpdate()
     {
         for (int i = 0; i < gravityAffectedObjects.Count; i++)
@@ -70,7 +69,7 @@ public abstract class GravitySource : MonoBehaviour, IGravitySource
             rigidbody.AddForce(CalculateForceAtPosition(rigidbody.transform.position, affectedObject.Mass));
         }
     }
-
+    
     private Vector2 CalculateForceAtPosition(Vector2 position, float mass)
     {
         Vector2 distance = (Vector2)gravityCollider.transform.position - position;

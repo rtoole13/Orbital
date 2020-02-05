@@ -12,6 +12,8 @@ public class Ship : GravityAffected
         if (Input.GetMouseButton(0))
             AddClickForce();
         base.Update();
+
+        
     }
     #endregion UNITY
 
@@ -21,6 +23,7 @@ public class Ship : GravityAffected
         Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector2 distance = mousePosition - (Vector2)rigidbody.transform.position;
         rigidbody.AddForce(clickForce * distance.normalized);
+        //rigidbody.velocity = clickForce * distance.normalized;
         adjustTrajectory = true;
     }
 }

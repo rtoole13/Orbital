@@ -16,6 +16,7 @@ public abstract class GravityAffected : MonoBehaviour
     private float _semimajorAxis;
     private float _semiminorAxis;
     private float _period;
+
     private Vector2 _orbitalPosition;
     private enum TrajectoryType
     {
@@ -215,11 +216,15 @@ public abstract class GravityAffected : MonoBehaviour
         {
             return;
         }
+        if ((SemimajorAxis < CurrentGravitySource.Radius) || (SemiminorAxis < CurrentGravitySource.Radius))
+        {
+            return;
+        }
         float trueAnomaly = CalculateTrueAnomaly();
         //Debug.Log(Mathf.Rad2Deg * trueAnomaly);
         OrbitalPosition = new Vector2(SemimajorAxis * Mathf.Cos(trueAnomaly), SemiminorAxis * Mathf.Sin(trueAnomaly));
-        //Debug.Log("position:" + transform.position);
-        //Debug.Log(TranslateToGravitationalSource(OrbitalPosition));
+        Debug.Log(TransformByGravitationalSourcePoint(OrbitalPosition));
+        //transform.position = TransformByGravitationalSourcePoint(OrbitalPosition);
     }
 
     public void UpdateTrajectory()
@@ -289,22 +294,35 @@ public abstract class GravityAffected : MonoBehaviour
 
     public float CalculateTrueAnomaly()
     {
-        float eDotP = Vector3.Dot(EccentricityVector, SourceRelativePosition);
-        float det = EccentricityVector.x * SourceRelativePosition.y - EccentricityVector.y * SourceRelativePosition.x;
-        Debug.Log(Mathf.Atan2(eDotP, det));
-        float nu = Mathf.Acos(eDotP / (Eccentricity * SourceDistance));
+        // Angle b/w relative position vector and eccentricityVectory
+        float nu = Mathf.Atan2(SourceRelativePosition.y, SourceRelativePosition.x) - Mathf.Atan2(EccentricityVector.y, EccentricityVector.x);
+
+        
         if (SpecificRelativeAngularMomentum.z < 0)
         {
-            
+
+            return 2 * Mathf.PI - nu;
+        }
+
+        // Adjust to be b/w 0 and 2pi
+        nu = (nu + 2 * Mathf.PI) % (2 * Mathf.PI);
+        if (SpecificRelativeAngularMomentum.z < 0)
+        {
             return 2 * Mathf.PI - nu;
         }
         return nu;
     }
 
-    private Vector2 TranslateToGravitationalSource(Vector2 position)
+    private Vector2 RotateVertex(Vector2 vertex, float angle)
     {
-        
-        Vector2 offset = new Vector2(Mathf.Cos(ArgumentOfPeriapsis), Mathf.Sin(ArgumentOfPeriapsis)) * Eccentricity * SemimajorAxis;
+        return new Vector2(vertex.x * Mathf.Cos(angle) - vertex.y * Mathf.Sin(angle),
+                       vertex.x * Mathf.Sin(angle) + vertex.y * Mathf.Cos(angle));
+    }
+
+    private Vector2 TransformByGravitationalSourcePoint(Vector2 position)
+    {
+        position = RotateVertex(position, ArgumentOfPeriapsis);
+        Vector2 offset = new Vector2(Mathf.Cos(ArgumentOfPeriapsis), Mathf.Sin(ArgumentOfPeriapsis)) * -1f * Eccentricity * SemimajorAxis;
         return position + offset;
     }
     #endregion PHYSICS
