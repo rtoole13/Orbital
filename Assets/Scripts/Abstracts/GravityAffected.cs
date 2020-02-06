@@ -17,7 +17,7 @@ public abstract class GravityAffected : MonoBehaviour
     private float _semiminorAxis;
     private float _period;
 
-    
+    private List<Vector2> nonGravitationalForces;
     private Vector2 _orbitalPosition;
     private enum TrajectoryType
     {
@@ -27,8 +27,9 @@ public abstract class GravityAffected : MonoBehaviour
     private TrajectoryType currentTrajectoryType;
     private Rigidbody2D body;
 
-    protected bool trajectoryIsDeterministic = false;
-    protected bool adjustTrajectory = false;
+    protected bool nonGravitationalForcesAdded = true;
+    protected bool determineTrajectory = false;
+    
     #region GETSET
     public float Mass {
         get { return _mass; }
@@ -173,12 +174,18 @@ public abstract class GravityAffected : MonoBehaviour
         body = GetComponent<Rigidbody2D>();
     }
 
+    private void Start()
+    {
+        nonGravitationalForces = new List<Vector2>();
+    }
+
     protected virtual void Update()
     {
-        if (adjustTrajectory)
-            UpdateTrajectory();
-
         
+
+        //if (adjustTrajectory)
+        //UpdateTrajectory();
+
         /*
         CalculateOrbitalParameters();
         Debug.Log("E vec: " + EccentricityVector);
@@ -191,14 +198,32 @@ public abstract class GravityAffected : MonoBehaviour
 
     protected void FixedUpdate()
     {
-        if (trajectoryIsDeterministic)
+        if (Input.GetMouseButton(1))
         {
-            UpdatePositionByTrajectory();
-            return;
+            nonGravitationalForcesAdded = false;
+            //determineTrajectory = true;
+        }
+        else
+        {
+            nonGravitationalForcesAdded = true;
         }
 
-        //Apply forces, regular rigidbody stuff.
-        UpdatePositionIteratively();
+        if (nonGravitationalForcesAdded)
+        {
+            //Apply forces, regular rigidbody stuff.
+            UpdatePositionIteratively();
+            determineTrajectory = true;
+        }
+        else
+        {
+            if (determineTrajectory)
+            {
+                // First frame switching from iterative update to trajectory update
+                determineTrajectory = false;
+                CalculateOrbitalParameters();
+            }
+            UpdatePositionByTrajectory();
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D collider)
@@ -214,53 +239,60 @@ public abstract class GravityAffected : MonoBehaviour
         CurrentGravitySource = null;
         source.RemoveAffectedBody(this);
     }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        //On Collision w/ an object, stop deterministic trajectory update (normal force)
+        nonGravitationalForcesAdded = true;
+    }
     #endregion UNITY
 
     #region PHYSICS
     private void UpdatePositionByTrajectory()
     {
+        if (CurrentGravitySource == null)
+            return;
 
+        float trueAnomaly = CalculateTrueAnomaly();
+        OrbitalPosition = new Vector2(SemimajorAxis * Mathf.Cos(trueAnomaly), SemiminorAxis * Mathf.Sin(trueAnomaly));
+        Debug.Log(CalculateVelocityFromOrbitalParameters());
+        body.position = TransformByGravitationalSourcePoint(OrbitalPosition);
+        //body.velocity = CalculateVelocityFromOrbitalParameters();
     }
 
     private void UpdatePositionIteratively()
     {
         if (CurrentGravitySource == null)
             return;
+
         Vector2 gravitationalForce = CurrentGravitySource.CalculateGravitationalForceAtPosition(transform.position, Mass);
         body.AddForce(gravitationalForce);
-        //Add other forces? Collisions?
-    }
-    public void UpdateOrbitPosition()
-    {
-        if (EccentricityVector.sqrMagnitude == 0)
-        {
-            return;
-        }
-        if ((SemimajorAxis < CurrentGravitySource.Radius) || (SemiminorAxis < CurrentGravitySource.Radius))
-        {
-            return;
-        }
-        float trueAnomaly = CalculateTrueAnomaly();
-        //Debug.Log(Mathf.Rad2Deg * trueAnomaly);
-        OrbitalPosition = new Vector2(SemimajorAxis * Mathf.Cos(trueAnomaly), SemiminorAxis * Mathf.Sin(trueAnomaly));
-        Debug.Log(TransformByGravitationalSourcePoint(OrbitalPosition));
-        //transform.position = TransformByGravitationalSourcePoint(OrbitalPosition);
-    }
 
-    public void UpdateTrajectory()
-    {
+        //Add other forces. Collisions?
+        ApplyNonGravitationalForces();
         CalculateOrbitalParameters();
-        adjustTrajectory = false;
     }
 
     public void CalculateOrbitalParameters()
     {
+        // This should only be called from the iterative update method and only once before switching to trajectory update.
         SpecificRelativeAngularMomentum = CalculateSpecificRelativeAngularMomentum();
         EccentricityVector = CalculateEccentricityVector();
         SemimajorAxis = CalculateSemimajorAxis();
         SemiminorAxis = CalculateSemiminorAxis();
         SpecificOrbitalEnergy = CalculateSpecificOrbitalEnergy();
         ArgumentOfPeriapsis = CalculateArgumentOfPeriapse();
+    }
+
+    public Vector2 CalculateVelocityFromOrbitalParameters()
+    {
+        // get direction
+        Vector2 direction = Vector3.Cross(SpecificRelativeAngularMomentum, SourceRelativePosition);
+
+        // get speed via vis-viva
+        float speed = Mathf.Sqrt(CurrentGravitySource.GRAVITYCONSTRANT * CurrentGravitySource.Mass * ((2 / SourceDistance) - (1 / SemimajorAxis)));
+
+        return speed * direction;
     }
 
     public Vector3 CalculateSpecificRelativeAngularMomentum()
@@ -348,9 +380,18 @@ public abstract class GravityAffected : MonoBehaviour
 
     public void AddExternalForce(Vector2 forceVector)
     {
-        trajectoryIsDeterministic = false;
-        adjustTrajectory = true;
-        body.AddForce(forceVector);
+        nonGravitationalForcesAdded = true;
+        nonGravitationalForces.Add(forceVector);
+    }
+
+    private void ApplyNonGravitationalForces()
+    {
+        for (int i = 0; i < nonGravitationalForces.Count; i++)
+        {
+            body.AddForce(nonGravitationalForces[i]);
+        }
+        nonGravitationalForces.Clear();
+        nonGravitationalForcesAdded = false;
     }
     #endregion PHYSICS
 }
