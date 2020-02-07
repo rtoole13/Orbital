@@ -47,7 +47,7 @@ public abstract class GravityAffected : MonoBehaviour
         get { 
             if (CurrentGravitySource == null)
                 return Mathf.Infinity;
-            Vector3 diff = CurrentGravitySource.transform.position - this.transform.position;
+            Vector3 diff = CurrentGravitySource.transform.position - transform.position;
             return diff.magnitude;
         }
     }
@@ -58,7 +58,7 @@ public abstract class GravityAffected : MonoBehaviour
         {
             if (CurrentGravitySource == null)
                 return Vector3.positiveInfinity;
-            return this.transform.position - CurrentGravitySource.transform.position;
+            return transform.position - CurrentGravitySource.transform.position;
         }
     }
 
@@ -210,12 +210,16 @@ public abstract class GravityAffected : MonoBehaviour
 
         if (nonGravitationalForcesAdded)
         {
+            if (body.isKinematic)
+                body.isKinematic = false;
+
             //Apply forces, regular rigidbody stuff.
             UpdatePositionIteratively();
             determineTrajectory = true;
         }
         else
         {
+            body.isKinematic = true;
             if (determineTrajectory)
             {
                 // First frame switching from iterative update to trajectory update
@@ -256,7 +260,7 @@ public abstract class GravityAffected : MonoBehaviour
         float trueAnomaly = CalculateTrueAnomaly();
         OrbitalPosition = new Vector2(SemimajorAxis * Mathf.Cos(trueAnomaly), SemiminorAxis * Mathf.Sin(trueAnomaly));
         Debug.Log(CalculateVelocityFromOrbitalParameters());
-        body.position = TransformByGravitationalSourcePoint(OrbitalPosition);
+        transform.position = TransformByGravitationalSourcePoint(OrbitalPosition);
         //body.velocity = CalculateVelocityFromOrbitalParameters();
     }
 
