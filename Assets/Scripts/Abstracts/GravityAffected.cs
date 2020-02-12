@@ -10,15 +10,22 @@ public abstract class GravityAffected : MonoBehaviour
     private GravitySource _gravitySource;
     private Vector3 _specificRelativeAngularMomentum;
     private Vector3 _eccentricityVector;
+    private Vector2 _orbitalPosition;
     private float _eccentricity;
     private float _specificOrbitalEnergy;
     private float _argumentOfPeriapsis;
     private float _semimajorAxis;
     private float _semiminorAxis;
     private float _period;
+    private float _orbitalPeriod;
+    private float _meanAnomalyAtEpoch;
+    private float _meanAnomaly;
+    private float _eccentricAnomaly;
+    private float _meanMotion;
+    private float _timeSinceEpoch;
 
     private List<Vector2> nonGravitationalForces;
-    private Vector2 _orbitalPosition;
+    
     private enum TrajectoryType
     {
         Ellipse = 0,
@@ -166,6 +173,41 @@ public abstract class GravityAffected : MonoBehaviour
         private set { _orbitalPosition = value; }
     }
 
+    public float OrbitalPeriod
+    {
+        get { return _orbitalPeriod; }
+        private set { _orbitalPeriod = value; }
+    }
+
+    public float MeanMotion
+    {
+        get { return _meanMotion; }
+        private set { _meanMotion = value; }
+    }
+
+    public float MeanAnomalyAtEpoch
+    {
+        get { return _meanAnomalyAtEpoch; }
+        private set { _meanAnomalyAtEpoch = value; }
+    }
+
+    public float MeanAnomaly
+    {
+        get { return _meanAnomaly; }
+        private set { _meanAnomaly = value; }
+    }
+
+    public float EccentricAnomaly
+    {
+        get { return _eccentricAnomaly; }
+        private set { _eccentricAnomaly = value; }
+    }
+
+    public float TimeSinceEpoch
+    {
+        get { return _timeSinceEpoch; }
+        private set { _timeSinceEpoch = value; }
+    }
     #endregion GETSET
 
     #region UNITY
@@ -181,7 +223,7 @@ public abstract class GravityAffected : MonoBehaviour
 
     protected virtual void Update()
     {
-        
+
 
         //if (adjustTrajectory)
         //UpdateTrajectory();
@@ -257,10 +299,30 @@ public abstract class GravityAffected : MonoBehaviour
         if (CurrentGravitySource == null)
             return;
 
+        UpdateMeanAnomaly();
+        if (MeanAnomaly >= 0f)
+        {
+            Debug.Log("wee");
+            UpdateEccentricAnomaly();
+            transform.position = RotateVertex(CalculateOrbitalPosition(), ArgumentOfPeriapsis);
+        }
+        else
+        {
+            UpdatePositionIteratively();
+        }
+            
+            
+        /*
+        float actualX = temp.x * Mathf.Cos(ArgumentOfPeriapsis) - temp.y * Mathf.Sin(ArgumentOfPeriapsis);
+        float actualY = temp.y * Mathf.Sin(ArgumentOfPeriapsis) + temp.x * Mathf.Sin(ArgumentOfPeriapsis);
+        Debug.Log("calcX: " + actualX + ", calcY: " + actualY);
+        Debug.Log("actuX: " + transform.position.x + ", actuy: " + transform.position.y);
+        
         float trueAnomaly = CalculateTrueAnomaly();
         OrbitalPosition = new Vector2(SemimajorAxis * Mathf.Cos(trueAnomaly), SemiminorAxis * Mathf.Sin(trueAnomaly));
         Debug.Log(CalculateVelocityFromOrbitalParameters());
         transform.position = TransformByGravitationalSourcePoint(OrbitalPosition);
+        */
         //body.velocity = CalculateVelocityFromOrbitalParameters();
     }
 
@@ -274,7 +336,6 @@ public abstract class GravityAffected : MonoBehaviour
 
         //Add other forces. Collisions?
         ApplyNonGravitationalForces();
-        CalculateOrbitalParameters();
     }
 
     public void CalculateOrbitalParameters()
@@ -285,7 +346,15 @@ public abstract class GravityAffected : MonoBehaviour
         SemimajorAxis = CalculateSemimajorAxis();
         SemiminorAxis = CalculateSemiminorAxis();
         SpecificOrbitalEnergy = CalculateSpecificOrbitalEnergy();
+
+        TimeSinceEpoch = 0f;
+        MeanMotion = CalculateMeanMotion();
+        OrbitalPeriod = CalculateOrbitalPeriod();
+        EccentricAnomaly = CalculateEccentricAnomalyAtEpoch();
+        MeanAnomalyAtEpoch = CalculateMeanAnomalyAtEpoch();
+        MeanAnomaly = MeanAnomalyAtEpoch;
         ArgumentOfPeriapsis = CalculateArgumentOfPeriapse();
+
     }
 
     public Vector2 CalculateVelocityFromOrbitalParameters()
@@ -367,6 +436,51 @@ public abstract class GravityAffected : MonoBehaviour
             return 2 * Mathf.PI - nu;
         }
         return nu;
+    }
+
+    public float CalculateOrbitalPeriod()
+    {
+        return 2 * Mathf.PI / MeanMotion;
+    }
+
+    public Vector2 CalculateOrbitalPosition()
+    {
+        return new Vector2(Mathf.Cos(EccentricAnomaly) - Eccentricity, Mathf.Sin(EccentricAnomaly) * Mathf.Sqrt(1 - Mathf.Pow(Eccentricity, 2))) * SemimajorAxis;
+
+    }
+    public float CalculateEccentricAnomalyAtEpoch()
+    {
+        return Mathf.Acos((-1f / Eccentricity) * ((SourceDistance / SemimajorAxis) - 1f));
+    }
+
+    public float CalculateMeanAnomalyAtEpoch()
+    {
+        return EccentricAnomaly - Eccentricity * Mathf.Sin(EccentricAnomaly);
+    }
+
+    public float CalculateMeanMotion()
+    {
+        return Mathf.Sqrt(StandardGravityParameter / Mathf.Pow(SemimajorAxis, 3));
+    }
+
+    public void UpdateMeanAnomaly()
+    {
+        var time = (TimeSinceEpoch + Time.deltaTime) % OrbitalPeriod;
+        TimeSinceEpoch = time; //Fixed delta time??
+        MeanAnomaly = MeanAnomalyAtEpoch + MeanMotion * TimeSinceEpoch;
+    }
+
+    public void UpdateEccentricAnomaly()
+    {
+        float E = MeanAnomaly;
+        while (true)
+        {
+            float deltaE = (E - Eccentricity * Mathf.Sin(E) - MeanAnomaly) / (1f - Eccentricity * Mathf.Cos(E));
+            E -= deltaE;
+            if (Mathf.Abs(deltaE) < 1e-6)
+                break;
+        }
+        EccentricAnomaly = E;
     }
 
     private Vector2 RotateVertex(Vector2 vertex, float angle)
