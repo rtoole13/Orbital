@@ -240,10 +240,16 @@ public abstract class GravityAffected : MonoBehaviour
 
     protected void FixedUpdate()
     {
+        
         if (Input.GetMouseButton(1))
         {
             nonGravitationalForcesAdded = false;
             //determineTrajectory = true;
+        }
+        else if (Input.GetMouseButtonUp(1))
+        {
+            Debug.Log("weee");
+            body.velocity = RotateVertex(CalculateVelocity(), ArgumentOfPeriapsis);
         }
         else
         {
@@ -302,7 +308,6 @@ public abstract class GravityAffected : MonoBehaviour
         UpdateMeanAnomaly();
         if (MeanAnomaly >= 0f)
         {
-            Debug.Log("wee");
             UpdateEccentricAnomaly();
             transform.position = RotateVertex(CalculateOrbitalPosition(), ArgumentOfPeriapsis);
         }
@@ -461,6 +466,12 @@ public abstract class GravityAffected : MonoBehaviour
     public float CalculateMeanMotion()
     {
         return Mathf.Sqrt(StandardGravityParameter / Mathf.Pow(SemimajorAxis, 3));
+    }
+
+    public Vector2 CalculateVelocity()
+    {
+        float deltaE = MeanMotion / (1f - (Eccentricity * Mathf.Cos(EccentricAnomaly)));
+        return new Vector2(-Mathf.Sin(EccentricAnomaly), Mathf.Cos(EccentricAnomaly) * Mathf.Sqrt(1-Mathf.Pow(Eccentricity, 2))) * SemimajorAxis * deltaE;
     }
 
     public void UpdateMeanAnomaly()
