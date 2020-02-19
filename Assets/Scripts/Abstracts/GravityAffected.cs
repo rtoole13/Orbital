@@ -25,7 +25,6 @@ public abstract class GravityAffected : MonoBehaviour
     private float _timeSinceEpoch;
 
     private List<Vector2> nonGravitationalForces;
-    
     private enum TrajectoryType
     {
         Ellipse = 0,
@@ -33,6 +32,8 @@ public abstract class GravityAffected : MonoBehaviour
     }
     private TrajectoryType currentTrajectoryType;
     private Rigidbody2D body;
+    private bool updateIteratively = true;
+    private Vector2 deterministicVelocity;
 
     protected bool nonGravitationalForcesAdded = true;
     protected bool determineTrajectory = false;
@@ -224,57 +225,21 @@ public abstract class GravityAffected : MonoBehaviour
     protected virtual void Update()
     {
 
-
-        //if (adjustTrajectory)
-        //UpdateTrajectory();
-
-        /*
-        CalculateOrbitalParameters();
-        Debug.Log("E vec: " + EccentricityVector);
-        Debug.Log("a: " + SemimajorAxis);
-        Debug.Log("SOE: " + SpecificOrbitalEnergy);
-        Debug.Log("SRAM: " + SpecificRelativeAngularMomentum);
-        
-        */
     }
 
     protected void FixedUpdate()
     {
-        
-        if (Input.GetMouseButton(1))
+        if (CurrentGravitySource == null)
+            return;
+
+        if (updateIteratively)
         {
-            nonGravitationalForcesAdded = false;
-            //determineTrajectory = true;
-        }
-        else if (Input.GetMouseButtonUp(1))
-        {
-            Debug.Log("weee");
-            body.velocity = RotateVertex(CalculateVelocity(), ArgumentOfPeriapsis);
+            // Apply forces, regular rigidbody stuff.
+            UpdateIteratively();
         }
         else
         {
-            nonGravitationalForcesAdded = true;
-        }
-
-        if (nonGravitationalForcesAdded)
-        {
-            if (body.isKinematic)
-                body.isKinematic = false;
-
-            //Apply forces, regular rigidbody stuff.
-            UpdatePositionIteratively();
-            determineTrajectory = true;
-        }
-        else
-        {
-            body.isKinematic = true;
-            if (determineTrajectory)
-            {
-                // First frame switching from iterative update to trajectory update
-                determineTrajectory = false;
-                CalculateOrbitalParameters();
-            }
-            UpdatePositionByTrajectory();
+            UpdateByTrajectory();
         }
     }
 
@@ -294,55 +259,77 @@ public abstract class GravityAffected : MonoBehaviour
 
     private void OnCollisionStay2D(Collision2D collision)
     {
-        //On Collision w/ an object, stop deterministic trajectory update (normal force)
-        nonGravitationalForcesAdded = true;
+        // On Collision w/ an object, stop deterministic trajectory update (normal force)
+        Debug.Log("Coll");
+        SwitchToIterativeUpdate();
     }
-    #endregion UNITY
 
-    #region PHYSICS
-    private void UpdatePositionByTrajectory()
+    private void SwitchToDeterministicUpdate()
     {
-        if (CurrentGravitySource == null)
+        // Switching from iterative to deterministic trajectory update
+        if (!updateIteratively)
             return;
 
-        UpdateMeanAnomaly();
+        updateIteratively = false;
+        body.isKinematic = true;
+        CalculateOrbitalParameters();
+    }
+
+    private void SwitchToIterativeUpdate()
+    {
+        // Switching from deterministic trajectory to iterative update
+        if (updateIteratively)
+            return;
+
+        updateIteratively = true;
+        body.isKinematic = false;
+        body.velocity = RotateVertex(deterministicVelocity, ArgumentOfPeriapsis);
+    }
+
+    #endregion UNITY
+
+    #region DETERMINISTIC
+    // Basically, rigidbody.iskinematic = true;
+    private void UpdateByTrajectory()
+    {
+        if (nonGravitationalForcesAdded)
+        {
+            SwitchToIterativeUpdate();
+            return;
+        }
+
+        TimeSinceEpoch = CalculateTimeSinceEpoch();
+        MeanAnomaly = CalculateMeanAnomaly();
         if (MeanAnomaly >= 0f)
         {
             UpdateEccentricAnomaly();
             transform.position = RotateVertex(CalculateOrbitalPosition(), ArgumentOfPeriapsis);
+            deterministicVelocity = CalculateVelocityFromMeanMotion();
         }
-        else
-        {
-            UpdatePositionIteratively();
-        }
-            
-            
-        /*
-        float actualX = temp.x * Mathf.Cos(ArgumentOfPeriapsis) - temp.y * Mathf.Sin(ArgumentOfPeriapsis);
-        float actualY = temp.y * Mathf.Sin(ArgumentOfPeriapsis) + temp.x * Mathf.Sin(ArgumentOfPeriapsis);
-        Debug.Log("calcX: " + actualX + ", calcY: " + actualY);
-        Debug.Log("actuX: " + transform.position.x + ", actuy: " + transform.position.y);
         
-        float trueAnomaly = CalculateTrueAnomaly();
-        OrbitalPosition = new Vector2(SemimajorAxis * Mathf.Cos(trueAnomaly), SemiminorAxis * Mathf.Sin(trueAnomaly));
-        Debug.Log(CalculateVelocityFromOrbitalParameters());
-        transform.position = TransformByGravitationalSourcePoint(OrbitalPosition);
-        */
-        //body.velocity = CalculateVelocityFromOrbitalParameters();
     }
 
-    private void UpdatePositionIteratively()
+    #endregion DETERMINISTIC
+
+    #region ITERATIVE
+    // Basically, rigidbody.iskinematic = false;
+    private void UpdateIteratively()
     {
-        if (CurrentGravitySource == null)
+        //Add other forces. Collisions?
+        if (nonGravitationalForces.Count == 0 && currentTrajectoryType == TrajectoryType.Ellipse)
+        {
+            nonGravitationalForcesAdded = false;
+            SwitchToDeterministicUpdate();
             return;
+        }
 
         Vector2 gravitationalForce = CurrentGravitySource.CalculateGravitationalForceAtPosition(transform.position, Mass);
         body.AddForce(gravitationalForce);
-
-        //Add other forces. Collisions?
         ApplyNonGravitationalForces();
     }
+    #endregion ITERATIVE
 
+    #region PHYSICS
     public void CalculateOrbitalParameters()
     {
         // This should only be called from the iterative update method and only once before switching to trajectory update.
@@ -351,15 +338,22 @@ public abstract class GravityAffected : MonoBehaviour
         SemimajorAxis = CalculateSemimajorAxis();
         SemiminorAxis = CalculateSemiminorAxis();
         SpecificOrbitalEnergy = CalculateSpecificOrbitalEnergy();
+        ArgumentOfPeriapsis = CalculateArgumentOfPeriapse();
 
+
+        //Deterministic Params
+        InitializeDeterministicParameters();
+    }
+    
+    public void InitializeDeterministicParameters()
+    {
         TimeSinceEpoch = 0f;
         MeanMotion = CalculateMeanMotion();
         OrbitalPeriod = CalculateOrbitalPeriod();
         EccentricAnomaly = CalculateEccentricAnomalyAtEpoch();
         MeanAnomalyAtEpoch = CalculateMeanAnomalyAtEpoch();
         MeanAnomaly = MeanAnomalyAtEpoch;
-        ArgumentOfPeriapsis = CalculateArgumentOfPeriapse();
-
+        deterministicVelocity = CalculateVelocityFromMeanMotion();
     }
 
     public Vector2 CalculateVelocityFromOrbitalParameters()
@@ -455,7 +449,7 @@ public abstract class GravityAffected : MonoBehaviour
     }
     public float CalculateEccentricAnomalyAtEpoch()
     {
-        return Mathf.Acos((-1f / Eccentricity) * ((SourceDistance / SemimajorAxis) - 1f));
+        return Mathf.Acos(Mathf.Clamp((-1f / Eccentricity) * ((SourceDistance / SemimajorAxis) - 1f), -1f, 1f));
     }
 
     public float CalculateMeanAnomalyAtEpoch()
@@ -468,17 +462,21 @@ public abstract class GravityAffected : MonoBehaviour
         return Mathf.Sqrt(StandardGravityParameter / Mathf.Pow(SemimajorAxis, 3));
     }
 
-    public Vector2 CalculateVelocity()
+    public Vector2 CalculateVelocityFromMeanMotion()
     {
         float deltaE = MeanMotion / (1f - (Eccentricity * Mathf.Cos(EccentricAnomaly)));
         return new Vector2(-Mathf.Sin(EccentricAnomaly), Mathf.Cos(EccentricAnomaly) * Mathf.Sqrt(1-Mathf.Pow(Eccentricity, 2))) * SemimajorAxis * deltaE;
     }
 
-    public void UpdateMeanAnomaly()
+    public float CalculateTimeSinceEpoch()
     {
         var time = (TimeSinceEpoch + Time.deltaTime) % OrbitalPeriod;
-        TimeSinceEpoch = time; //Fixed delta time??
-        MeanAnomaly = MeanAnomalyAtEpoch + MeanMotion * TimeSinceEpoch;
+        return time; //Fixed delta time??
+    }
+
+    public float CalculateMeanAnomaly()
+    {
+        return MeanAnomalyAtEpoch + MeanMotion * TimeSinceEpoch;
     }
 
     public void UpdateEccentricAnomaly()
@@ -510,7 +508,7 @@ public abstract class GravityAffected : MonoBehaviour
     public void AddExternalForce(Vector2 forceVector)
     {
         nonGravitationalForcesAdded = true;
-        nonGravitationalForces.Add(forceVector);
+        nonGravitationalForces.Add(forceVector);   
     }
 
     private void ApplyNonGravitationalForces()
@@ -520,7 +518,6 @@ public abstract class GravityAffected : MonoBehaviour
             body.AddForce(nonGravitationalForces[i]);
         }
         nonGravitationalForces.Clear();
-        nonGravitationalForcesAdded = false;
     }
     #endregion PHYSICS
 }
