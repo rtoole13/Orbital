@@ -41,7 +41,13 @@ public abstract class GravityAffected : MonoBehaviour
     private float lastTime;
     private float currentTime;
     private float dt;
-    private Vector2 lastEpochPos;
+
+    //GIZMOS VARS
+    private Vector2 lastEpochPos = Vector2.zero;
+    private Vector2 currentEpochPosition = Vector2.zero;
+    private bool canUpdateEpochs = true;
+    private float elapsedEpochTime = 0f;
+
     #region GETSET
     public float Mass {
         get { return _mass; }
@@ -351,11 +357,10 @@ public abstract class GravityAffected : MonoBehaviour
             InitializeDeterministicParameters();
             Debug.Log("OrbitalPeriod: " + OrbitalPeriod);
         }
-        if (Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButton(1))
         {
             CalculateOrbitalParameters();
             InitializeDeterministicParameters();
-            Debug.Log("OrbitalPeriod: " + OrbitalPeriod);
         }
         TimeSinceEpoch = CalculateTimeSinceEpoch();
         MeanAnomaly = CalculateMeanAnomaly();
@@ -368,7 +373,6 @@ public abstract class GravityAffected : MonoBehaviour
             deterministicVelocity = CalculateVelocityFromMeanMotion();
             */
             //Debug.Log(SemimajorAxis);
-            Debug.Log(TimeSinceEpoch);
         }
         
         //Debug.Log("Body: " + body.velocity);
@@ -554,10 +558,21 @@ public abstract class GravityAffected : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        Gizmos.DrawCube(lastEpochPos, new Vector3(1f, 1f, 1f));
-        if (TimeSinceEpoch > 0 && TimeSinceEpoch < 0.25)
+        Gizmos.color = Color.red;
+        Gizmos.DrawCube(lastEpochPos, new Vector3(.5f, .5f, .5f));
+        Gizmos.color = Color.green;
+        Gizmos.DrawCube(currentEpochPosition, new Vector3(.5f, .5f, .5f));
+        float updateInterval = 0.05f;
+        if (TimeSinceEpoch > 0 && TimeSinceEpoch < updateInterval && canUpdateEpochs)
         {
-            
+            Debug.Log("Epoch!");
+            lastEpochPos = new Vector2(currentEpochPosition.x, currentEpochPosition.y);
+            currentEpochPosition = new Vector2(body.position.x, body.position.y);
+            canUpdateEpochs = false;
+            elapsedEpochTime = 0f;
         }
+        elapsedEpochTime += dt;
+        if (elapsedEpochTime > updateInterval + 1f)
+            canUpdateEpochs = true;
     }
 }
