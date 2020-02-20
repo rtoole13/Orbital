@@ -27,8 +27,7 @@ public class TrajectoryPlotter : MonoBehaviour
     }
     public float SemiminorAxis
     {
-        get { return _semiminorAxis; }
-        private set { _semiminorAxis = value; }
+        get { return orbitalBody.SemiminorAxis; }
     }
     #endregion GETSET
 
@@ -50,12 +49,10 @@ public class TrajectoryPlotter : MonoBehaviour
 
     private void BuildEllipse()
     {
-        SemiminorAxis = CalculateSemiminorAxis();
-        if ((orbitalBody.SemimajorAxis < orbitalBody.CurrentGravitySource.Radius) || (SemiminorAxis < orbitalBody.CurrentGravitySource.Radius)){
+        if ((SemimajorAxis < orbitalBody.CurrentGravitySource.Radius) || (SemiminorAxis < orbitalBody.CurrentGravitySource.Radius)){
             //Ignoring when on surface-ish
             return;
         }
-
         Vector3[] points = new Vector3[segments + 1];
         for (int i = 0; i < segments; i++)
         {
@@ -106,9 +103,9 @@ public class TrajectoryPlotter : MonoBehaviour
     {
         if (orbitalBody == null || orbitalBody.CurrentGravitySource == null)
             return;
-
+        float baryCenterDistance = SemimajorAxis / (1f + orbitalBody.CurrentGravitySource.Mass / orbitalBody.Mass);
         Gizmos.color = Color.green;
-        Gizmos.DrawRay(Vector3.zero, SemimajorAxis * (1f - orbitalBody.Eccentricity) * orbitalBody.EccentricityVector);
+        Gizmos.DrawRay(Vector3.zero, SemimajorAxis * (1f - orbitalBody.Eccentricity) * orbitalBody.EccentricityVector.normalized);
         
     }
     #endregion GIZMOS
