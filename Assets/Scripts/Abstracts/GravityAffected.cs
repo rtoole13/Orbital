@@ -47,6 +47,7 @@ public abstract class GravityAffected : MonoBehaviour
     private Vector2 currentEpochPosition = Vector2.zero;
     private bool canUpdateEpochs = true;
     private float elapsedEpochTime = 0f;
+    private Vector2 trajectoryPosition = Vector2.zero;
 
     #region GETSET
     public float Mass {
@@ -367,6 +368,7 @@ public abstract class GravityAffected : MonoBehaviour
         if (MeanAnomaly >= 0f)
         {
             UpdateEccentricAnomaly();
+            trajectoryPosition = RotateVertex(CalculateOrbitalPosition(), ArgumentOfPeriapsis);
             /*
             Debug.Log("Body: " + body.position);
             Debug.Log("Calculated:" + RotateVertex(CalculateOrbitalPosition(), ArgumentOfPeriapsis));
@@ -574,5 +576,8 @@ public abstract class GravityAffected : MonoBehaviour
         elapsedEpochTime += dt;
         if (elapsedEpochTime > updateInterval + 1f)
             canUpdateEpochs = true;
+
+        Gizmos.color = Color.blue;
+        Gizmos.DrawCube(trajectoryPosition, new Vector3(.5f, .5f, .5f));
     }
 }
