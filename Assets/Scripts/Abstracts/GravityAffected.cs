@@ -23,7 +23,7 @@ public abstract class GravityAffected : MonoBehaviour
     private float _eccentricAnomaly;
     private float _meanMotion;
     private float _timeSinceEpoch;
-
+    
     private List<Vector2> nonGravitationalForces;
     private enum TrajectoryType
     {
@@ -37,6 +37,7 @@ public abstract class GravityAffected : MonoBehaviour
 
     protected bool nonGravitationalForcesAdded = true;
     protected bool determineTrajectory = false;
+
 
     private float lastTime;
     private float currentTime;
@@ -327,7 +328,7 @@ public abstract class GravityAffected : MonoBehaviour
         if (MeanAnomaly >= 0f)
         {
             UpdateEccentricAnomaly();
-            transform.position = RotateVertex(CalculateOrbitalPosition(), ArgumentOfPeriapsis);
+            transform.position = RotateVertex(CalculateOrbitalPosition(CalculateTrueAnomaly()), ArgumentOfPeriapsis);
             deterministicVelocity = CalculateVelocityFromMeanMotion();
         }
         
@@ -356,7 +357,6 @@ public abstract class GravityAffected : MonoBehaviour
         {
             CalculateOrbitalParameters();
             InitializeDeterministicParameters();
-            Debug.Log("OrbitalPeriod: " + OrbitalPeriod);
         }
         if (Input.GetMouseButton(1))
         {
@@ -368,7 +368,8 @@ public abstract class GravityAffected : MonoBehaviour
         if (MeanAnomaly >= 0f)
         {
             UpdateEccentricAnomaly();
-            trajectoryPosition = RotateVertex(CalculateOrbitalPosition(), ArgumentOfPeriapsis);
+
+            trajectoryPosition = RotateVertex(CalculateOrbitalPosition(CalculateTrueAnomaly()), ArgumentOfPeriapsis);
             /*
             Debug.Log("Body: " + body.position);
             Debug.Log("Calculated:" + RotateVertex(CalculateOrbitalPosition(), ArgumentOfPeriapsis));
@@ -399,7 +400,8 @@ public abstract class GravityAffected : MonoBehaviour
         TimeSinceEpoch = 0f;
         MeanMotion = CalculateMeanMotion();
         OrbitalPeriod = CalculateOrbitalPeriod();
-        EccentricAnomaly = CalculateEccentricAnomalyAtEpoch();
+        EccentricAnomaly = CalculateEccentricAnomalyAtEpochFromStateVectors();
+        Debug.Log(EccentricAnomaly);
         MeanAnomalyAtEpoch = CalculateMeanAnomalyAtEpoch();
         MeanAnomaly = MeanAnomalyAtEpoch;
         deterministicVelocity = CalculateVelocityFromMeanMotion();
@@ -471,6 +473,24 @@ public abstract class GravityAffected : MonoBehaviour
         float sinNu = Mathf.Sqrt(1f - Mathf.Pow(Eccentricity, 2)) * Mathf.Sin(EccentricAnomaly);
         float cosNu = Mathf.Cos(EccentricAnomaly) - Eccentricity;
         float nu = Mathf.Atan2(sinNu, cosNu);
+
+        if (SpecificRelativeAngularMomentum.z < 0f)
+            nu = 2 * Mathf.PI - nu; //CW orbit when switched from iterative
+
+        // move [-pi, pi] range to [0, 2pi]
+        float twoPi = 2f * Mathf.PI;
+        nu = (nu + twoPi) % twoPi; //FIXME Shouldn't work in the CW orbit case
+        return nu;
+    }
+
+    public float CalculateTrueAnomalyFromStateVectors()
+    {
+        float nu = Mathf.Acos(Vector2.Dot(EccentricityVector, SourceRelativePosition)/(Eccentricity * SourceDistance));
+
+        if (Vector2.Dot(SourceRelativePosition, SourceRelativeVelocity) < 0f)
+        {
+            nu = 2 * Mathf.PI - nu;
+        }
         return nu;
     }
 
@@ -479,14 +499,41 @@ public abstract class GravityAffected : MonoBehaviour
         return 2 * Mathf.PI / MeanMotion;
     }
 
-    public Vector2 CalculateOrbitalPosition()
+    public float CalculateOrbitalRadius(float trueAnomaly)
     {
-        return new Vector2(Mathf.Cos(EccentricAnomaly) - Eccentricity, Mathf.Sin(EccentricAnomaly) * Mathf.Sqrt(1 - Mathf.Pow(Eccentricity, 2))) * SemimajorAxis;
+        float num = 1f - Mathf.Pow(Eccentricity, 2);
+        float denom = 1f + (Eccentricity * Mathf.Cos(trueAnomaly));
+
+        return SemimajorAxis * num / denom; 
+    }
+
+    public Vector2 CalculateOrbitalPosition(float trueAnomaly)
+    {
+        //position in both cases is identical
+
+        //From TrueAnomaly -> radius -> Cartesian
+        float orbitalRadius = CalculateOrbitalRadius(trueAnomaly);
+
+        //Convert to polar coordinates
+        return orbitalRadius * new Vector2(Mathf.Cos(trueAnomaly), Mathf.Sin(trueAnomaly));
+
+        //FROM EccentricAnomaly directly to Cartesian
+        //return new Vector2(Mathf.Cos(EccentricAnomaly) - Eccentricity, Mathf.Sin(EccentricAnomaly) * Mathf.Sqrt(1 - Mathf.Pow(Eccentricity, 2))) * SemimajorAxis; 
 
     }
+
     public float CalculateEccentricAnomalyAtEpoch()
     {
         return Mathf.Acos(Mathf.Clamp((-1f / Eccentricity) * ((SourceDistance / SemimajorAxis) - 1f), -1f, 1f));
+    }
+
+    public float CalculateEccentricAnomalyAtEpochFromStateVectors() //What a mouthful
+    {
+        float trueAnomaly = CalculateTrueAnomalyFromStateVectors();
+        float E = Mathf.Atan2(Mathf.Sqrt(1 - Mathf.Pow(Eccentricity, 2)) * Mathf.Sin(trueAnomaly), Eccentricity + Mathf.Cos(trueAnomaly));
+
+        float modulus = 2f * Mathf.PI;
+        return E - (modulus * Mathf.Floor(E/modulus)); //FIXME: PROPER MODULUS OPERATOR -- MAKE GENERIC
     }
 
     public float CalculateMeanAnomalyAtEpoch()
