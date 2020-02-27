@@ -58,21 +58,10 @@ public class TrajectoryPlotter : MonoBehaviour
         {
             float angle = ((float)i / (float)segments) * 2 * Mathf.PI;
             Vector3 vertex = new Vector3(Mathf.Sin(angle) * SemimajorAxis, Mathf.Cos(angle) * SemiminorAxis, 0);
-            if (orbitalBody.SpecificRelativeAngularMomentum.z < 0)
-            {
-                //WORKS REAL GOOD
-                points[i] = TranslateVector(vertex, new Vector3(-orbitalBody.Eccentricity * SemimajorAxis * Mathf.Cos(orbitalBody.ArgumentOfPeriapsis), 
-                                                                -orbitalBody.Eccentricity * SemimajorAxis * Mathf.Sin(orbitalBody.ArgumentOfPeriapsis), 0));
-            }
-            else
-            {
-                points[i] = TranslateVector(vertex, new Vector3(-orbitalBody.Eccentricity * SemimajorAxis * Mathf.Cos(orbitalBody.ArgumentOfPeriapsis), 
-                                                                -orbitalBody.Eccentricity * SemimajorAxis * Mathf.Sin(orbitalBody.ArgumentOfPeriapsis), 0));
-            }
-            
-            //points[i] = RotateVertex(vertex, orbitalBody.ArgumentOfPeriapsis);
+            vertex = TranslateVector(vertex, new Vector3(-SemimajorAxis * orbitalBody.Eccentricity, 0, 0));
+            points[i] = RotateVertex(vertex, orbitalBody.ArgumentOfPeriapsis);
         }
-
+        Debug.Log(Mathf.Rad2Deg * orbitalBody.ArgumentOfPeriapsis);
         points[segments] = points[0];
         lineRenderer.positionCount = segments + 1;
         lineRenderer.SetPositions(points);
@@ -103,7 +92,6 @@ public class TrajectoryPlotter : MonoBehaviour
     {
         if (orbitalBody == null || orbitalBody.CurrentGravitySource == null)
             return;
-        float baryCenterDistance = SemimajorAxis / (1f + orbitalBody.CurrentGravitySource.Mass / orbitalBody.Mass);
         Gizmos.color = Color.green;
         Gizmos.DrawRay(Vector3.zero, SemimajorAxis * (1f - orbitalBody.Eccentricity) * orbitalBody.EccentricityVector.normalized);
         

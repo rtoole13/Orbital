@@ -234,7 +234,7 @@ public abstract class GravityAffected : MonoBehaviour
     private void Start()
     {
         nonGravitationalForces = new List<Vector2>();
-        body.velocity = new Vector2(0, 5f);
+        body.velocity = new Vector2(-6f, 0);
 
         lastTime = Time.time;
         currentTime = lastTime;
