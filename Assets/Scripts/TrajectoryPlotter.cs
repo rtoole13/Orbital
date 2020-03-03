@@ -59,7 +59,7 @@ public class TrajectoryPlotter : MonoBehaviour
             float angle = ((float)i / (float)segments) * 2 * Mathf.PI;
             Vector3 vertex = new Vector3(Mathf.Sin(angle) * SemimajorAxis, Mathf.Cos(angle) * SemiminorAxis, 0);
             vertex = TranslateVector(vertex, new Vector3(-SemimajorAxis * orbitalBody.Eccentricity, 0, 0));
-            points[i] = RotateVertex(vertex, orbitalBody.ArgumentOfPeriapsis);
+            points[i] = RotateVertex(vertex, orbitalBody.ArgumentOfPeriapsis) + orbitalBody.CurrentGravitySource.transform.position;
         }
         points[segments] = points[0];
         lineRenderer.positionCount = segments + 1;
@@ -92,7 +92,7 @@ public class TrajectoryPlotter : MonoBehaviour
         if (orbitalBody == null || orbitalBody.CurrentGravitySource == null)
             return;
         Gizmos.color = Color.green;
-        Gizmos.DrawRay(Vector3.zero, SemimajorAxis * (1f - orbitalBody.Eccentricity) * orbitalBody.EccentricityVector.normalized);
+        Gizmos.DrawRay(orbitalBody.CurrentGravitySource.transform.position, SemimajorAxis * (1f - orbitalBody.Eccentricity) * orbitalBody.EccentricityVector.normalized);
         
     }
     #endregion GIZMOS

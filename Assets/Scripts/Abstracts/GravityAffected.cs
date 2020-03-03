@@ -23,6 +23,7 @@ public abstract class GravityAffected : MonoBehaviour
     private float _eccentricAnomaly;
     private float _meanMotion;
     private float _timeSinceEpoch;
+    private float _hillRadius; // FIXME: Current hill radius. If extend beyond this, gravitySource drops back to parent gravity source.
     
     private List<Vector2> nonGravitationalForces;
     private enum TrajectoryType
@@ -325,7 +326,7 @@ public abstract class GravityAffected : MonoBehaviour
         if (MeanAnomaly >= 0f)
         {
             UpdateEccentricAnomaly();
-            transform.position = RotateVertex(CalculateOrbitalPosition(CalculateTrueAnomaly()), ArgumentOfPeriapsis);
+            transform.position = RotateVertex(CalculateOrbitalPosition(CalculateTrueAnomaly()), ArgumentOfPeriapsis) + (Vector2)CurrentGravitySource.transform.position; 
             deterministicVelocity = CalculateVelocityFromMeanMotion();
         }
         
@@ -366,7 +367,7 @@ public abstract class GravityAffected : MonoBehaviour
         {
             UpdateEccentricAnomaly();
 
-            trajectoryPosition = RotateVertex(CalculateOrbitalPosition(CalculateTrueAnomaly()), ArgumentOfPeriapsis);
+            trajectoryPosition = RotateVertex(CalculateOrbitalPosition(CalculateTrueAnomaly()), ArgumentOfPeriapsis) + (Vector2)CurrentGravitySource.transform.position;
         }
     }
     #endregion ITERATIVE
@@ -545,9 +546,15 @@ public abstract class GravityAffected : MonoBehaviour
 
     public void UpdateEccentricAnomaly()
     {
+        int maxIter = 6;
+        int currentIter = 0;
         float E = MeanAnomaly;
         while (true)
         {
+            currentIter += 1;
+            if (currentIter > maxIter)
+                break;
+
             float deltaE = (E - Eccentricity * Mathf.Sin(E) - MeanAnomaly) / (1f - Eccentricity * Mathf.Cos(E));
             E -= deltaE;
             if (Mathf.Abs(deltaE) < 1e-6)
@@ -594,8 +601,8 @@ public abstract class GravityAffected : MonoBehaviour
         float updateInterval = 0.05f;
         if (TimeSinceEpoch > 0 && TimeSinceEpoch < updateInterval && canUpdateEpochs)
         {
-            lastEpochPos = new Vector2(currentEpochPosition.x, currentEpochPosition.y);
-            currentEpochPosition = new Vector2(body.position.x, body.position.y);
+            lastEpochPos = new Vector2(currentEpochPosition.x, currentEpochPosition.y) + (Vector2)CurrentGravitySource.transform.position;
+            currentEpochPosition = new Vector2(body.position.x, body.position.y) + (Vector2)CurrentGravitySource.transform.position;
             canUpdateEpochs = false;
             elapsedEpochTime = 0f;
         }
