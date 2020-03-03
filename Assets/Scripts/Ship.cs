@@ -5,8 +5,15 @@ using UnityEngine;
 public class Ship : GravityAffected
 {
     public float clickForce = 1f;
+    public Vector2 startVelocity;
 
     #region UNITY
+    protected override void Start()
+    {
+        base.Start();
+        body.velocity = startVelocity;
+    }
+
     protected override void Update()
     {
         if (Input.GetMouseButton(0))

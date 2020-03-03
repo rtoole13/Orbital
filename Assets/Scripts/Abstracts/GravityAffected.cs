@@ -31,10 +31,10 @@ public abstract class GravityAffected : MonoBehaviour
         Hyperbola = 1
     }
     private TrajectoryType currentTrajectoryType;
-    private Rigidbody2D body;
     private bool updateIteratively = true;
     private Vector2 deterministicVelocity;
 
+    protected Rigidbody2D body;
     protected bool nonGravitationalForcesAdded = true;
     protected bool determineTrajectory = false;
 
@@ -227,14 +227,11 @@ public abstract class GravityAffected : MonoBehaviour
     private void Awake()
     {
         body = GetComponent<Rigidbody2D>();
-        
-        
     }
 
-    private void Start()
+    protected virtual void Start()
     {
         nonGravitationalForces = new List<Vector2>();
-        body.velocity = new Vector2(-6f, 0);
 
         lastTime = Time.time;
         currentTime = lastTime;
@@ -370,16 +367,7 @@ public abstract class GravityAffected : MonoBehaviour
             UpdateEccentricAnomaly();
 
             trajectoryPosition = RotateVertex(CalculateOrbitalPosition(CalculateTrueAnomaly()), ArgumentOfPeriapsis);
-            /*
-            Debug.Log("Body: " + body.position);
-            Debug.Log("Calculated:" + RotateVertex(CalculateOrbitalPosition(), ArgumentOfPeriapsis));
-            deterministicVelocity = CalculateVelocityFromMeanMotion();
-            */
-            //Debug.Log(SemimajorAxis);
         }
-        
-        //Debug.Log("Body: " + body.velocity);
-        //Debug.Log("Calculated: " + RotateVertex(deterministicVelocity, -ArgumentOfPeriapsis));
     }
     #endregion ITERATIVE
 
@@ -401,7 +389,6 @@ public abstract class GravityAffected : MonoBehaviour
         MeanMotion = CalculateMeanMotion();
         OrbitalPeriod = CalculateOrbitalPeriod();
         EccentricAnomaly = CalculateEccentricAnomalyAtEpochFromStateVectors();
-        Debug.Log(EccentricAnomaly);
         MeanAnomalyAtEpoch = CalculateMeanAnomalyAtEpoch();
         MeanAnomaly = MeanAnomalyAtEpoch;
         deterministicVelocity = CalculateVelocityFromMeanMotion();
@@ -436,14 +423,7 @@ public abstract class GravityAffected : MonoBehaviour
 
     public float CalculateArgumentOfPeriapse()
     {
-        float omega = Mathf.Atan2(EccentricityVector.y, EccentricityVector.x);
-        
-        if (SpecificRelativeAngularMomentum.z < 0)
-        {
-            return 2*Mathf.PI - omega;
-        }
-        
-        return omega;
+        return Mathf.Atan2(EccentricityVector.y, EccentricityVector.x);
     }
 
     public float CalculateSemimajorAxis()
@@ -614,7 +594,6 @@ public abstract class GravityAffected : MonoBehaviour
         float updateInterval = 0.05f;
         if (TimeSinceEpoch > 0 && TimeSinceEpoch < updateInterval && canUpdateEpochs)
         {
-            Debug.Log("Epoch!");
             lastEpochPos = new Vector2(currentEpochPosition.x, currentEpochPosition.y);
             currentEpochPosition = new Vector2(body.position.x, body.position.y);
             canUpdateEpochs = false;

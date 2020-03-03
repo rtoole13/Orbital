@@ -61,7 +61,6 @@ public class TrajectoryPlotter : MonoBehaviour
             vertex = TranslateVector(vertex, new Vector3(-SemimajorAxis * orbitalBody.Eccentricity, 0, 0));
             points[i] = RotateVertex(vertex, orbitalBody.ArgumentOfPeriapsis);
         }
-        Debug.Log(Mathf.Rad2Deg * orbitalBody.ArgumentOfPeriapsis);
         points[segments] = points[0];
         lineRenderer.positionCount = segments + 1;
         lineRenderer.SetPositions(points);
