@@ -584,7 +584,7 @@ public abstract class GravityAffected : MonoBehaviour
         nonGravitationalForces.Clear();
     }
     #endregion PHYSICS
-
+    
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
