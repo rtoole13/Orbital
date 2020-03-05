@@ -11,6 +11,7 @@ public static class OrbitalMechanics
     {
         return GRAVITATIONALCONSTANT * (massA + massB);
     }
+
     #endregion GENERAL
 
     #region STATEVECTORS
@@ -212,35 +213,4 @@ public static class OrbitalMechanics
         return E;
     }
     #endregion ORBITALELEMENTS
-
-    /*
-
-    private Vector2 RotateVertex(Vector2 vertex, float angle)
-    {
-        return new Vector2(vertex.x * Mathf.Cos(angle) - vertex.y * Mathf.Sin(angle),
-                       vertex.x * Mathf.Sin(angle) + vertex.y * Mathf.Cos(angle));
-    }
-
-    private Vector2 TransformByGravitationalSourcePoint(Vector2 position)
-    {
-        position = RotateVertex(position, ArgumentOfPeriapsis);
-        Vector2 offset = new Vector2(Mathf.Cos(ArgumentOfPeriapsis), Mathf.Sin(ArgumentOfPeriapsis)) * -1f * Eccentricity * SemimajorAxis;
-        return position + offset;
-    }
-
-    public void AddExternalForce(Vector2 forceVector)
-    {
-        nonGravitationalForcesAdded = true;
-        nonGravitationalForces.Add(forceVector);
-    }
-
-    private void ApplyNonGravitationalForces()
-    {
-        for (int i = 0; i < nonGravitationalForces.Count; i++)
-        {
-            body.AddForce(nonGravitationalForces[i]);
-        }
-        nonGravitationalForces.Clear();
-    }
-    */
 }

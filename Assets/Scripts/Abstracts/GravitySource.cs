@@ -15,6 +15,10 @@ public abstract class GravitySource : MonoBehaviour, IGravitySource
         private set { _mass = value; }
     }
 
+    public Vector2 Position
+    {
+        get { return (Vector2)transform.position; }
+    }
     public Vector3 Velocity
     {
         get { return new Vector3(body.velocity.x, body.velocity.y, 0f); }
