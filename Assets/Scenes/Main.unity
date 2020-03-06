@@ -159,9 +159,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3474b03c717ffc54e89f43d2ad93d72b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  zoomMultiplier: 4
+  trackingDeltaDistance: 0.075
+  zoomDeltaDistance: 2
   cameraSizeMin: 5
   cameraSizeMax: 100
-  currentTarget: {fileID: 703178207}
 --- !u!20 &519420031
 Camera:
   m_ObjectHideFlags: 0
