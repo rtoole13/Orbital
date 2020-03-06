@@ -164,6 +164,7 @@ MonoBehaviour:
   zoomDeltaDistance: 2
   cameraSizeMin: 5
   cameraSizeMax: 100
+  currentTarget: {fileID: 1908100511}
 --- !u!20 &519420031
 Camera:
   m_ObjectHideFlags: 0
