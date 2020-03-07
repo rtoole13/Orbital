@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Collider2D), typeof(Rigidbody2D))]
-public abstract class GravityAffected : MonoBehaviour, ICameraTrackable
+public abstract class GravityAffected : MonoBehaviour
 {
     [SerializeField]
-    private float _mass = 1.0f;
-    private GravitySource _gravitySource;
+    protected float _mass = 1.0f;
+
+    [SerializeField]
+    private GravitySource _gravitySource; //UNDO this asap
     private Vector3 _specificRelativeAngularMomentum;
     private Vector3 _eccentricityVector;
     private Vector2 _orbitalPosition;
@@ -225,21 +227,15 @@ public abstract class GravityAffected : MonoBehaviour, ICameraTrackable
     #endregion GETSET
 
     #region UNITY
-    private void Awake()
+    protected virtual void Awake()
     {
         body = GetComponent<Rigidbody2D>();
         nonGravitationalForces = new List<Vector2>();
     }
 
-    protected virtual void Start()
-    {
-        
-    }
+    protected virtual void Start(){}
 
-    protected virtual void Update()
-    {
-        
-    }
+    protected virtual void Update(){}
 
     protected void FixedUpdate()
     {
@@ -257,7 +253,7 @@ public abstract class GravityAffected : MonoBehaviour, ICameraTrackable
         }
 
     }
-
+    /*
     private void OnTriggerEnter2D(Collider2D collider)
     {
         IGravitySource source = collider.gameObject.GetComponent<IGravitySource>();
@@ -271,11 +267,10 @@ public abstract class GravityAffected : MonoBehaviour, ICameraTrackable
         CurrentGravitySource = null;
         source.RemoveAffectedBody(this);
     }
-
+    */
     private void OnCollisionStay2D(Collision2D collision)
     {
         // On Collision w/ an object, stop deterministic trajectory update (normal force)
-        Debug.Log("Collision!");
         SwitchToIterativeUpdate();
     }
 
@@ -323,7 +318,6 @@ public abstract class GravityAffected : MonoBehaviour, ICameraTrackable
             transform.position = OrbitalPositionToWorld(OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly));
             deterministicVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
         }
-        
     }
 
     #endregion DETERMINISTIC
@@ -341,9 +335,9 @@ public abstract class GravityAffected : MonoBehaviour, ICameraTrackable
             return;
         }
         */
-
         Vector2 gravitationalForce = CurrentGravitySource.CalculateGravitationalForceAtPosition(transform.position, Mass);
         body.AddForce(gravitationalForce);
+        
         ApplyNonGravitationalForces();
         if (Input.GetMouseButtonUp(0))
         {
@@ -407,6 +401,7 @@ public abstract class GravityAffected : MonoBehaviour, ICameraTrackable
         nonGravitationalForces.Clear();
     }
     #endregion PHYSICS
+
     #region GENERAL
     private Vector2 OrbitalPositionToWorld(Vector2 orbitalPosition)
     {

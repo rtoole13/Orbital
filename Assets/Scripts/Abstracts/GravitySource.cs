@@ -3,33 +3,23 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(CircleCollider2D), typeof(Rigidbody2D))]
-public abstract class GravitySource : MonoBehaviour, IGravitySource, ICameraTrackable
+public abstract class GravitySource : GravityAffected
 {
-    [SerializeField]
-    private float _mass = 5.0f;
-    private Rigidbody2D body;
+    private CircleCollider2D bodyCollider;
+    private List<GravityAffected> gravityAffectedObjects = new List<GravityAffected>();
 
-    public float Mass
-    {
-        get { return _mass; }
-        private set { _mass = value; }
-    }
+    public Vector2 startVelocity;
+    #region GETSET
 
     public Vector2 Position
     {
         get { return (Vector2)transform.position; }
     }
+
     public Vector3 Velocity
     {
         get { return new Vector3(body.velocity.x, body.velocity.y, 0f); }
     }
-
-    public readonly float GRAVITYCONSTRANT = 1.0f;
-    //public float GRAVITYCONSTRANT = 1.0f;
-
-    private CircleCollider2D gravityCollider;
-    private CircleCollider2D bodyCollider;
-    private List<GravityAffected> gravityAffectedObjects = new List<GravityAffected>(); 
 
     public float Radius
     {
@@ -38,31 +28,33 @@ public abstract class GravitySource : MonoBehaviour, IGravitySource, ICameraTrac
             return bodyCollider.radius;
         }
     }
-    private void Awake()
+    #endregion GETSET
+
+    protected override void Awake()
     {
+        
+        base.Awake();
         // Get gravityCollider
         CircleCollider2D[] colliders = GetComponents<CircleCollider2D>();
         for (int i = 0; i < colliders.Length; i++)
         {
             CircleCollider2D collider = colliders[i];
-            if (collider.isTrigger)
-            {
-                gravityCollider = collider;
-            }
-            else
+            if (!collider.isTrigger)
             {
                 bodyCollider = collider;
             }
         }
-
-        // Get rigidbody
-        body = GetComponent<Rigidbody2D>();
     }
 
-    public Vector2 CalculateGravitationalForceAtPosition(Vector2 position, float mass)
+    protected override void Start()
     {
-        Vector2 distance = (Vector2)gravityCollider.transform.position - position;
-        float forceMagnitude = GRAVITYCONSTRANT * Mass * mass / Vector2.SqrMagnitude(distance);
+        base.Start();
+        body.velocity = startVelocity;
+    }
+    public Vector2 CalculateGravitationalForceAtPosition(Vector2 position, float mass) //DEPRECATED, remove in favor of OrbitalMechanics method
+    {
+        Vector2 distance = (Vector2)bodyCollider.transform.position - position;
+        float forceMagnitude = OrbitalMechanics.GRAVITATIONALCONSTANT * Mass * mass / Vector2.SqrMagnitude(distance);
         Vector2 force = forceMagnitude * distance.normalized;
         return force;
     }
@@ -75,10 +67,5 @@ public abstract class GravitySource : MonoBehaviour, IGravitySource, ICameraTrac
     public void RemoveAffectedBody(GravityAffected body)
     {
         gravityAffectedObjects.Remove(body);
-    }
-
-    public GravitySource GetGravitySource()
-    {
-        return this;
     }
 }

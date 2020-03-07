@@ -12,6 +12,14 @@ public static class OrbitalMechanics
         return GRAVITATIONALCONSTANT * (massA + massB);
     }
 
+    public static Vector2 GravitationalForceAtPosition(this GravitySource gravitySource, Vector2 position, float mass)
+    {
+        Vector2 distance = gravitySource.Position - position;
+        float forceMagnitude = OrbitalMechanics.GRAVITATIONALCONSTANT * gravitySource.Mass * mass / Vector2.SqrMagnitude(distance);
+        Vector2 force = forceMagnitude * distance.normalized;
+        return force;
+    }
+
     #endregion GENERAL
 
     #region STATEVECTORS

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Ship : GravityAffected
+public class Ship : GravityAffected, ICameraTrackable
 {
     public float clickForce = 1f;
     public Vector2 startVelocity;
@@ -11,6 +11,11 @@ public class Ship : GravityAffected
     protected override void Start()
     {
         base.Start();
+        if (CurrentGravitySource != null)
+        {
+            body.velocity = startVelocity + CurrentGravitySource.startVelocity;
+            return;
+        }
         body.velocity = startVelocity;
     }
 
