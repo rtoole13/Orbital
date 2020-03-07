@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Collider2D), typeof(Rigidbody2D))]
-public abstract class GravityAffected : MonoBehaviour
+public abstract class GravityAffected : MonoBehaviour, ICameraTrackable
 {
     [SerializeField]
     private float _mass = 1.0f;

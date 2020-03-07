@@ -165,6 +165,7 @@ MonoBehaviour:
   cameraSizeMin: 5
   cameraSizeMax: 100
   currentTarget: {fileID: 1908100511}
+  doubleClickSelectInterval: 1
 --- !u!20 &519420031
 Camera:
   m_ObjectHideFlags: 0

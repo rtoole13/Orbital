@@ -24,6 +24,11 @@ public class CameraController : MonoBehaviour
 
     [SerializeField]
     private GameObject currentTarget; // Make this an interface, ICameraTrackable
+
+    [SerializeField]
+    private float doubleClickSelectInterval;
+    private float firstClickTime;
+    private bool inDoubleClickRange = false;
     private Camera mainCamera;
     private float targetOrthographicSize;
     private float defaultOrthographicSize;
@@ -47,9 +52,9 @@ public class CameraController : MonoBehaviour
 
     private void HandleMouseInputs()
     {
-        if (Input.GetMouseButton(0))
+        if (Input.GetMouseButtonDown(0))
         {
-            ChangeFocusTarget();
+            HandleLeftClick();
         }
 
         if (Input.GetMouseButtonDown(3))
@@ -62,15 +67,41 @@ public class CameraController : MonoBehaviour
             return;
         targetOrthographicSize = Mathf.Clamp(targetOrthographicSize - (float)Input.mouseScrollDelta.y * zoomMultiplier, cameraSizeMin, cameraSizeMax);
     }
-
-    private void ChangeFocusTarget()
+    private void HandleLeftClick()
     {
-        Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hitInfo))
+        if (!inDoubleClickRange)
         {
-            Debug.Log("wee");
+            inDoubleClickRange = true;
+            IEnumerator doubleClickCoroutine = DoubleClickRange();
+            StartCoroutine(doubleClickCoroutine);
         }
-        
+        else
+        {
+            SelectFocusTarget();
+            inDoubleClickRange = false;
+        }
+    }
+
+    private IEnumerator DoubleClickRange()
+    {
+        // Waits until interval expires, then sets bool back to false   
+        yield return new WaitForSeconds(doubleClickSelectInterval);
+        inDoubleClickRange = false;
+    }
+
+    private void SelectFocusTarget()
+    {
+        RaycastHit2D[] rayHits = Physics2D.GetRayIntersectionAll(mainCamera.ScreenPointToRay(Input.mousePosition));
+        for (int i = 0; i < rayHits.Length; i++)
+        {
+            RaycastHit2D hit = rayHits[i];
+            ICameraTrackable cameraTrackable = hit.collider.GetComponent<ICameraTrackable>();
+            if (hit.collider.isTrigger || cameraTrackable == null)
+            {
+                continue;
+            }
+            currentTarget = hit.collider.gameObject;
+        }
     }
 
     private void ResetOrthographicSize()
