@@ -5,7 +5,11 @@ using UnityEngine;
 public static class OrbitalMechanics
 {
     public static float GRAVITATIONALCONSTANT = 1f;
-
+    public enum TrajectoryType
+    {
+        Ellipse = 0,
+        Hyperbola = 1
+    }
     #region GENERAL
     public static float StandardGravityParameter(float massA, float massB)
     {

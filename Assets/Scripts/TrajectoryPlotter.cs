@@ -6,7 +6,7 @@ using UnityEngine;
 public class TrajectoryPlotter : MonoBehaviour
 {
     LineRenderer lineRenderer;
-    GravityAffected orbitalBody;
+    OrbitalBody orbitalBody;
     private float _semiminorAxis;
     private Vector2 _center;
     private float eccentricityTolerance = 0.05f;
@@ -35,7 +35,7 @@ public class TrajectoryPlotter : MonoBehaviour
     private void Awake()
     {
         lineRenderer = GetComponent<LineRenderer>();
-        orbitalBody = GetComponent<GravityAffected>();
+        orbitalBody = GetComponent<OrbitalBody>();
         //BuildEllipse();
     }
 

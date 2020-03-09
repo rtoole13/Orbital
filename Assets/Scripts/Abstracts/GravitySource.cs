@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(CircleCollider2D), typeof(Rigidbody2D))]
-public abstract class GravitySource : GravityAffected
+public abstract class GravitySource : OrbitalBody
 {
     private CircleCollider2D bodyCollider;
     private List<GravityAffected> gravityAffectedObjects = new List<GravityAffected>();
@@ -51,6 +51,7 @@ public abstract class GravitySource : GravityAffected
         base.Start();
         body.velocity = startVelocity;
     }
+
     public Vector2 CalculateGravitationalForceAtPosition(Vector2 position, float mass) //DEPRECATED, remove in favor of OrbitalMechanics method
     {
         Vector2 distance = (Vector2)bodyCollider.transform.position - position;
