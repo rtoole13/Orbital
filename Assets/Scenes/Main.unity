@@ -367,8 +367,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 220b5a1c1ed8f7044bab621386eb5fa7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mass: 1
   _gravitySource: {fileID: 1908100516}
+  _mass: 1
   clickForce: 2
   startVelocity: {x: 3.85, y: -3.85}
 --- !u!114 &703178213
@@ -672,8 +672,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 697b46c062f14374cb8bd08c44d5cc61, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mass: 125
   _gravitySource: {fileID: 0}
+  _mass: 125
   startVelocity: {x: 0, y: 0}
 --- !u!58 &1739312352
 CircleCollider2D:
@@ -909,6 +909,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 697b46c062f14374cb8bd08c44d5cc61, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mass: 100
   _gravitySource: {fileID: 0}
+  _mass: 100
   startVelocity: {x: 0, y: 0}
