@@ -8,9 +8,8 @@ public class Ship : GravityAffected, ICameraTrackable
     public Vector2 startVelocity;
 
     #region UNITY
-    protected override void Start()
+    private void Start()
     {
-        base.Start();
         if (CurrentGravitySource != null)
         {
             body.velocity = startVelocity + CurrentGravitySource.startVelocity;

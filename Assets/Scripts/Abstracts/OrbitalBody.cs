@@ -218,10 +218,6 @@ public abstract class OrbitalBody : MonoBehaviour
     {
         body = GetComponent<Rigidbody2D>();
     }
-    protected virtual void Start()
-    {
-
-    }
     #endregion UNITY
 
     #region PHYSICS
@@ -246,8 +242,9 @@ public abstract class OrbitalBody : MonoBehaviour
         MeanAnomaly = MeanAnomalyAtEpoch;
         TrueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
         DeterministicVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
+        Debug.Log(OrbitalPositionToWorld(OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly)));
+        Debug.Log(CurrentGravitySource.Velocity);
     }
-
     #endregion PHYSICS
 
     #region GENERAL

@@ -23,9 +23,11 @@ public abstract class GravityAffected : OrbitalBody
         nonGravitationalForces = new List<Vector2>();
     }
 
-    protected virtual void Update(){}
+    protected virtual void Update(){
+        
+    }
 
-    protected void FixedUpdate()
+    private void FixedUpdate()
     {
         if (CurrentGravitySource == null)
             return;

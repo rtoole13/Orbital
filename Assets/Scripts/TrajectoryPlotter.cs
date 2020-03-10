@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(LineRenderer), typeof(GravityAffected))]
+[RequireComponent(typeof(LineRenderer), typeof(OrbitalBody))]
 public class TrajectoryPlotter : MonoBehaviour
 {
     LineRenderer lineRenderer;
