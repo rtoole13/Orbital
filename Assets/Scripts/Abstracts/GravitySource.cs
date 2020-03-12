@@ -15,11 +15,11 @@ public abstract class GravitySource : OrbitalBody
     {
         get { return (Vector2)transform.position; }
     }
-
+    /*
     public Vector3 Velocity
     {
         get { return new Vector3(body.velocity.x, body.velocity.y, 0f); }
-    }
+    }*/
 
     public float Radius
     {
@@ -51,6 +51,7 @@ public abstract class GravitySource : OrbitalBody
         body.velocity = startVelocity;
         if (CurrentGravitySource == null)
             return;
+        body.velocity += CurrentGravitySource.startVelocity;
         CalculateOrbitalParameters();
         CalculateEpochParameters();
     }
@@ -66,7 +67,6 @@ public abstract class GravitySource : OrbitalBody
         {
             EccentricAnomaly = OrbitalMechanics.EccentricAnomaly(MeanAnomaly, Eccentricity, 6);
             TrueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
-            Vector2 position = OrbitalPositionToWorld(OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly));
             transform.position = OrbitalPositionToWorld(OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly));
 
             DeterministicVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);

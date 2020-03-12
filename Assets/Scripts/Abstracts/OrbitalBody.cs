@@ -44,6 +44,13 @@ public abstract class OrbitalBody : MonoBehaviour
         private set { _mass = value; }
     }
 
+    public Vector2 Velocity
+    {
+        get 
+        {
+            return updateIteratively ? body.velocity : DeterministicVelocity;
+        }
+    }
     public float SourceDistance
     {
         get
@@ -78,7 +85,7 @@ public abstract class OrbitalBody : MonoBehaviour
             if (CurrentGravitySource == null)
                 return new Vector3(body.velocity.x, body.velocity.y, 0f);
             Vector3 thisVelocity = new Vector3(body.velocity.x, body.velocity.y, 0f);
-            return thisVelocity - CurrentGravitySource.Velocity;
+            return thisVelocity - (Vector3)CurrentGravitySource.Velocity;
         }
 
     }
@@ -242,8 +249,6 @@ public abstract class OrbitalBody : MonoBehaviour
         MeanAnomaly = MeanAnomalyAtEpoch;
         TrueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
         DeterministicVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
-        Debug.Log(OrbitalPositionToWorld(OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly)));
-        Debug.Log(body.position);
     }
     #endregion PHYSICS
 

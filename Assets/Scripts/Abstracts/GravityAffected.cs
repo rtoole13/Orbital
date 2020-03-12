@@ -16,6 +16,7 @@ public abstract class GravityAffected : OrbitalBody
     private Vector2 lastEpochPos = Vector2.zero;
     private Vector2 trajectoryPosition = Vector2.zero;
 
+    public Vector2 startVelocity;
     #region UNITY
     protected override void Awake()
     {
@@ -23,6 +24,14 @@ public abstract class GravityAffected : OrbitalBody
         nonGravitationalForces = new List<Vector2>();
     }
 
+    private void Start()
+    {
+        body.velocity = startVelocity;
+        if (CurrentGravitySource == null)
+            return;
+        //body.velocity += CurrentGravitySource.startVelocity;
+        SwitchToDeterministicUpdate();
+    }
     protected virtual void Update(){
         
     }
@@ -79,12 +88,8 @@ public abstract class GravityAffected : OrbitalBody
     // Basically, rigidbody.iskinematic = true;
     private void UpdateByTrajectory()
     {
-        if (nonGravitationalForcesAdded)
-        {
-            SwitchToIterativeUpdate();
+        if (CurrentGravitySource == null)
             return;
-        }
-
         TimeSinceEpoch = (TimeSinceEpoch + Time.fixedDeltaTime) % OrbitalPeriod;
         MeanAnomaly = OrbitalMechanics.MeanAnomaly(MeanAnomalyAtEpoch, MeanMotion, TimeSinceEpoch);
         if (MeanAnomaly >= 0f)
@@ -92,6 +97,7 @@ public abstract class GravityAffected : OrbitalBody
             EccentricAnomaly = OrbitalMechanics.EccentricAnomaly(MeanAnomaly, Eccentricity, 6);
             TrueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
             transform.position = OrbitalPositionToWorld(OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly));
+            
             DeterministicVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
         }
     }

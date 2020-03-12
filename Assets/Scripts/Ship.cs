@@ -5,9 +5,10 @@ using UnityEngine;
 public class Ship : GravityAffected, ICameraTrackable
 {
     public float clickForce = 1f;
-    public Vector2 startVelocity;
+    //public Vector2 startVelocity;
 
     #region UNITY
+    /*
     private void Start()
     {
         if (CurrentGravitySource != null)
@@ -17,7 +18,7 @@ public class Ship : GravityAffected, ICameraTrackable
         }
         body.velocity = startVelocity;
     }
-
+    */
     protected override void Update()
     {
         if (Input.GetMouseButton(0))
