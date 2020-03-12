@@ -11,9 +11,9 @@ public static class OrbitalMechanics
         Hyperbola = 1
     }
     #region GENERAL
-    public static float StandardGravityParameter(float massA, float massB)
+    public static float StandardGravityParameter(float mass)
     {
-        return GRAVITATIONALCONSTANT * (massA + massB);
+        return GRAVITATIONALCONSTANT * mass;
     }
 
     public static Vector2 GravitationalForceAtPosition(this GravitySource gravitySource, Vector2 position, float mass)
@@ -32,14 +32,14 @@ public static class OrbitalMechanics
         return Vector3.Cross(relativePosition, relativeVelocity);
     }
 
-    public static Vector3 EccentricityVector(Vector3 relativePosition, Vector3 relativeVelocity, float mainMass, float orbitalMass)
+    public static Vector3 EccentricityVector(Vector3 relativePosition, Vector3 relativeVelocity, float bodyMass)
     {
-        return Vector3.Cross(relativeVelocity, SpecificRelativeAngularMomentum(relativePosition, relativeVelocity)) / StandardGravityParameter(mainMass, orbitalMass) - relativePosition.normalized;
+        return Vector3.Cross(relativeVelocity, SpecificRelativeAngularMomentum(relativePosition, relativeVelocity)) / StandardGravityParameter(bodyMass) - relativePosition.normalized;
     }
 
-    public static Vector3 EccentricityVector(Vector3 relativePosition, Vector3 relativeVelocity, Vector3 specificRelativeAngularMomentum, float mainMass, float orbitalMass)
+    public static Vector3 EccentricityVector(Vector3 relativePosition, Vector3 relativeVelocity, Vector3 specificRelativeAngularMomentum, float bodyMass)
     {
-        return Vector3.Cross(relativeVelocity, specificRelativeAngularMomentum) / StandardGravityParameter(mainMass, orbitalMass) - relativePosition.normalized;
+        return Vector3.Cross(relativeVelocity, specificRelativeAngularMomentum) / StandardGravityParameter(bodyMass) - relativePosition.normalized;
     }
 
     public static float SemimajorAxis(float orbitalRadius, float velocitySq, float mainMass)
@@ -54,9 +54,9 @@ public static class OrbitalMechanics
         return 1 / denom;
     }
 
-    public static float TrueAnomaly(Vector3 relativePosition, Vector3 relativeVelocity, float mainMass, float orbitalMass)
+    public static float TrueAnomaly(Vector3 relativePosition, Vector3 relativeVelocity, float bodyMass)
     {
-        Vector3 eccentricityVector = EccentricityVector(relativePosition, relativeVelocity, mainMass, orbitalMass);
+        Vector3 eccentricityVector = EccentricityVector(relativePosition, relativeVelocity, bodyMass);
         float nu = Mathf.Acos(Vector2.Dot(eccentricityVector, relativePosition) / (eccentricityVector.magnitude * relativePosition.magnitude));
 
         if (Vector2.Dot(relativePosition, relativeVelocity) < 0f)
@@ -66,9 +66,9 @@ public static class OrbitalMechanics
         return nu;
     }
 
-    public static float EccentricAnomalyAtEpoch(Vector3 relativePosition, Vector3 relativeVelocity, float mainMass, float orbitalMass, float eccentricity)
+    public static float EccentricAnomalyAtEpoch(Vector3 relativePosition, Vector3 relativeVelocity, float bodyMass, float eccentricity)
     {
-        float trueAnomaly = TrueAnomaly(relativePosition, relativeVelocity, mainMass, orbitalMass);
+        float trueAnomaly = TrueAnomaly(relativePosition, relativeVelocity, bodyMass);
         float E = Mathf.Atan2(Mathf.Sqrt(1 - Mathf.Pow(eccentricity, 2)) * Mathf.Sin(trueAnomaly), eccentricity + Mathf.Cos(trueAnomaly));
 
         float modulus = 2f * Mathf.PI;
@@ -107,7 +107,7 @@ public static class OrbitalMechanics
     }
     public static float SpecificOrbitalEnergy(float mainMass, float orbitalMass, float semimajorAxis)
     {
-        return -1f * StandardGravityParameter(mainMass, orbitalMass) / (2f * semimajorAxis);
+        return -1f * StandardGravityParameter(mainMass + orbitalMass) / (2f * semimajorAxis);
     }
 
     public static float ArgumentOfPeriapse(Vector3 eccentricityVector)
@@ -190,9 +190,9 @@ public static class OrbitalMechanics
         return eccentricAnomaly - eccentricity * Mathf.Sin(eccentricAnomaly);
     }
 
-    public static float MeanMotion(float mainMass, float orbitalMass, float semimajorAxis)
+    public static float MeanMotion(float bodyMass, float semimajorAxis)
     {
-        return Mathf.Sqrt(StandardGravityParameter(mainMass, orbitalMass) / Mathf.Pow(semimajorAxis, 3));
+        return Mathf.Sqrt(StandardGravityParameter(bodyMass) / Mathf.Pow(semimajorAxis, 3));
     }
 
     public static float MeanAnomaly(float meanAnomalyAtEpoch, float meanMotion, float timeSinceEpoch)
@@ -201,10 +201,10 @@ public static class OrbitalMechanics
         return meanAnomalyAtEpoch + meanMotion * timeSinceEpoch;
     }
 
-    public static float MeanAnomaly(float meanAnomalyAtEpoch, float mainMass, float orbitalMass, float semimajorAxis, float timeSinceEpoch)
+    public static float MeanAnomaly(float meanAnomalyAtEpoch, float bodyMass, float semimajorAxis, float timeSinceEpoch)
     {
         // Updated mean anomaly, assuming mean anomaly at epoch has been calculated!
-        return meanAnomalyAtEpoch + MeanMotion(mainMass, orbitalMass, semimajorAxis) * timeSinceEpoch;
+        return meanAnomalyAtEpoch + MeanMotion(bodyMass, semimajorAxis) * timeSinceEpoch;
     }
 
     public static float EccentricAnomaly(float meanAnomaly, float eccentricity, int maxIterations)

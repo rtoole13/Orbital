@@ -66,7 +66,9 @@ public abstract class GravitySource : OrbitalBody
         {
             EccentricAnomaly = OrbitalMechanics.EccentricAnomaly(MeanAnomaly, Eccentricity, 6);
             TrueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
+            Vector2 position = OrbitalPositionToWorld(OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly));
             transform.position = OrbitalPositionToWorld(OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly));
+
             DeterministicVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
         }
     }

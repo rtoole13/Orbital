@@ -99,7 +99,7 @@ public abstract class OrbitalBody : MonoBehaviour
         {
             if (CurrentGravitySource == null)
                 return 0f;
-            return OrbitalMechanics.StandardGravityParameter(CurrentGravitySource.Mass, Mass);
+            return OrbitalMechanics.StandardGravityParameter(CurrentGravitySource.Mass);
         }
     }
 
@@ -225,7 +225,7 @@ public abstract class OrbitalBody : MonoBehaviour
     {
         // This should only be called from the iterative update method and only once before switching to trajectory update.
         SpecificRelativeAngularMomentum = OrbitalMechanics.SpecificRelativeAngularMomentum(SourceRelativePosition, SourceRelativeVelocity);
-        EccentricityVector = OrbitalMechanics.EccentricityVector(SourceRelativePosition, SourceRelativeVelocity, SpecificRelativeAngularMomentum, CurrentGravitySource.Mass, Mass);
+        EccentricityVector = OrbitalMechanics.EccentricityVector(SourceRelativePosition, SourceRelativeVelocity, SpecificRelativeAngularMomentum, CurrentGravitySource.Mass);
         SemimajorAxis = OrbitalMechanics.SemimajorAxis(SourceDistance, body.velocity.sqrMagnitude, CurrentGravitySource.Mass);
         SemiminorAxis = OrbitalMechanics.SemiminorAxis(SemimajorAxis, Eccentricity);
         SpecificOrbitalEnergy = OrbitalMechanics.SpecificOrbitalEnergy(CurrentGravitySource.Mass, Mass, SemimajorAxis);
@@ -235,15 +235,15 @@ public abstract class OrbitalBody : MonoBehaviour
     protected void CalculateEpochParameters()
     {
         TimeSinceEpoch = 0f;
-        MeanMotion = OrbitalMechanics.MeanMotion(CurrentGravitySource.Mass, Mass, SemimajorAxis);
+        MeanMotion = OrbitalMechanics.MeanMotion(CurrentGravitySource.Mass, SemimajorAxis);
         OrbitalPeriod = OrbitalMechanics.OrbitalPeriod(MeanMotion);
-        EccentricAnomaly = OrbitalMechanics.EccentricAnomalyAtEpoch(SourceRelativePosition, SourceRelativeVelocity, CurrentGravitySource.Mass, Mass, Eccentricity);
+        EccentricAnomaly = OrbitalMechanics.EccentricAnomalyAtEpoch(SourceRelativePosition, SourceRelativeVelocity, CurrentGravitySource.Mass, Eccentricity);
         MeanAnomalyAtEpoch = OrbitalMechanics.MeanAnomalyAtEpoch(EccentricAnomaly, Eccentricity);
         MeanAnomaly = MeanAnomalyAtEpoch;
         TrueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
         DeterministicVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
         Debug.Log(OrbitalPositionToWorld(OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly)));
-        Debug.Log(CurrentGravitySource.Velocity);
+        Debug.Log(body.position);
     }
     #endregion PHYSICS
 
