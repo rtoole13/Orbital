@@ -11,22 +11,9 @@ public abstract class GravitySource : OrbitalBody
     public Vector2 startVelocity;
     #region GETSET
 
-    public Vector2 Position
-    {
-        get { return (Vector2)transform.position; }
-    }
-    /*
-    public Vector3 Velocity
-    {
-        get { return new Vector3(body.velocity.x, body.velocity.y, 0f); }
-    }*/
-
     public float Radius
     {
-        get
-        {
-            return bodyCollider.radius;
-        }
+        get { return bodyCollider.radius; }
     }
     #endregion GETSET
 
@@ -52,25 +39,14 @@ public abstract class GravitySource : OrbitalBody
         if (CurrentGravitySource == null)
             return;
         body.velocity += CurrentGravitySource.startVelocity;
+        updateIteratively = false;
         CalculateOrbitalParameters();
         CalculateEpochParameters();
     }
 
     private void FixedUpdate()
     {
-        if (CurrentGravitySource == null)
-            return;
-
-        TimeSinceEpoch = (TimeSinceEpoch + Time.fixedDeltaTime) % OrbitalPeriod;
-        MeanAnomaly = OrbitalMechanics.MeanAnomaly(MeanAnomalyAtEpoch, MeanMotion, TimeSinceEpoch);
-        if (MeanAnomaly >= 0f)
-        {
-            EccentricAnomaly = OrbitalMechanics.EccentricAnomaly(MeanAnomaly, Eccentricity, 6);
-            TrueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
-            transform.position = OrbitalPositionToWorld(OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly));
-
-            DeterministicVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
-        }
+        UpdateDeterministically();
     }
 
     #endregion UNITY
@@ -82,7 +58,7 @@ public abstract class GravitySource : OrbitalBody
         Vector2 force = forceMagnitude * distance.normalized;
         return force;
     }
-    
+
     public void AddAffectedBody(GravityAffected body)
     {
         gravityAffectedObjects.Add(body);

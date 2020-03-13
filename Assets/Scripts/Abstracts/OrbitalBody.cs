@@ -6,7 +6,7 @@ public abstract class OrbitalBody : MonoBehaviour
 {
 
     private float _argumentOfPeriapsis;
-    private Vector2 _deterministicVelocity;
+    private Vector2 _OrbitalVelocity;
     private float _eccentricity;
     private float _eccentricAnomaly;
     private Vector3 _eccentricityVector;
@@ -44,13 +44,16 @@ public abstract class OrbitalBody : MonoBehaviour
         private set { _mass = value; }
     }
 
+    public Vector2 Position
+    {
+        get { return updateIteratively ? body.position : OrbitalPositionToWorld; }
+    }
+
     public Vector2 Velocity
     {
-        get 
-        {
-            return updateIteratively ? body.velocity : DeterministicVelocity;
-        }
+        get { return updateIteratively ? body.velocity : OrbitalVelocityToWorld; }
     }
+
     public float SourceDistance
     {
         get
@@ -62,30 +65,25 @@ public abstract class OrbitalBody : MonoBehaviour
         }
     }
 
-    public Vector2 DeterministicVelocity
-    {
-        get { return _deterministicVelocity; }
-        protected set { _deterministicVelocity = value; }
-    }
-
     public Vector3 SourceRelativePosition
     {
+        //FIXME: Is this always from state vector state? Otherwise, this is identical to OrbitalPosition?
         get
         {
             if (CurrentGravitySource == null)
                 return Vector3.positiveInfinity;
-            return transform.position - CurrentGravitySource.transform.position;
+            return transform.position - (Vector3)CurrentGravitySource.Position;
         }
     }
 
     public Vector3 SourceRelativeVelocity
     {
+        //FIXME: Is this always from state vector state? Otherwise, this is identical to OrbitalVelocity?
         get
         {
             if (CurrentGravitySource == null)
-                return new Vector3(body.velocity.x, body.velocity.y, 0f);
-            Vector3 thisVelocity = new Vector3(body.velocity.x, body.velocity.y, 0f);
-            return thisVelocity - (Vector3)CurrentGravitySource.Velocity;
+                return (Vector3)body.velocity;
+            return (Vector3)body.velocity - (Vector3)CurrentGravitySource.Velocity;
         }
 
     }
@@ -177,6 +175,22 @@ public abstract class OrbitalBody : MonoBehaviour
         protected set { _orbitalPosition = value; }
     }
 
+    public Vector2 OrbitalVelocity
+    {
+        get { return _OrbitalVelocity; }
+        protected set { _OrbitalVelocity = value; }
+    }
+
+    public Vector2 OrbitalPositionToWorld
+    {
+        get { return OrbitalPosition.RotateVector(ArgumentOfPeriapsis) + (CurrentGravitySource != null) ? CurrentGravitySource.Position : Vector2.zero; }
+    }
+
+    public Vector2 OrbitalVelocityToWorld
+    {
+        get { return OrbitalVelocity.RotateVector(ArgumentOfPeriapsis) + (CurrentGravitySource != null) ? CurrentGravitySource.Velocity : Vector2.zero; }
+    }
+
     public float OrbitalPeriod
     {
         get { return _orbitalPeriod; }
@@ -248,14 +262,27 @@ public abstract class OrbitalBody : MonoBehaviour
         MeanAnomalyAtEpoch = OrbitalMechanics.MeanAnomalyAtEpoch(EccentricAnomaly, Eccentricity);
         MeanAnomaly = MeanAnomalyAtEpoch;
         TrueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
-        DeterministicVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
+        OrbitalPosition = OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly);
+        OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
     }
     #endregion PHYSICS
 
     #region GENERAL
-    protected Vector2 OrbitalPositionToWorld(Vector2 orbitalPosition)
-    {
-        return orbitalPosition.RotateVector(ArgumentOfPeriapsis) + CurrentGravitySource.Position;
+
+    protected void UpdateDeterministically(){
+        // Only expected to be called at some time after CalculateEpochParameters
+        if (CurrentGravitySource == null)
+            return;
+        TimeSinceEpoch = (TimeSinceEpoch + Time.fixedDeltaTime) % OrbitalPeriod;
+        // Update anomalies based on time since epoch
+        MeanAnomaly = OrbitalMechanics.MeanAnomaly(MeanAnomalyAtEpoch, MeanMotion, TimeSinceEpoch);
+        EccentricAnomaly = OrbitalMechanics.EccentricAnomaly(MeanAnomaly, Eccentricity, 6);
+        TrueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
+
+        // Update orbital Position and velocity
+        OrbitalPosition = OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly);
+        OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
+        transform.position = OrbitalPositionToWorld(OrbitalPosition);
     }
-    #endregion GENERAL  
+    #endregion GENERAL
 }

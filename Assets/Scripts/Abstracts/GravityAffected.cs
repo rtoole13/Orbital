@@ -4,7 +4,7 @@ using UnityEngine;
 
 [RequireComponent(typeof(Collider2D), typeof(Rigidbody2D))]
 public abstract class GravityAffected : OrbitalBody
-{    
+{
     private List<Vector2> nonGravitationalForces;
     protected bool nonGravitationalForcesAdded = true;
     protected bool determineTrajectory = false;
@@ -29,11 +29,11 @@ public abstract class GravityAffected : OrbitalBody
         body.velocity = startVelocity;
         if (CurrentGravitySource == null)
             return;
-        //body.velocity += CurrentGravitySource.startVelocity;
+        body.velocity += CurrentGravitySource.startVelocity;
         SwitchToDeterministicUpdate();
     }
     protected virtual void Update(){
-        
+
     }
 
     private void FixedUpdate()
@@ -48,11 +48,11 @@ public abstract class GravityAffected : OrbitalBody
         }
         else
         {
-            UpdateByTrajectory();
+            UpdateDeterministically();
         }
 
     }
-    
+
     private void OnCollisionStay2D(Collision2D collision)
     {
         // On Collision w/ an object, stop deterministic trajectory update (normal force)
@@ -79,30 +79,10 @@ public abstract class GravityAffected : OrbitalBody
 
         updateIteratively = true;
         body.isKinematic = false;
-        body.velocity = DeterministicVelocity.RotateVector(ArgumentOfPeriapsis);
+        body.velocity = OrbitalVelocity.RotateVector(ArgumentOfPeriapsis);
     }
 
     #endregion UNITY
-
-    #region DETERMINISTIC
-    // Basically, rigidbody.iskinematic = true;
-    private void UpdateByTrajectory()
-    {
-        if (CurrentGravitySource == null)
-            return;
-        TimeSinceEpoch = (TimeSinceEpoch + Time.fixedDeltaTime) % OrbitalPeriod;
-        MeanAnomaly = OrbitalMechanics.MeanAnomaly(MeanAnomalyAtEpoch, MeanMotion, TimeSinceEpoch);
-        if (MeanAnomaly >= 0f)
-        {
-            EccentricAnomaly = OrbitalMechanics.EccentricAnomaly(MeanAnomaly, Eccentricity, 6);
-            TrueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
-            transform.position = OrbitalPositionToWorld(OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly));
-            
-            DeterministicVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
-        }
-    }
-
-    #endregion DETERMINISTIC
 
     #region ITERATIVE
     // Basically, rigidbody.iskinematic = false;
@@ -119,7 +99,7 @@ public abstract class GravityAffected : OrbitalBody
         */
         Vector2 gravitationalForce = CurrentGravitySource.CalculateGravitationalForceAtPosition(transform.position, Mass);
         body.AddForce(gravitationalForce);
-        
+
         ApplyNonGravitationalForces();
         if (Input.GetMouseButtonUp(0))
         {
@@ -145,11 +125,11 @@ public abstract class GravityAffected : OrbitalBody
     #endregion ITERATIVE
 
     #region PHYSICS
-    
+
     public void AddExternalForce(Vector2 forceVector)
     {
         nonGravitationalForcesAdded = true;
-        nonGravitationalForces.Add(forceVector);   
+        nonGravitationalForces.Add(forceVector);
     }
 
     private void ApplyNonGravitationalForces()
@@ -162,7 +142,7 @@ public abstract class GravityAffected : OrbitalBody
     }
     #endregion PHYSICS
 
-    
+
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
