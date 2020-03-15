@@ -258,9 +258,6 @@ public abstract class OrbitalBody : MonoBehaviour
     {
         body = GetComponent<Rigidbody2D>();
         body.velocity = startVelocity;
-        if (CurrentGravitySource == null)
-            return;
-        body.velocity += CurrentGravitySource.startVelocity;
     }
 
     protected virtual void Start()
@@ -275,6 +272,7 @@ public abstract class OrbitalBody : MonoBehaviour
         // This should only be called from the iterative update method and only once before switching to trajectory update.
         Vector3 sourceRelativePosition = (Vector3)body.position - (Vector3)CurrentGravitySource.Position;
         Vector3 sourceRelativeVelocity = (Vector3)body.velocity - (Vector3)CurrentGravitySource.Velocity;
+        Debug.Log(gameObject.name + ": " + sourceRelativeVelocity);
         SpecificRelativeAngularMomentum = OrbitalMechanics.SpecificRelativeAngularMomentum(sourceRelativePosition, sourceRelativeVelocity);
         EccentricityVector = OrbitalMechanics.EccentricityVector(sourceRelativePosition, sourceRelativeVelocity, SpecificRelativeAngularMomentum, CurrentGravitySource.Mass);
         SemimajorAxis = OrbitalMechanics.SemimajorAxis(sourceRelativePosition.magnitude, sourceRelativeVelocity.sqrMagnitude, CurrentGravitySource.Mass);
