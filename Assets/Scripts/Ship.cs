@@ -5,7 +5,6 @@ using UnityEngine;
 public class Ship : GravityAffected, ICameraTrackable
 {
     public float clickForce = 1f;
-    //public Vector2 startVelocity;
 
     #region UNITY
     /*

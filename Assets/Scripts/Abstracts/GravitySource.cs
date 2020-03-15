@@ -8,7 +8,6 @@ public abstract class GravitySource : OrbitalBody
     private CircleCollider2D bodyCollider;
     private List<GravityAffected> gravityAffectedObjects = new List<GravityAffected>();
 
-    public Vector2 startVelocity;
     #region GETSET
 
     public float Radius
@@ -33,15 +32,13 @@ public abstract class GravitySource : OrbitalBody
         }
     }
 
-    private void Start()
+    protected override void Start()
     {
-        body.velocity = startVelocity;
+        base.Start();
         if (CurrentGravitySource == null)
             return;
-        body.velocity += CurrentGravitySource.startVelocity;
         updateIteratively = false;
-        CalculateOrbitalParameters();
-        CalculateEpochParameters();
+        CalculateOrbitalParametersFromStateVectors();
     }
 
     private void FixedUpdate()

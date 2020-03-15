@@ -4,6 +4,7 @@ using UnityEngine;
 
 public abstract class OrbitalBody : MonoBehaviour
 {
+    public Vector2 startVelocity;
 
     private float _argumentOfPeriapsis;
     private Vector2 _OrbitalVelocity;
@@ -46,12 +47,17 @@ public abstract class OrbitalBody : MonoBehaviour
 
     public Vector2 Position
     {
-        get { return updateIteratively ? body.position : OrbitalPositionToWorld; }
+        // Whether iterative or deterministic, this position will be updating
+        get { return body.position; }
     }
 
     public Vector2 Velocity
     {
-        get { return updateIteratively ? body.velocity : OrbitalVelocityToWorld; }
+        // If iterative, body.velocity is dynamic, otherwise calculate world velocity from orbital vel
+        get
+        {
+            return updateIteratively ? body.velocity : OrbitalVelocityToWorld;
+        }
     }
 
     public float SourceDistance
@@ -60,7 +66,7 @@ public abstract class OrbitalBody : MonoBehaviour
         {
             if (CurrentGravitySource == null)
                 return Mathf.Infinity;
-            Vector3 diff = CurrentGravitySource.transform.position - transform.position;
+            Vector3 diff = CurrentGravitySource.body.position - body.position;
             return diff.magnitude;
         }
     }
@@ -183,12 +189,25 @@ public abstract class OrbitalBody : MonoBehaviour
 
     public Vector2 OrbitalPositionToWorld
     {
-        get { return OrbitalPosition.RotateVector(ArgumentOfPeriapsis) + (CurrentGravitySource != null) ? CurrentGravitySource.Position : Vector2.zero; }
+        get
+        {
+            Vector2 position = CurrentGravitySource != null
+                ? CurrentGravitySource.Position
+                : Vector2.zero;
+            return OrbitalPosition.RotateVector(ArgumentOfPeriapsis) + position;
+        }
     }
 
     public Vector2 OrbitalVelocityToWorld
     {
-        get { return OrbitalVelocity.RotateVector(ArgumentOfPeriapsis) + (CurrentGravitySource != null) ? CurrentGravitySource.Velocity : Vector2.zero; }
+        
+        get 
+        {
+            Vector2 velocity = CurrentGravitySource != null
+                ? CurrentGravitySource.Velocity
+                : Vector2.zero;
+            return OrbitalVelocity.RotateVector(ArgumentOfPeriapsis) + velocity;
+        }
     }
 
     public float OrbitalPeriod
@@ -238,27 +257,36 @@ public abstract class OrbitalBody : MonoBehaviour
     protected virtual void Awake()
     {
         body = GetComponent<Rigidbody2D>();
+        body.velocity = startVelocity;
+        if (CurrentGravitySource == null)
+            return;
+        body.velocity += CurrentGravitySource.startVelocity;
+    }
+
+    protected virtual void Start()
+    {
+        
     }
     #endregion UNITY
 
     #region PHYSICS
-    protected void CalculateOrbitalParameters()
+    protected void CalculateOrbitalParametersFromStateVectors()
     {
         // This should only be called from the iterative update method and only once before switching to trajectory update.
-        SpecificRelativeAngularMomentum = OrbitalMechanics.SpecificRelativeAngularMomentum(SourceRelativePosition, SourceRelativeVelocity);
-        EccentricityVector = OrbitalMechanics.EccentricityVector(SourceRelativePosition, SourceRelativeVelocity, SpecificRelativeAngularMomentum, CurrentGravitySource.Mass);
-        SemimajorAxis = OrbitalMechanics.SemimajorAxis(SourceDistance, body.velocity.sqrMagnitude, CurrentGravitySource.Mass);
+        Vector3 sourceRelativePosition = (Vector3)body.position - (Vector3)CurrentGravitySource.Position;
+        Vector3 sourceRelativeVelocity = (Vector3)body.velocity - (Vector3)CurrentGravitySource.Velocity;
+        SpecificRelativeAngularMomentum = OrbitalMechanics.SpecificRelativeAngularMomentum(sourceRelativePosition, sourceRelativeVelocity);
+        EccentricityVector = OrbitalMechanics.EccentricityVector(sourceRelativePosition, sourceRelativeVelocity, SpecificRelativeAngularMomentum, CurrentGravitySource.Mass);
+        SemimajorAxis = OrbitalMechanics.SemimajorAxis(sourceRelativePosition.magnitude, sourceRelativeVelocity.sqrMagnitude, CurrentGravitySource.Mass);
         SemiminorAxis = OrbitalMechanics.SemiminorAxis(SemimajorAxis, Eccentricity);
         SpecificOrbitalEnergy = OrbitalMechanics.SpecificOrbitalEnergy(CurrentGravitySource.Mass, Mass, SemimajorAxis);
         ArgumentOfPeriapsis = OrbitalMechanics.ArgumentOfPeriapse(EccentricityVector);
-    }
 
-    protected void CalculateEpochParameters()
-    {
+        // Epoch parameters
         TimeSinceEpoch = 0f;
         MeanMotion = OrbitalMechanics.MeanMotion(CurrentGravitySource.Mass, SemimajorAxis);
         OrbitalPeriod = OrbitalMechanics.OrbitalPeriod(MeanMotion);
-        EccentricAnomaly = OrbitalMechanics.EccentricAnomalyAtEpoch(SourceRelativePosition, SourceRelativeVelocity, CurrentGravitySource.Mass, Eccentricity);
+        EccentricAnomaly = OrbitalMechanics.EccentricAnomalyAtEpoch(sourceRelativePosition, sourceRelativeVelocity, CurrentGravitySource.Mass, Eccentricity);
         MeanAnomalyAtEpoch = OrbitalMechanics.MeanAnomalyAtEpoch(EccentricAnomaly, Eccentricity);
         MeanAnomaly = MeanAnomalyAtEpoch;
         TrueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
@@ -278,11 +306,11 @@ public abstract class OrbitalBody : MonoBehaviour
         MeanAnomaly = OrbitalMechanics.MeanAnomaly(MeanAnomalyAtEpoch, MeanMotion, TimeSinceEpoch);
         EccentricAnomaly = OrbitalMechanics.EccentricAnomaly(MeanAnomaly, Eccentricity, 6);
         TrueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
-
+        
         // Update orbital Position and velocity
         OrbitalPosition = OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly);
         OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
-        transform.position = OrbitalPositionToWorld(OrbitalPosition);
+        transform.position = OrbitalPositionToWorld;
     }
     #endregion GENERAL
 }

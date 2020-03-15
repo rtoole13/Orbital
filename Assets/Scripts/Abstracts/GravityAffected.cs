@@ -5,18 +5,17 @@ using UnityEngine;
 [RequireComponent(typeof(Collider2D), typeof(Rigidbody2D))]
 public abstract class GravityAffected : OrbitalBody
 {
-    private List<Vector2> nonGravitationalForces;
-    protected bool nonGravitationalForcesAdded = true;
-    protected bool determineTrajectory = false;
 
+    protected bool nonGravitationalForcesAdded = true;
+    
     //GIZMOS VARS
+    private List<Vector2> nonGravitationalForces;
     private bool canUpdateEpochs = true;
     private Vector2 currentEpochPosition = Vector2.zero;
     private float elapsedEpochTime = 0f;
     private Vector2 lastEpochPos = Vector2.zero;
     private Vector2 trajectoryPosition = Vector2.zero;
 
-    public Vector2 startVelocity;
     #region UNITY
     protected override void Awake()
     {
@@ -24,12 +23,9 @@ public abstract class GravityAffected : OrbitalBody
         nonGravitationalForces = new List<Vector2>();
     }
 
-    private void Start()
+    protected override void Start()
     {
-        body.velocity = startVelocity;
-        if (CurrentGravitySource == null)
-            return;
-        body.velocity += CurrentGravitySource.startVelocity;
+        base.Start();
         SwitchToDeterministicUpdate();
     }
     protected virtual void Update(){
@@ -65,10 +61,9 @@ public abstract class GravityAffected : OrbitalBody
         if (!updateIteratively)
             return;
 
+        CalculateOrbitalParametersFromStateVectors();
         updateIteratively = false;
         body.isKinematic = true;
-        CalculateOrbitalParameters();
-        CalculateEpochParameters();
     }
 
     private void SwitchToIterativeUpdate()
@@ -103,13 +98,11 @@ public abstract class GravityAffected : OrbitalBody
         ApplyNonGravitationalForces();
         if (Input.GetMouseButtonUp(0))
         {
-            CalculateOrbitalParameters();
-            CalculateEpochParameters();
+            CalculateOrbitalParametersFromStateVectors();
         }
         if (Input.GetMouseButton(1))
         {
-            CalculateOrbitalParameters();
-            CalculateEpochParameters();
+            CalculateOrbitalParametersFromStateVectors();
         }
         TimeSinceEpoch = (TimeSinceEpoch + Time.fixedDeltaTime) % OrbitalPeriod;
         MeanAnomaly = OrbitalMechanics.MeanAnomaly(MeanAnomalyAtEpoch, MeanMotion, TimeSinceEpoch);
@@ -117,7 +110,9 @@ public abstract class GravityAffected : OrbitalBody
         {
             EccentricAnomaly = OrbitalMechanics.EccentricAnomaly(MeanAnomaly, Eccentricity, 6);
             TrueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
-            trajectoryPosition = OrbitalPositionToWorld(OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly));
+            OrbitalPosition = OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly);
+            OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
+            trajectoryPosition = OrbitalPositionToWorld;
             //Debug.Log("Old: " + CalculateVelocityFromOrbitalParameters());
             //Debug.Log("New: " + OrbitalMechanics.CalculateVelocityFromOrbitalParameters(SpecificRelativeAngularMomentum, SourceRelativePosition, CurrentGravitySource.Mass, SemimajorAxis));
         }
