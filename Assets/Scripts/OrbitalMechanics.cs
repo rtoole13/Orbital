@@ -24,6 +24,36 @@ public static class OrbitalMechanics
         return force;
     }
 
+    public static float Cosh(float value)
+    {
+        return (Mathf.Exp(value) + Mathf.Exp(-value)) / 2f;
+    }
+
+    public static float ArcCosh(float value)
+    {
+        return Mathf.Log(value + Mathf.Sqrt(Mathf.Pow(value, 2) - 1f));
+    }
+
+    public static float Sinh(float value)
+    {
+        return (Mathf.Exp(value) - Mathf.Exp(-value)) / 2f;
+    }
+
+    public static float ArcSinh(float value)
+    {
+        return Mathf.Log(value + Mathf.Sqrt(Mathf.Pow(value, 2) + 1f));
+
+    }
+
+    public static float Tanh(float value)
+    {
+        return Sinh(value) / Cosh(value);
+    }
+
+    public static float HalfTanh(float value)
+    {
+        return Sinh(value) / (Cosh(value) + 1f);
+    }
     #endregion GENERAL
 
     #region STATEVECTORS
@@ -66,6 +96,12 @@ public static class OrbitalMechanics
         return nu;
     }
 
+    public static float HyperbolicTrueAnomaly(float orbitalDistance, float semimajorAxis, float eccentricity)
+    {
+        float cosNu = (SemilatusRectum(semimajorAxis, eccentricity) / orbitalDistance - 1f) / eccentricity;
+        return Mathf.Acos(cosNu);
+    }
+
     public static float EccentricAnomalyAtEpoch(Vector3 relativePosition, Vector3 relativeVelocity, float bodyMass, float eccentricity)
     {
         float trueAnomaly = TrueAnomaly(relativePosition, relativeVelocity, bodyMass);
@@ -83,6 +119,12 @@ public static class OrbitalMechanics
         return E - (modulus * Mathf.Floor(E / modulus)); //FIXME: PROPER MODULUS OPERATOR -- MAKE GENERIC
     }
 
+    public static float HyperbolicAnomaly(float trueAnomaly, float eccentricity)
+    {
+        float cosW = Mathf.Cos(trueAnomaly);
+        float coshE = (cosW + eccentricity) / (1 + eccentricity * cosW);
+        return ArcCosh(coshE);
+    }
     #endregion STATEVECTORS
 
     #region ORBITALELEMENTS
@@ -140,16 +182,23 @@ public static class OrbitalMechanics
         return nu;
     }
 
+    public static float HyperbolicTrueAnomaly(float eccentricity, float hyperbolicEccentricAnomaly)
+    {
+        return 2f * Mathf.Atan(HalfTanh(hyperbolicEccentricAnomaly) * Mathf.Sqrt((eccentricity + 1f) / (eccentricity - 1f)));
+    }
+
     public static float OrbitalPeriod(float meanMotion)
     {
+        //FIXME: Meaningless for Hyperbolic orbit.
         return 2 * Mathf.PI / meanMotion;
     }
 
     public static float OrbitalRadius(float eccentricity, float trueAnomaly, float semimajorAxis)
     {
-        float num = 1f - Mathf.Pow(eccentricity, 2);
+        // Always ends up positive because of the negative convention of semimajorAxis for hyperboles
         float denom = 1f + (eccentricity * Mathf.Cos(trueAnomaly));
-
+        float num = 1f - Mathf.Pow(eccentricity, 2);
+        
         return semimajorAxis * num / denom;
     }
 
@@ -159,7 +208,7 @@ public static class OrbitalMechanics
 
         //From TrueAnomaly -> radius -> Cartesian
         float orbitalRadius = OrbitalRadius(eccentricity, trueAnomaly, semimajorAxis);
-
+        
         //Convert to polar coordinates
         return orbitalRadius * new Vector2(Mathf.Cos(trueAnomaly), Mathf.Sin(trueAnomaly));
 
@@ -167,20 +216,23 @@ public static class OrbitalMechanics
         //return new Vector2(Mathf.Cos(EccentricAnomaly) - Eccentricity, Mathf.Sin(EccentricAnomaly) * Mathf.Sqrt(1 - Mathf.Pow(Eccentricity, 2))) * SemimajorAxis; 
     }
 
-    public static float EccentricAnomalyAtEpoch(Vector3 relativePosition, float eccentricity, float semimajorAxis)
-    {
-        return Mathf.Acos(Mathf.Clamp((-1f / eccentricity) * ((relativePosition.magnitude / semimajorAxis) - 1f), -1f, 1f));
-
-    }
-
     public static float EccentricAnomalyAtEpoch(float orbitalDistance, float eccentricity, float semimajorAxis)
     {
+        if (semimajorAxis < 0) // Hyperbolic
+        {
+            float semilatusRectum = SemilatusRectum(semimajorAxis, eccentricity);
+            float coshE = (1f / eccentricity) * (1f - orbitalDistance / semilatusRectum) + (orbitalDistance * eccentricity) / semilatusRectum;
+            return Mathf.Log(coshE + Mathf.Sqrt(Mathf.Pow(coshE, 2) - 1f));
+        }
         return Mathf.Acos(Mathf.Clamp((-1f / eccentricity) * ((orbitalDistance / semimajorAxis) - 1f), -1f, 1f));
-
     }
 
     public static float MeanAnomalyAtEpoch(float eccentricAnomaly, float eccentricity)
     {
+        if (eccentricity >= 1)
+        {
+            return eccentricity * Sinh(eccentricAnomaly) - eccentricAnomaly;
+        }
         return eccentricAnomaly - eccentricity * Mathf.Sin(eccentricAnomaly);
     }
 
@@ -192,7 +244,10 @@ public static class OrbitalMechanics
 
     public static float MeanMotion(float bodyMass, float semimajorAxis)
     {
-        return Mathf.Sqrt(StandardGravityParameter(bodyMass) / Mathf.Pow(semimajorAxis, 3));
+        float absSemimajorAxis = semimajorAxis < 0
+            ? -1f * semimajorAxis
+            : semimajorAxis;
+        return Mathf.Sqrt(StandardGravityParameter(bodyMass) / Mathf.Pow(absSemimajorAxis, 3));
     }
 
     public static float MeanAnomaly(float meanAnomalyAtEpoch, float meanMotion, float timeSinceEpoch)
@@ -209,8 +264,27 @@ public static class OrbitalMechanics
 
     public static float EccentricAnomaly(float meanAnomaly, float eccentricity, int maxIterations)
     {
+        // Newton's method
         int currentIter = 0;
         float E = meanAnomaly;
+        if (eccentricity >= 1)
+        {
+            // Hyperbole
+            while (true)
+            {
+                currentIter += 1;
+                if (currentIter > maxIterations)
+                    break;
+
+                float deltaE = (eccentricity * Sinh(E) - E - meanAnomaly) / (eccentricity * Cosh(E) - 1f);
+                E -= deltaE;
+                if (Mathf.Abs(deltaE) < 1e-6)
+                    break;
+            }
+            return E;
+        }
+
+        // Ellipse
         while (true)
         {
             currentIter += 1;
@@ -223,6 +297,12 @@ public static class OrbitalMechanics
                 break;
         }
         return E;
+    }
+
+    public static float SemilatusRectum(float semimajorAxis, float eccentricity)
+    {
+        // Works out to be positive for ellipses and hyperboles (e < 1 and a >= 0 vs e >= 1 and a < 0, respectively)
+        return semimajorAxis * (1f - Mathf.Pow(eccentricity, 2));
     }
     #endregion ORBITALELEMENTS
 }
