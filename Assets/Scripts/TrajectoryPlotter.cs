@@ -46,7 +46,7 @@ public class TrajectoryPlotter : MonoBehaviour
             return;
         if (orbitalBody.Eccentricity >= 1f)
         {
-            BuildHyperbole();
+            BuildHyperbola();
         }
         else
         {
@@ -74,21 +74,19 @@ public class TrajectoryPlotter : MonoBehaviour
         lineRenderer.SetPositions(points);
     }
 
-    private void BuildHyperbole()
+    private void BuildHyperbola()
     {
-        /*
+        
         Vector3[] points = new Vector3[segments + 1];
         for (int i = 0; i < segments; i++)
         {
-            float angle = ((float)i / (float)segments) * 2 * Mathf.PI;
-            Vector3 vertex = new Vector3(Mathf.Sin(angle) * SemimajorAxis, Mathf.Cos(angle) * SemiminorAxis, 0);
+            float angle = ((float)i / (float)segments) * 2f  - 1f;
+            Vector3 vertex = new Vector3(SemimajorAxis * OrbitalMechanics.Cosh(angle), SemiminorAxis * OrbitalMechanics.Sinh(angle), 0);
             vertex = TranslateVector(vertex, new Vector3(-SemimajorAxis * orbitalBody.Eccentricity, 0, 0));
             points[i] = RotateVertex(vertex, orbitalBody.ArgumentOfPeriapsis) + orbitalBody.CurrentGravitySource.transform.position;
         }
-        points[segments] = points[0];
-        lineRenderer.positionCount = segments + 1;
+        lineRenderer.positionCount = segments;
         lineRenderer.SetPositions(points);
-        */
     }
 
     private float CalculateSemiminorAxis()

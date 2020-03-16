@@ -217,7 +217,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalPosition: {x: 47, y: 0, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -323,7 +323,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 703178207}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 6, z: 0}
+  m_LocalPosition: {x: 47.5, y: 6, z: 0}
   m_LocalScale: {x: 0.576, y: 0.576, z: 0.576}
   m_Children: []
   m_Father: {fileID: 0}
@@ -367,7 +367,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 220b5a1c1ed8f7044bab621386eb5fa7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startVelocity: {x: 6, y: 0}
+  startVelocity: {x: 5.8, y: 6}
   _gravitySource: {fileID: 1908100516}
   _mass: 1
   clickForce: 2
@@ -479,7 +479,7 @@ LineRenderer:
     shadowBias: 0.5
     generateLightingData: 0
   m_UseWorldSpace: 1
-  m_Loop: 1
+  m_Loop: 0
 --- !u!1 &1235773191
 GameObject:
   m_ObjectHideFlags: 0
@@ -661,7 +661,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1739312351
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -771,7 +771,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1739312350}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 10.400002, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 7.131637, y: 7.131637, z: 7.131637}
   m_Children:
   - {fileID: 1481935056}
@@ -987,7 +987,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1908100511}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 47.5, y: 0, z: 0}
   m_LocalScale: {x: 4.976371, y: 4.976371, z: 4.976371}
   m_Children:
   - {fileID: 1235773192}
@@ -1022,8 +1022,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 697b46c062f14374cb8bd08c44d5cc61, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startVelocity: {x: 0, y: 0}
-  _gravitySource: {fileID: 0}
+  startVelocity: {x: 0, y: 6}
+  _gravitySource: {fileID: 1739312351}
   _mass: 100
 --- !u!114 &1908100517
 MonoBehaviour:

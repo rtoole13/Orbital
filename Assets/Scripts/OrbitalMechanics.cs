@@ -195,17 +195,14 @@ public static class OrbitalMechanics
 
     public static float OrbitalRadius(float eccentricity, float trueAnomaly, float semimajorAxis)
     {
-        // Always ends up positive because of the negative convention of semimajorAxis for hyperboles
+        // Always ends up positive because of the negative convention of semimajorAxis for hyperbolas
         float denom = 1f + (eccentricity * Mathf.Cos(trueAnomaly));
         float num = 1f - Mathf.Pow(eccentricity, 2);
-        
         return semimajorAxis * num / denom;
     }
 
     public static Vector2 OrbitalPosition(float eccentricity, float semimajorAxis, float trueAnomaly)
     {
-        //position in both cases is identical
-
         //From TrueAnomaly -> radius -> Cartesian
         float orbitalRadius = OrbitalRadius(eccentricity, trueAnomaly, semimajorAxis);
         
@@ -244,10 +241,18 @@ public static class OrbitalMechanics
 
     public static float MeanMotion(float bodyMass, float semimajorAxis)
     {
-        float absSemimajorAxis = semimajorAxis < 0
-            ? -1f * semimajorAxis
-            : semimajorAxis;
-        return Mathf.Sqrt(StandardGravityParameter(bodyMass) / Mathf.Pow(absSemimajorAxis, 3));
+        float absSemimajorAxis, sign;
+        if (semimajorAxis < 0)
+        {
+            absSemimajorAxis = -1f * semimajorAxis;
+            sign = -1f;
+        }
+        else
+        {
+            absSemimajorAxis = semimajorAxis;
+            sign = 1f;
+        }
+        return sign * Mathf.Sqrt(StandardGravityParameter(bodyMass) / Mathf.Pow(absSemimajorAxis, 3));
     }
 
     public static float MeanAnomaly(float meanAnomalyAtEpoch, float meanMotion, float timeSinceEpoch)
@@ -269,7 +274,7 @@ public static class OrbitalMechanics
         float E = meanAnomaly;
         if (eccentricity >= 1)
         {
-            // Hyperbole
+            // Hyperbola
             while (true)
             {
                 currentIter += 1;
@@ -301,7 +306,7 @@ public static class OrbitalMechanics
 
     public static float SemilatusRectum(float semimajorAxis, float eccentricity)
     {
-        // Works out to be positive for ellipses and hyperboles (e < 1 and a >= 0 vs e >= 1 and a < 0, respectively)
+        // Works out to be positive for ellipses and hyperbolas (e < 1 and a >= 0 vs e >= 1 and a < 0, respectively)
         return semimajorAxis * (1f - Mathf.Pow(eccentricity, 2));
     }
     #endregion ORBITALELEMENTS

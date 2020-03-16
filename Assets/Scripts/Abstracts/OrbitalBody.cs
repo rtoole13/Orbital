@@ -274,7 +274,7 @@ public abstract class OrbitalBody : MonoBehaviour
         MeanAnomalyAtEpoch = OrbitalMechanics.MeanAnomalyAtEpoch(EccentricAnomaly, Eccentricity);
         MeanAnomaly = MeanAnomalyAtEpoch;
         OrbitalPosition = OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly);
-        OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis); //FIXME: broken for hyperbole
+        OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis); //FIXME: broken for hyperbola
     }
     #endregion PHYSICS
 
@@ -298,9 +298,7 @@ public abstract class OrbitalBody : MonoBehaviour
             EccentricAnomaly = OrbitalMechanics.EccentricAnomaly(MeanAnomaly, Eccentricity, 6);
             TrueAnomaly = OrbitalMechanics.HyperbolicTrueAnomaly(Eccentricity, EccentricAnomaly);
         }
-        Debug.Log("Calculated: " + OrbitalMechanics.OrbitalRadius(Eccentricity, TrueAnomaly, SemimajorAxis));
-        Vector3 rel = (Vector3)body.position - (Vector3)CurrentGravitySource.Position;
-        Debug.Log("Rel: " + rel.magnitude);
+        
         // Update orbital Position and velocity
         OrbitalPosition = OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly);
         OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
