@@ -140,13 +140,42 @@ public static class OrbitalMechanics
 
         return speed * direction;
     }
+    
+    public static Vector2 OrbitalVelocity(float meanMotion, float eccentricAnomaly, float eccentricity, float semimajorAxis, float semiminorAxis)
+    {
+        if (eccentricity >= 1f)
+        {
+            // Hyperbolic
+            //dM = ecoshE * dE - dE
+
+        }
+        //dE = dM / (1 - e*cosE), dM = n
+        //p = a*cosE - e
+        //q = b*sinE
+        //dp = -a*sinE*dE
+        //dq = b*cosE*dE
+        float deltaE = meanMotion / (1f - (eccentricity * Mathf.Cos(eccentricAnomaly)));
+        return new Vector2(-semimajorAxis * Mathf.Sin(eccentricAnomaly), semiminorAxis * Mathf.Cos(eccentricAnomaly)) * deltaE;
+    }
 
     public static Vector2 OrbitalVelocity(float meanMotion, float eccentricAnomaly, float eccentricity, float semimajorAxis)
     {
+        if (eccentricity >= 1f)
+        {
+            // Hyperbolic
+            //dM = ecoshE * dE - dE
+            
+        }
+        //dE = dM / (1 - e*cosE), dM = n
+        //p = a*cosE - e
+        //q = b*sinE
+        //dp = -a*sinE*dE
+        //dq = b*cosE*dE
         float deltaE = meanMotion / (1f - (eccentricity * Mathf.Cos(eccentricAnomaly)));
-        return new Vector2(-Mathf.Sin(eccentricAnomaly), Mathf.Cos(eccentricAnomaly) * Mathf.Sqrt(1 - Mathf.Pow(eccentricity, 2))) * semimajorAxis * deltaE;
-
+        float semiminorAxis = semimajorAxis * Mathf.Sqrt(1f - Mathf.Pow(eccentricity, 2));
+        return new Vector2(-semimajorAxis * Mathf.Sin(eccentricAnomaly), semiminorAxis * Mathf.Cos(eccentricAnomaly)) * deltaE;
     }
+
     public static float SpecificOrbitalEnergy(float mainMass, float orbitalMass, float semimajorAxis)
     {
         return -1f * StandardGravityParameter(mainMass + orbitalMass) / (2f * semimajorAxis);
@@ -208,9 +237,16 @@ public static class OrbitalMechanics
         
         //Convert to polar coordinates
         return orbitalRadius * new Vector2(Mathf.Cos(trueAnomaly), Mathf.Sin(trueAnomaly));
+    }
 
+    public static Vector2 OrbitalPosition(float eccentricAnomaly, float eccentricity, float semimajorAxis, float semiminorAxis)
+    {
         //FROM EccentricAnomaly directly to Cartesian
+
+        //p = a*cosE - e
+        //q = b*sinE
         //return new Vector2(Mathf.Cos(EccentricAnomaly) - Eccentricity, Mathf.Sin(EccentricAnomaly) * Mathf.Sqrt(1 - Mathf.Pow(Eccentricity, 2))) * SemimajorAxis; 
+        return new Vector2(semimajorAxis * (Mathf.Cos(eccentricAnomaly) - eccentricity), semiminorAxis * Mathf.Sin(eccentricAnomaly));
     }
 
     public static float EccentricAnomalyAtEpoch(float orbitalDistance, float eccentricity, float semimajorAxis)

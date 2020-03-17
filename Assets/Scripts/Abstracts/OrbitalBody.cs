@@ -293,7 +293,7 @@ public abstract class OrbitalBody : MonoBehaviour
         }
         else
         {
-            TimeSinceEpoch = TimeSinceEpoch + Time.fixedDeltaTime;
+            TimeSinceEpoch += Time.fixedDeltaTime;
             MeanAnomaly = OrbitalMechanics.MeanAnomaly(MeanAnomalyAtEpoch, MeanMotion, TimeSinceEpoch);
             EccentricAnomaly = OrbitalMechanics.EccentricAnomaly(MeanAnomaly, Eccentricity, 6);
             TrueAnomaly = OrbitalMechanics.HyperbolicTrueAnomaly(Eccentricity, EccentricAnomaly);
@@ -301,6 +301,8 @@ public abstract class OrbitalBody : MonoBehaviour
         
         // Update orbital Position and velocity
         OrbitalPosition = OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly);
+        Debug.Log("w-based: " + OrbitalPosition);
+        Debug.Log("E-based: " + OrbitalMechanics.OrbitalPosition(EccentricAnomaly, Eccentricity, SemimajorAxis, SemiminorAxis));
         OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
         transform.position = OrbitalPositionToWorld;
     }
