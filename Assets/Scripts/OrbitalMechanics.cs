@@ -239,13 +239,14 @@ public static class OrbitalMechanics
         return orbitalRadius * new Vector2(Mathf.Cos(trueAnomaly), Mathf.Sin(trueAnomaly));
     }
 
-    public static Vector2 OrbitalPosition(float eccentricAnomaly, float eccentricity, float semimajorAxis, float semiminorAxis)
+    public static Vector2 OrbitalPosition(float eccentricAnomaly, float eccentricity, float semimajorAxis, float semiminorAxis, bool clockWise)
     {
         //FROM EccentricAnomaly directly to Cartesian
 
         //p = a*cosE - e
         //q = b*sinE
         //return new Vector2(Mathf.Cos(EccentricAnomaly) - Eccentricity, Mathf.Sin(EccentricAnomaly) * Mathf.Sqrt(1 - Mathf.Pow(Eccentricity, 2))) * SemimajorAxis; 
+        eccentricAnomaly = clockWise ? 2f * Mathf.PI - eccentricAnomaly : eccentricAnomaly;
         return new Vector2(semimajorAxis * (Mathf.Cos(eccentricAnomaly) - eccentricity), semiminorAxis * Mathf.Sin(eccentricAnomaly));
     }
 
