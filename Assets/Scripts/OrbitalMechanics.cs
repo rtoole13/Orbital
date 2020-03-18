@@ -96,6 +96,7 @@ public static class OrbitalMechanics
         return nu;
     }
 
+
     public static float HyperbolicTrueAnomaly(float orbitalDistance, float semimajorAxis, float eccentricity)
     {
         float cosNu = (SemilatusRectum(semimajorAxis, eccentricity) / orbitalDistance - 1f) / eccentricity;
@@ -222,7 +223,7 @@ public static class OrbitalMechanics
         return 2 * Mathf.PI / meanMotion;
     }
 
-    public static float OrbitalRadius(float eccentricity, float trueAnomaly, float semimajorAxis)
+    public static float OrbitalRadius(float eccentricity, float semimajorAxis, float trueAnomaly)
     {
         // Always ends up positive because of the negative convention of semimajorAxis for hyperbolas
         float denom = 1f + (eccentricity * Mathf.Cos(trueAnomaly));
@@ -230,12 +231,13 @@ public static class OrbitalMechanics
         return semimajorAxis * num / denom;
     }
 
-    public static Vector2 OrbitalPosition(float eccentricity, float semimajorAxis, float trueAnomaly)
+    public static float HyperbolicOrbitalRadius(float hyperbolicAnomaly, float semimajorAxis, float eccentricity)
     {
-        //From TrueAnomaly -> radius -> Cartesian
-        float orbitalRadius = OrbitalRadius(eccentricity, trueAnomaly, semimajorAxis);
-        
-        //Convert to polar coordinates
+        return semimajorAxis * (1f - eccentricity * Cosh(hyperbolicAnomaly));
+    }
+
+    public static Vector2 OrbitalPosition(float orbitalRadius, float trueAnomaly)
+    {
         return orbitalRadius * new Vector2(Mathf.Cos(trueAnomaly), Mathf.Sin(trueAnomaly));
     }
 

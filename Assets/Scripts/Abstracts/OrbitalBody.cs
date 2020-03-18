@@ -21,6 +21,7 @@ public abstract class OrbitalBody : MonoBehaviour
     private float _meanMotion;
     private float _orbitalPeriod;
     private Vector2 _orbitalPosition;
+    private float _orbitalRadius;
     private float _period;
     private float _semimajorAxis;
     private float _semiminorAxis;
@@ -28,7 +29,6 @@ public abstract class OrbitalBody : MonoBehaviour
     private Vector3 _specificRelativeAngularMomentum;
     private float _timeSinceEpoch;
     private OrbitalMechanics.TrajectoryType _trajectoryType;
-    private float _trueAnomaly;
 
     protected Rigidbody2D body;
     protected bool updateIteratively = true;
@@ -156,9 +156,14 @@ public abstract class OrbitalBody : MonoBehaviour
     public Vector2 OrbitalPosition
     {
         get { return _orbitalPosition; }
-        protected set { _orbitalPosition = value; }
+        private set { _orbitalPosition = value; }
     }
 
+    public float OrbitalRadius
+    {
+        get { return _orbitalRadius; }
+        private set { _orbitalRadius = value; }
+    }
     public Vector2 OrbitalVelocity
     {
         get { return _OrbitalVelocity; }
@@ -226,8 +231,29 @@ public abstract class OrbitalBody : MonoBehaviour
 
     public float TrueAnomaly
     {
-        get { return _trueAnomaly; }
-        protected set { _trueAnomaly = value; }
+        get 
+        { 
+            if (updateIteratively)
+            {
+                // FROM STATE VECTORS
+                Vector3 sourceRelativePosition = (Vector3)body.position - (Vector3)CurrentGravitySource.Position;
+                Vector3 sourceRelativeVelocity = (Vector3)body.velocity - (Vector3)CurrentGravitySource.Velocity;
+                return OrbitalMechanics.TrueAnomaly(sourceRelativePosition, sourceRelativeVelocity, Mass);
+            }
+            else
+            {
+                // FROM ORBITAL ELEMENTS
+                if (TrajectoryType == OrbitalMechanics.TrajectoryType.Ellipse)
+                {
+                    return OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
+                }
+                else
+                {
+                    // Here, it's assumed that EccentricAnomaly is in fact the hyperbolic anomaly
+                    return OrbitalMechanics.HyperbolicTrueAnomaly(Eccentricity, EccentricAnomaly);
+                }
+            }
+        }
     }
     #endregion GETSET
 
@@ -260,21 +286,26 @@ public abstract class OrbitalBody : MonoBehaviour
         // Epoch parameters
         TimeSinceEpoch = 0f;
         MeanMotion = OrbitalMechanics.MeanMotion(CurrentGravitySource.Mass, SemimajorAxis);
+        MeanAnomalyAtEpoch = OrbitalMechanics.MeanAnomalyAtEpoch(EccentricAnomaly, Eccentricity);
+        MeanAnomaly = MeanAnomalyAtEpoch;
         if (TrajectoryType == OrbitalMechanics.TrajectoryType.Ellipse)
         {
             OrbitalPeriod = OrbitalMechanics.OrbitalPeriod(MeanMotion);
             EccentricAnomaly = OrbitalMechanics.EccentricAnomalyAtEpoch(sourceRelativePosition, sourceRelativeVelocity, CurrentGravitySource.Mass, Eccentricity);
-            TrueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
+            float trueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
+            OrbitalRadius = OrbitalMechanics.OrbitalRadius(Eccentricity, SemimajorAxis, trueAnomaly);
+            OrbitalPosition = OrbitalMechanics.OrbitalPosition(OrbitalRadius, trueAnomaly);
+            OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
         }
         else
         {
-            TrueAnomaly = OrbitalMechanics.TrueAnomaly(sourceRelativePosition, sourceRelativeVelocity, CurrentGravitySource.Mass);
-            EccentricAnomaly = OrbitalMechanics.HyperbolicAnomaly(TrueAnomaly, Eccentricity);
+            float trueAnomaly = OrbitalMechanics.TrueAnomaly(sourceRelativePosition, sourceRelativeVelocity, CurrentGravitySource.Mass);
+            EccentricAnomaly = OrbitalMechanics.HyperbolicAnomaly(trueAnomaly, Eccentricity);
+            OrbitalRadius = OrbitalMechanics.OrbitalRadius(Eccentricity, SemimajorAxis, trueAnomaly);
+            OrbitalPosition = OrbitalMechanics.OrbitalPosition(OrbitalRadius, trueAnomaly);
+            OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis); //BROKE
         }
-        MeanAnomalyAtEpoch = OrbitalMechanics.MeanAnomalyAtEpoch(EccentricAnomaly, Eccentricity);
-        MeanAnomaly = MeanAnomalyAtEpoch;
-        OrbitalPosition = OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly);
-        OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis); //FIXME: broken for hyperbola
+        
     }
     #endregion PHYSICS
 
@@ -289,21 +320,20 @@ public abstract class OrbitalBody : MonoBehaviour
             TimeSinceEpoch = (TimeSinceEpoch + Time.fixedDeltaTime) % OrbitalPeriod;
             MeanAnomaly = OrbitalMechanics.MeanAnomaly(MeanAnomalyAtEpoch, MeanMotion, TimeSinceEpoch);
             EccentricAnomaly = OrbitalMechanics.EccentricAnomaly(MeanAnomaly, Eccentricity, 6);
-            TrueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
+            OrbitalRadius = OrbitalMechanics.OrbitalRadius(Eccentricity, SemimajorAxis, TrueAnomaly);
+            OrbitalPosition = OrbitalMechanics.OrbitalPosition(OrbitalRadius, TrueAnomaly);
+            OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
         }
         else
         {
             TimeSinceEpoch += Time.fixedDeltaTime;
             MeanAnomaly = OrbitalMechanics.MeanAnomaly(MeanAnomalyAtEpoch, MeanMotion, TimeSinceEpoch);
             EccentricAnomaly = OrbitalMechanics.EccentricAnomaly(MeanAnomaly, Eccentricity, 6);
-            TrueAnomaly = OrbitalMechanics.HyperbolicTrueAnomaly(Eccentricity, EccentricAnomaly);
+            OrbitalRadius = OrbitalMechanics.HyperbolicOrbitalRadius(EccentricAnomaly, SemimajorAxis, Eccentricity);
+            OrbitalPosition = OrbitalMechanics.OrbitalPosition(OrbitalRadius, TrueAnomaly);
+            OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis); //BROKE
+
         }
-        
-        // Update orbital Position and velocity
-        OrbitalPosition = OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly);
-        Debug.Log("w-based: " + OrbitalPosition);
-        Debug.Log("E-based: " + OrbitalMechanics.OrbitalPosition(EccentricAnomaly, Eccentricity, SemimajorAxis, SemiminorAxis));
-        OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
         transform.position = OrbitalPositionToWorld;
     }
     #endregion GENERAL
