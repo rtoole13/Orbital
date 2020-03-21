@@ -138,25 +138,25 @@ public abstract class GravityAffected : OrbitalBody
     #endregion PHYSICS
 
 
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawCube(lastEpochPos, new Vector3(.5f, .5f, .5f));
-        Gizmos.color = Color.green;
-        Gizmos.DrawCube(currentEpochPosition, new Vector3(.5f, .5f, .5f));
-        float updateInterval = 0.05f;
-        if (TimeSinceEpoch > 0 && TimeSinceEpoch < updateInterval && canUpdateEpochs)
-        {
-            lastEpochPos = currentEpochPosition + CurrentGravitySource.Position;
-            currentEpochPosition = body.position + CurrentGravitySource.Position;
-            canUpdateEpochs = false;
-            elapsedEpochTime = 0f;
-        }
-        elapsedEpochTime += Time.fixedDeltaTime;
-        if (elapsedEpochTime > updateInterval + 1f)
-            canUpdateEpochs = true;
+    //private void OnDrawGizmos()
+    //{
+    //    Gizmos.color = Color.red;
+    //    Gizmos.DrawCube(lastEpochPos, new Vector3(.5f, .5f, .5f));
+    //    Gizmos.color = Color.green;
+    //    Gizmos.DrawCube(currentEpochPosition, new Vector3(.5f, .5f, .5f));
+    //    float updateInterval = 0.05f;
+    //    if (TimeSinceEpoch > 0 && TimeSinceEpoch < updateInterval && canUpdateEpochs)
+    //    {
+    //        lastEpochPos = currentEpochPosition + CurrentGravitySource.Position;
+    //        currentEpochPosition = body.position + CurrentGravitySource.Position;
+    //        canUpdateEpochs = false;
+    //        elapsedEpochTime = 0f;
+    //    }
+    //    elapsedEpochTime += Time.fixedDeltaTime;
+    //    if (elapsedEpochTime > updateInterval + 1f)
+    //        canUpdateEpochs = true;
 
-        Gizmos.color = Color.blue;
-        Gizmos.DrawCube(trajectoryPosition, new Vector3(.5f, .5f, .5f));
-    }
+    //    Gizmos.color = Color.blue;
+    //    Gizmos.DrawCube(trajectoryPosition, new Vector3(.5f, .5f, .5f));
+    //}
 }

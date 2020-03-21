@@ -16,6 +16,27 @@ public static class OrbitalMechanics
         return GRAVITATIONALCONSTANT * mass;
     }
 
+    public static float HyperbolicExcessVelocity(float mass, float semimajorAxis)
+    {
+        return Mathf.Sqrt(-StandardGravityParameter(mass) / semimajorAxis);
+    }
+
+    public static float TrueAnomalyOfAsymptote(float eccentricity, bool clockWise)
+    {
+        float nuInf = Mathf.Acos(-1f / eccentricity);
+        nuInf = clockWise ? 2 * Mathf.PI - nuInf : nuInf; // CW orbit when switched from iterative
+
+        // move [-pi, pi] range to [0, 2pi]
+        float twoPi = 2f * Mathf.PI;
+        nuInf = (nuInf + twoPi) % twoPi;
+        return nuInf;
+    }
+
+    public static Vector2 HyperbolicAsymptote(float trueAnomalyOfAsymptote)
+    {
+        return new Vector2(Mathf.Cos(trueAnomalyOfAsymptote), Mathf.Sin(trueAnomalyOfAsymptote));
+    }
+
     public static Vector2 GravitationalForceAtPosition(this GravitySource gravitySource, Vector2 position, float mass)
     {
         Vector2 distance = gravitySource.Position - position;
@@ -129,17 +150,20 @@ public static class OrbitalMechanics
     #endregion STATEVECTORS
 
     #region ORBITALELEMENTS
+    public static float OrbitalSpeed(float mainMass, float orbitalRadius, float semimajorAxis)
+    {
+        return Mathf.Sqrt(GRAVITATIONALCONSTANT * mainMass * ((2f / orbitalRadius) - (1f / semimajorAxis)));
+    }
+
     public static Vector2 OrbitalVelocity(Vector3 specificRelativeAngularMomentum, Vector3 orbitalRadius, float mainMass, float semimajorAxis)
     {
         // NOTE: Specific relative angular momentum must have been calculated at a previous point, when accel was constant.
 
         // Get direction
-        Vector2 direction = Vector3.Cross(specificRelativeAngularMomentum, orbitalRadius);
+        Vector2 direction = Vector3.Cross(specificRelativeAngularMomentum, orbitalRadius).normalized;
 
-        // Get speed via vis-viva
-        float speed = Mathf.Sqrt(GRAVITATIONALCONSTANT * mainMass * ((2 / orbitalRadius.magnitude) - (1 / semimajorAxis)));
-
-        return speed * direction;
+        // Get speed via vis-viva, multiply by direction vector
+        return OrbitalSpeed(mainMass, orbitalRadius.magnitude, semimajorAxis) * direction;
     }
     
     public static Vector2 OrbitalVelocity(float meanMotion, float eccentricAnomaly, float eccentricity, float semimajorAxis, float semiminorAxis)
@@ -234,10 +258,13 @@ public static class OrbitalMechanics
     {
         // Always ends up positive because of the negative convention of semimajorAxis for hyperbolas
         float denom = 1f + (eccentricity * Mathf.Cos(trueAnomaly));
-        Debug.Log("nu " + trueAnomaly);
-        Debug.Log("denom " + denom);
         float num = 1f - Mathf.Pow(eccentricity, 2);
         return semimajorAxis * num / denom;
+    }
+
+    public static float HyperbolicOrbitalRadius(float eccentricity, float semimajorAxis, float hyperbolicEccentricAnomaly)
+    {
+        return semimajorAxis * (1f - eccentricity * Cosh(hyperbolicEccentricAnomaly));
     }
 
     public static Vector2 OrbitalPosition(float orbitalRadius, float trueAnomaly)
