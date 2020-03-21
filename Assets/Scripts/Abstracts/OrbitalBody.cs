@@ -285,7 +285,6 @@ public abstract class OrbitalBody : MonoBehaviour
             OrbitalPosition = OrbitalMechanics.OrbitalPosition(OrbitalRadius, trueAnomaly);
             OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis); //BROKE
         }
-        
     }
     #endregion PHYSICS
 
@@ -301,7 +300,7 @@ public abstract class OrbitalBody : MonoBehaviour
             MeanAnomaly = OrbitalMechanics.MeanAnomaly(MeanAnomalyAtEpoch, MeanMotion, TimeSinceEpoch);
             EccentricAnomaly = OrbitalMechanics.EccentricAnomaly(MeanAnomaly, Eccentricity, 6);
             TrueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
-            OrbitalRadius = OrbitalMechanics.OrbitalRadius(Eccentricity, SemimajorAxis, TrueAnomaly);
+            
             OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
         }
         else
@@ -309,12 +308,11 @@ public abstract class OrbitalBody : MonoBehaviour
             TimeSinceEpoch += Time.fixedDeltaTime;
             MeanAnomaly = OrbitalMechanics.MeanAnomaly(MeanAnomalyAtEpoch, MeanMotion, TimeSinceEpoch);
             EccentricAnomaly = OrbitalMechanics.EccentricAnomaly(MeanAnomaly, Eccentricity, 6);
-            TrueAnomaly = OrbitalMechanics.HyperbolicTrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum.z < 0f);
-            OrbitalRadius = OrbitalMechanics.HyperbolicOrbitalRadius(SemimajorAxis, Eccentricity, TrueAnomaly);
-            
+            //Debug.Log(EccentricAnomaly * Mathf.Rad2Deg);
+            TrueAnomaly = OrbitalMechanics.HyperbolicTrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum.z > 0f);
             OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis); //BROKE
-            Debug.Log(TrueAnomaly);
         }
+        OrbitalRadius = OrbitalMechanics.OrbitalRadius(Eccentricity, SemimajorAxis, TrueAnomaly);
         OrbitalPosition = OrbitalMechanics.OrbitalPosition(OrbitalRadius, TrueAnomaly);
         transform.position = OrbitalPositionToWorld;
     }

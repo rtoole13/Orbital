@@ -208,18 +208,19 @@ public static class OrbitalMechanics
 
         // move [-pi, pi] range to [0, 2pi]
         float twoPi = 2f * Mathf.PI;
-        nu = (nu + twoPi) % twoPi; // FIXME Shouldn't work in the CW orbit case
+        nu = (nu + twoPi) % twoPi;
         return nu;
     }
 
     public static float HyperbolicTrueAnomaly(float eccentricity, float hyperbolicEccentricAnomaly, bool clockWise)
     {
         float nu = 2f * Mathf.Atan(HalfTanh(hyperbolicEccentricAnomaly) * Mathf.Sqrt((eccentricity + 1f) / (eccentricity - 1f)));
+        
         nu = clockWise ? 2 * Mathf.PI - nu : nu; // CW orbit when switched from iterative
 
         // move [-pi, pi] range to [0, 2pi]
         float twoPi = 2f * Mathf.PI;
-        nu = (nu + twoPi) % twoPi; // FIXME Shouldn't work in the CW orbit case
+        nu = (nu + twoPi) % twoPi; 
         return nu;
     }
 
@@ -233,13 +234,10 @@ public static class OrbitalMechanics
     {
         // Always ends up positive because of the negative convention of semimajorAxis for hyperbolas
         float denom = 1f + (eccentricity * Mathf.Cos(trueAnomaly));
+        Debug.Log("nu " + trueAnomaly);
+        Debug.Log("denom " + denom);
         float num = 1f - Mathf.Pow(eccentricity, 2);
         return semimajorAxis * num / denom;
-    }
-
-    public static float HyperbolicOrbitalRadius(float semimajorAxis, float eccentricity, float trueAnomaly)
-    {
-        return semimajorAxis * (1f - Mathf.Pow(eccentricity, 2)) / (1 + eccentricity * Mathf.Cos(trueAnomaly));
     }
 
     public static Vector2 OrbitalPosition(float orbitalRadius, float trueAnomaly)
