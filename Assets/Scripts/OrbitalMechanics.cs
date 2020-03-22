@@ -117,6 +117,10 @@ public static class OrbitalMechanics
         return nu;
     }
 
+    public static float RadiusOfInfluence(float semimajorAxis, float orbitingMass, float mainMass)
+    {
+        return Mathf.Abs(semimajorAxis) * Mathf.Pow(orbitingMass / mainMass, 2f / 5f);
+    }
 
     public static float HyperbolicTrueAnomaly(float orbitalDistance, float semimajorAxis, float eccentricity)
     {
@@ -200,6 +204,33 @@ public static class OrbitalMechanics
         float semiminorAxis = semimajorAxis * Mathf.Sqrt(1f - Mathf.Pow(eccentricity, 2));
         return new Vector2(-semimajorAxis * Mathf.Sin(eccentricAnomaly), semiminorAxis * Mathf.Cos(eccentricAnomaly)) * deltaE;
     }
+    
+    public static float FlightPathAngle(float eccentricity, float trueAnomaly)
+    {
+        float phi, denom;
+        if (eccentricity >= 1f)
+        {
+            // Hyperbolic
+            denom = 1f + eccentricity;
+            phi = Mathf.Atan2(eccentricity * Mathf.Sin(trueAnomaly), denom); // Atan?
+        }
+        trueAnomaly = 2 * Mathf.PI - trueAnomaly;
+        denom = Mathf.Sqrt(1f + Mathf.Pow(eccentricity, 2) + 2f * eccentricity * Mathf.Cos(trueAnomaly));
+        float num = 1f + eccentricity * Mathf.Cos(trueAnomaly);
+        phi = Mathf.Acos(num / denom);
+        //Debug.Log(phi * Mathf.Rad2Deg);
+        return phi;
+    }
+    public static float EllipticalFlightPathAngle(Vector3 specificRelativeAngularMomentum, float orbitalRadius, float orbitalSpeed)
+    {
+        // ONLY valid for Elliptical orbitals
+        float phi = Mathf.Acos(specificRelativeAngularMomentum.magnitude / (orbitalRadius * orbitalSpeed));
+        //phi = specificRelativeAngularMomentum.z > 0f // Clockwise
+        //    ? 2f * Mathf.PI - phi
+        //    : phi;
+        //Debug.Log(phi * Mathf.Rad2Deg);
+        return phi;
+    }
 
     public static float SpecificOrbitalEnergy(float mainMass, float orbitalMass, float semimajorAxis)
     {
@@ -215,6 +246,7 @@ public static class OrbitalMechanics
     {
         if (eccentricity >= 1)
         {
+            // Hyperbolic
             return -1f * semimajorAxis * Mathf.Sqrt(Mathf.Pow(eccentricity, 2) - 1);
         }
         return semimajorAxis * Mathf.Sqrt(1 - Mathf.Pow(eccentricity, 2)); ;
@@ -228,7 +260,7 @@ public static class OrbitalMechanics
         float nu = Mathf.Atan2(sinNu, cosNu);
 
         if (specificRelativeAngularMomentum.z < 0f)
-            nu = 2 * Mathf.PI - nu; // CW orbit when switched from iterative
+            nu = 2f * Mathf.PI - nu; // CW orbit when switched from iterative
 
         // move [-pi, pi] range to [0, 2pi]
         float twoPi = 2f * Mathf.PI;

@@ -9,7 +9,7 @@ public class CameraController : MonoBehaviour
     private float zoomMultiplier = 4f;
 
     [SerializeField]
-    [Range(0.01f, 0.2f)]
+    [Range(0.01f, 0.5f)]
     private float trackingDeltaDistance = 0.075f;
 
     [SerializeField]
