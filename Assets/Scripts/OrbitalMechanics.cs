@@ -24,7 +24,6 @@ public static class OrbitalMechanics
     public static float TrueAnomalyOfAsymptote(float eccentricity, bool clockWise)
     {
         float nuInf = Mathf.Acos(-1f / eccentricity);
-        nuInf = clockWise ? 2 * Mathf.PI - nuInf : nuInf; // CW orbit when switched from iterative
 
         // move [-pi, pi] range to [0, 2pi]
         float twoPi = 2f * Mathf.PI;
@@ -32,9 +31,12 @@ public static class OrbitalMechanics
         return nuInf;
     }
 
-    public static Vector2 HyperbolicAsymptote(float trueAnomalyOfAsymptote)
+    public static Vector2 HyperbolicAsymptote(float trueAnomalyOfAsymptote, bool clockWise)
     {
-        return new Vector2(Mathf.Cos(trueAnomalyOfAsymptote), Mathf.Sin(trueAnomalyOfAsymptote));
+        float sin = clockWise
+            ? -Mathf.Sin(trueAnomalyOfAsymptote)
+            : Mathf.Sin(trueAnomalyOfAsymptote);
+        return new Vector2(Mathf.Cos(trueAnomalyOfAsymptote), sin);
     }
 
     public static Vector2 GravitationalForceAtPosition(this GravitySource gravitySource, Vector2 position, float mass)
@@ -211,23 +213,26 @@ public static class OrbitalMechanics
         if (eccentricity >= 1f)
         {
             // Hyperbolic
-            denom = 1f + eccentricity;
-            phi = Mathf.Atan2(eccentricity * Mathf.Sin(trueAnomaly), denom); // Atan?
+            denom = 1f + eccentricity * Mathf.Cos(trueAnomaly);
+            phi = Mathf.Atan(eccentricity * Mathf.Sin(trueAnomaly) / denom); // Atan?
         }
-        trueAnomaly = 2 * Mathf.PI - trueAnomaly;
-        denom = Mathf.Sqrt(1f + Mathf.Pow(eccentricity, 2) + 2f * eccentricity * Mathf.Cos(trueAnomaly));
-        float num = 1f + eccentricity * Mathf.Cos(trueAnomaly);
-        phi = Mathf.Acos(num / denom);
-        //Debug.Log(phi * Mathf.Rad2Deg);
+        else
+        {
+            //Debug.Log(trueAnomaly);
+            denom = Mathf.Sqrt(1f + Mathf.Pow(eccentricity, 2) + 2f * eccentricity * Mathf.Cos(trueAnomaly));
+            float num = 1f + eccentricity * Mathf.Cos(trueAnomaly);
+            phi = Mathf.Acos(num / denom);
+        }
+        //Debug.Log("Phi: " + phi * Mathf.Rad2Deg);
         return phi;
     }
     public static float EllipticalFlightPathAngle(Vector3 specificRelativeAngularMomentum, float orbitalRadius, float orbitalSpeed)
     {
         // ONLY valid for Elliptical orbitals
         float phi = Mathf.Acos(specificRelativeAngularMomentum.magnitude / (orbitalRadius * orbitalSpeed));
-        //phi = specificRelativeAngularMomentum.z > 0f // Clockwise
-        //    ? 2f * Mathf.PI - phi
-        //    : phi;
+        phi = specificRelativeAngularMomentum.z > 0f // Clockwise
+            ? - phi
+            : phi;
         //Debug.Log(phi * Mathf.Rad2Deg);
         return phi;
     }
@@ -258,10 +263,7 @@ public static class OrbitalMechanics
         float sinNu = Mathf.Sqrt(1f - Mathf.Pow(eccentricity, 2)) * Mathf.Sin(eccentricAnomaly);
         float cosNu = Mathf.Cos(eccentricAnomaly) - eccentricity;
         float nu = Mathf.Atan2(sinNu, cosNu);
-
-        if (specificRelativeAngularMomentum.z < 0f)
-            nu = 2f * Mathf.PI - nu; // CW orbit when switched from iterative
-
+        
         // move [-pi, pi] range to [0, 2pi]
         float twoPi = 2f * Mathf.PI;
         nu = (nu + twoPi) % twoPi;
@@ -272,8 +274,6 @@ public static class OrbitalMechanics
     {
         float nu = 2f * Mathf.Atan(HalfTanh(hyperbolicEccentricAnomaly) * Mathf.Sqrt((eccentricity + 1f) / (eccentricity - 1f)));
         
-        nu = clockWise ? 2 * Mathf.PI - nu : nu; // CW orbit when switched from iterative
-
         // move [-pi, pi] range to [0, 2pi]
         float twoPi = 2f * Mathf.PI;
         nu = (nu + twoPi) % twoPi; 
@@ -299,9 +299,12 @@ public static class OrbitalMechanics
         return semimajorAxis * (1f - eccentricity * Cosh(hyperbolicEccentricAnomaly));
     }
 
-    public static Vector2 OrbitalPosition(float orbitalRadius, float trueAnomaly)
+    public static Vector2 OrbitalPosition(float orbitalRadius, float trueAnomaly, bool clockWise)
     {
-        return orbitalRadius * new Vector2(Mathf.Cos(trueAnomaly), Mathf.Sin(trueAnomaly));
+        float sin = clockWise
+            ? -Mathf.Sin(trueAnomaly)
+            : Mathf.Sin(trueAnomaly);
+        return orbitalRadius * new Vector2(Mathf.Cos(trueAnomaly), sin);
     }
 
     public static Vector2 OrbitalPosition(float eccentricAnomaly, float eccentricity, float semimajorAxis, float semiminorAxis, bool clockWise)
@@ -343,30 +346,31 @@ public static class OrbitalMechanics
 
     public static float MeanMotion(float bodyMass, float semimajorAxis)
     {
-        float absSemimajorAxis, sign;
+        float absSemimajorAxis;
         if (semimajorAxis < 0)
         {
             absSemimajorAxis = -1f * semimajorAxis;
-            sign = -1f;
         }
         else
         {
             absSemimajorAxis = semimajorAxis;
-            sign = 1f;
         }
-        return sign * Mathf.Sqrt(StandardGravityParameter(bodyMass) / Mathf.Pow(absSemimajorAxis, 3));
+        return Mathf.Sqrt(StandardGravityParameter(bodyMass) / Mathf.Pow(absSemimajorAxis, 3));
     }
 
     public static float MeanAnomaly(float meanAnomalyAtEpoch, float meanMotion, float timeSinceEpoch)
     {
         // Updated mean anomaly, assuming mean anomaly at epoch has been calculated!
-        return meanAnomalyAtEpoch + meanMotion * timeSinceEpoch;
+        float M = meanAnomalyAtEpoch + meanMotion * timeSinceEpoch;
+
+        return MathUtilities.Modulo(M, 2 * Mathf.PI);
     }
 
     public static float MeanAnomaly(float meanAnomalyAtEpoch, float bodyMass, float semimajorAxis, float timeSinceEpoch)
     {
         // Updated mean anomaly, assuming mean anomaly at epoch has been calculated!
-        return meanAnomalyAtEpoch + MeanMotion(bodyMass, semimajorAxis) * timeSinceEpoch;
+        float M = meanAnomalyAtEpoch + MeanMotion(bodyMass, semimajorAxis) * timeSinceEpoch;
+        return MathUtilities.Modulo(M, 2 * Mathf.PI);
     }
 
     public static float EccentricAnomaly(float meanAnomaly, float eccentricity, int maxIterations)

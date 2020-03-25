@@ -367,7 +367,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 220b5a1c1ed8f7044bab621386eb5fa7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startVelocity: {x: 6.5, y: 8}
+  startVelocity: {x: 5, y: 8}
   _gravitySource: {fileID: 1908100516}
   _mass: 1
   clickForce: 2
@@ -1023,7 +1023,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   startVelocity: {x: 0, y: 8}
-  _gravitySource: {fileID: 1739312351}
+  _gravitySource: {fileID: 0}
   _mass: 200
 --- !u!114 &1908100517
 MonoBehaviour:
