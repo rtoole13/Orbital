@@ -332,19 +332,19 @@ public abstract class OrbitalBody : MonoBehaviour
             EccentricAnomaly = OrbitalMechanics.HyperbolicAnomaly(TrueAnomaly, Eccentricity);
             //OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis); //BROKE
         }
+        FlightPathAngle = OrbitalMechanics.FlightPathAngle(Eccentricity, TrueAnomaly);
         MeanAnomalyAtEpoch = OrbitalMechanics.MeanAnomalyAtEpoch(EccentricAnomaly, Eccentricity);
         MeanAnomaly = MeanAnomalyAtEpoch;
         OrbitalRadius = OrbitalMechanics.OrbitalRadius(Eccentricity, SemimajorAxis, TrueAnomaly);
         lastPosition = OrbitalPosition;
         OrbitalPosition = OrbitalMechanics.OrbitalPosition(OrbitalRadius, TrueAnomaly, clockWiseOrbit);
+        OrbitalSpeed = OrbitalMechanics.OrbitalSpeed(CurrentGravitySource.Mass, OrbitalRadius, SemimajorAxis);
     }
     #endregion PHYSICS
 
     #region GENERAL
 
     protected void UpdateDeterministically(){
-        // Only expected to be called at some time after CalculateEpochParameters
-        
         if (CurrentGravitySource == null)
             return;
 
@@ -358,7 +358,6 @@ public abstract class OrbitalBody : MonoBehaviour
         {
             UpdateHyperbolically();
         }
-        Debug.LogFormat("{0} vel: {1}", gameObject.name, OrbitalVelocity);
     }
 
     protected void UpdateElliptically()
@@ -424,12 +423,13 @@ public abstract class OrbitalBody : MonoBehaviour
             return false;
         }
         Debug.LogFormat("Leaving {0}'s sphere of influence. Entering {1}'s.", CurrentGravitySource.name, CurrentGravitySource.CurrentGravitySource.name);
-        return false;
+        return true;
     }
 
     protected void LeaveSphereOfInfluence()
     {
         CurrentGravitySource = CurrentGravitySource.CurrentGravitySource;
+        body.velocity = OrbitalVelocityToWorld; //HACK, fix me
         CalculateOrbitalParametersFromStateVectors();
     }
 
