@@ -227,13 +227,13 @@ public abstract class OrbitalBody : MonoBehaviour
     }
 
     public Vector2 OrbitalVelocityToWorld
-    {
-        
+    {   
         get 
         {
             Vector2 velocity = CurrentGravitySource != null
                 ? CurrentGravitySource.Velocity
                 : Vector2.zero;
+            Debug.Log(velocity);
             return OrbitalVelocity.RotateVector(ArgumentOfPeriapsis) + velocity;
         }
     }
@@ -294,11 +294,8 @@ public abstract class OrbitalBody : MonoBehaviour
     #endregion UNITY
 
     #region PHYSICS
-    protected void CalculateOrbitalParametersFromStateVectors()
+    protected void CalculateOrbitalParametersFromStateVectors(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)
     {
-        // This should only be called from the iterative update method and only once before switching to trajectory update.
-        Vector3 sourceRelativePosition = (Vector3)Position - (Vector3)CurrentGravitySource.Position;        
-        Vector3 sourceRelativeVelocity = (Vector3)body.velocity - (Vector3)CurrentGravitySource.Velocity;
         OrbitalSpeed = sourceRelativeVelocity.magnitude;
         SpecificRelativeAngularMomentum = OrbitalMechanics.SpecificRelativeAngularMomentum(sourceRelativePosition, sourceRelativeVelocity);
         clockWiseOrbit = SpecificRelativeAngularMomentum.z < 0;
@@ -373,9 +370,6 @@ public abstract class OrbitalBody : MonoBehaviour
         OrbitalSpeed = OrbitalMechanics.OrbitalSpeed(CurrentGravitySource.Mass, OrbitalRadius, SemimajorAxis);
         OrbitalVelocity = OrbitalSpeed * OrbitalMechanics.OrbitalDirection(TrueAnomaly, FlightPathAngle, clockWiseOrbit);
 
-        Debug.Log("MeanAnomaly:" + MeanAnomaly);
-        Debug.Log("E:" + EccentricAnomaly);
-        Debug.Log("u:" + TrueAnomaly);
         transform.position = OrbitalPositionToWorld;
     }
 
@@ -431,9 +425,12 @@ public abstract class OrbitalBody : MonoBehaviour
 
     protected void LeaveSphereOfInfluence()
     {
+        Vector2 velocity = Velocity; // world vel
+        Vector2 position = Position; // world position
         CurrentGravitySource = CurrentGravitySource.CurrentGravitySource;
-        body.velocity = OrbitalVelocityToWorld; //HACK, fix me
-        CalculateOrbitalParametersFromStateVectors();
+        velocity -= CurrentGravitySource.Velocity; // world vel - new source vel
+        position -= CurrentGravitySource.Position; // world pos - new source pos
+        CalculateOrbitalParametersFromStateVectors(position, velocity);
     }
 
     #endregion GENERAL
@@ -445,7 +442,7 @@ public abstract class OrbitalBody : MonoBehaviour
 
         // Draw radius of SOI
         Gizmos.DrawWireSphere(Position, RadiusOfInfluence);
-
+        
         // Draw velocityVector
         Gizmos.color = Color.red;
         Vector2 dir = OrbitalMechanics.OrbitalDirection(TrueAnomaly, FlightPathAngle, clockWiseOrbit);

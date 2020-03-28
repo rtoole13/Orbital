@@ -26,7 +26,11 @@ public abstract class GravityAffected : OrbitalBody
     protected override void Start()
     {
         base.Start();
-        SwitchToDeterministicUpdate();
+        updateIteratively = false;
+        body.isKinematic = true;
+        Vector3 sourceRelativePosition = (Vector3)Position - (Vector3)CurrentGravitySource.Position;
+        Vector3 sourceRelativeVelocity = (Vector3)body.velocity - (Vector3)CurrentGravitySource.Velocity;
+        CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity);
     }
     protected virtual void Update(){
 
@@ -61,7 +65,7 @@ public abstract class GravityAffected : OrbitalBody
         if (!updateIteratively)
             return;
 
-        CalculateOrbitalParametersFromStateVectors();
+        //CalculateOrbitalParametersFromStateVectors();
         updateIteratively = false;
         body.isKinematic = true;
     }
@@ -98,11 +102,11 @@ public abstract class GravityAffected : OrbitalBody
         ApplyNonGravitationalForces();
         if (Input.GetMouseButtonUp(0))
         {
-            CalculateOrbitalParametersFromStateVectors();
+            //CalculateOrbitalParametersFromStateVectors();
         }
         if (Input.GetMouseButton(1))
         {
-            CalculateOrbitalParametersFromStateVectors();
+            //CalculateOrbitalParametersFromStateVectors();
         }
         TimeSinceEpoch = (TimeSinceEpoch + Time.fixedDeltaTime) % OrbitalPeriod;
         MeanAnomaly = OrbitalMechanics.MeanAnomaly(MeanAnomalyAtEpoch, MeanMotion, TimeSinceEpoch);

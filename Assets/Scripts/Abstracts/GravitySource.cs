@@ -38,7 +38,9 @@ public abstract class GravitySource : OrbitalBody
         if (CurrentGravitySource == null)
             return;
         updateIteratively = false;
-        CalculateOrbitalParametersFromStateVectors();
+        Vector3 sourceRelativePosition = (Vector3)Position - (Vector3)CurrentGravitySource.Position;
+        Vector3 sourceRelativeVelocity = (Vector3)body.velocity - (Vector3)CurrentGravitySource.Velocity;
+        CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity);
     }
 
     private void FixedUpdate()
