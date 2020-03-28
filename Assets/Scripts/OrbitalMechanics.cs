@@ -9,6 +9,8 @@ public static class OrbitalMechanics
     {
         Ellipse = 0,
         Hyperbola = 1
+        //Circle = 2,
+        //Parabola = 3,
     }
     #region GENERAL
     public static float StandardGravityParameter(float mass)
@@ -107,11 +109,13 @@ public static class OrbitalMechanics
         return 1 / denom;
     }
 
-    public static float TrueAnomaly(Vector3 relativePosition, Vector3 relativeVelocity, float bodyMass)
+    public static float TrueAnomaly(Vector3 relativePosition, Vector3 relativeVelocity, Vector3 eccentricityVector)
     {
-        Vector3 eccentricityVector = EccentricityVector(relativePosition, relativeVelocity, bodyMass);
-        float nu = Mathf.Acos(Vector2.Dot(eccentricityVector, relativePosition) / (eccentricityVector.magnitude * relativePosition.magnitude));
-
+        float eccentricity = eccentricityVector.magnitude;
+        float nu = eccentricity == 0f
+            ? 0f // If circular orbit, true anomaly to be considered angle b/w position vector and (1,0,0)
+            : Mathf.Acos(Vector2.Dot(eccentricityVector, relativePosition) / (eccentricityVector.magnitude * relativePosition.magnitude));
+        
         if (Vector2.Dot(relativePosition, relativeVelocity) < 0f)
         {
             nu = 2 * Mathf.PI - nu;
@@ -130,21 +134,19 @@ public static class OrbitalMechanics
         return Mathf.Acos(cosNu);
     }
 
-    public static float EccentricAnomalyAtEpoch(Vector3 relativePosition, Vector3 relativeVelocity, float bodyMass, float eccentricity)
+    public static float EccentricAnomalyAtEpoch(Vector3 relativePosition, Vector3 relativeVelocity, float bodyMass, Vector3 eccentricityVector)
     {
-        float trueAnomaly = TrueAnomaly(relativePosition, relativeVelocity, bodyMass);
+        float trueAnomaly = TrueAnomaly(relativePosition, relativeVelocity, eccentricityVector);
+        float eccentricity = eccentricityVector.magnitude;
         float E = Mathf.Atan2(Mathf.Sqrt(1 - Mathf.Pow(eccentricity, 2)) * Mathf.Sin(trueAnomaly), eccentricity + Mathf.Cos(trueAnomaly));
 
-        float modulus = 2f * Mathf.PI;
-        return E - (modulus * Mathf.Floor(E / modulus)); //FIXME: PROPER MODULUS OPERATOR -- MAKE GENERIC
+        return MathUtilities.Modulo(E, 2f * Mathf.PI);
     }
 
     public static float EccentricAnomalyAtEpoch(float trueAnomaly, float eccentricity)
     {
         float E = Mathf.Atan2(Mathf.Sqrt(1 - Mathf.Pow(eccentricity, 2)) * Mathf.Sin(trueAnomaly), eccentricity + Mathf.Cos(trueAnomaly));
-
-        float modulus = 2f * Mathf.PI;
-        return E - (modulus * Mathf.Floor(E / modulus)); //FIXME: PROPER MODULUS OPERATOR -- MAKE GENERIC
+        return MathUtilities.Modulo(E, 2f * Mathf.PI);
     }
 
     public static float HyperbolicAnomaly(float trueAnomaly, float eccentricity)
@@ -248,9 +250,15 @@ public static class OrbitalMechanics
         return -1f * StandardGravityParameter(mainMass + orbitalMass) / (2f * semimajorAxis);
     }
 
-    public static float ArgumentOfPeriapse(Vector3 eccentricityVector)
+    public static float ArgumentOfPeriapse(Vector3 eccentricityVector, Vector3 relativePosition)
     {
-        return Mathf.Atan2(eccentricityVector.y, eccentricityVector.x);
+        float eccentricity = eccentricityVector.magnitude;
+        if (eccentricity != 0f)
+        {
+            return Mathf.Atan2(eccentricityVector.y, eccentricityVector.x);
+        }
+        // If circular orbit, argument of periapse to be considered angle b/w position vector and (1,0,0)
+        return Mathf.Atan2(relativePosition.y, relativePosition.x);
     }
 
     public static float SemiminorAxis(float semimajorAxis, float eccentricity)
