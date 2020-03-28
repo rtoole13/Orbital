@@ -233,7 +233,6 @@ public abstract class OrbitalBody : MonoBehaviour
             Vector2 velocity = CurrentGravitySource != null
                 ? CurrentGravitySource.Velocity
                 : Vector2.zero;
-            Debug.Log(velocity);
             return OrbitalVelocity.RotateVector(ArgumentOfPeriapsis) + velocity;
         }
     }
@@ -332,6 +331,7 @@ public abstract class OrbitalBody : MonoBehaviour
         FlightPathAngle = OrbitalMechanics.FlightPathAngle(Eccentricity, TrueAnomaly);
         MeanAnomalyAtEpoch = OrbitalMechanics.MeanAnomalyAtEpoch(EccentricAnomaly, Eccentricity);
         MeanAnomaly = MeanAnomalyAtEpoch;
+
         OrbitalRadius = OrbitalMechanics.OrbitalRadius(Eccentricity, SemimajorAxis, TrueAnomaly);
         lastPosition = OrbitalPosition;
         OrbitalPosition = OrbitalMechanics.OrbitalPosition(OrbitalRadius, TrueAnomaly, clockWiseOrbit);
@@ -342,9 +342,11 @@ public abstract class OrbitalBody : MonoBehaviour
     #region GENERAL
 
     protected void UpdateDeterministically(){
+        //Time.timeScale = .1f;
+        //Time.fixedDeltaTime *= Time.timeScale;
         if (CurrentGravitySource == null)
             return;
-
+        
         if (LeavingSphereOfInfluence())
             LeaveSphereOfInfluence();
         if (TrajectoryType == OrbitalMechanics.TrajectoryType.Ellipse)
@@ -414,7 +416,6 @@ public abstract class OrbitalBody : MonoBehaviour
     {
         if (CurrentGravitySource.CurrentGravitySource == null)
             return false;
-
         if (OrbitalRadius < CurrentGravitySource.RadiusOfInfluence)
         {
             return false;

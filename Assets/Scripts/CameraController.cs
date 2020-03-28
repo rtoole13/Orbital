@@ -33,7 +33,8 @@ public class CameraController : MonoBehaviour
     private float targetOrthographicSize;
     private float defaultOrthographicSize;
 
-    
+    public delegate void OnOrthographicSizeChangeDelegate(float minOrthoSize, float maxOrthoSize, float currentOrthoSize);
+    public static event OnOrthographicSizeChangeDelegate OrthographicSizeChangeEvent;
 
     private void Awake()
     {
@@ -65,8 +66,10 @@ public class CameraController : MonoBehaviour
 
         if (Input.mouseScrollDelta.y == 0)
             return;
-        targetOrthographicSize = Mathf.Clamp(targetOrthographicSize - (float)Input.mouseScrollDelta.y * zoomMultiplier, cameraSizeMin, cameraSizeMax);
+
+        UpdateOrthographicSize(Mathf.Clamp(targetOrthographicSize - (float)Input.mouseScrollDelta.y * zoomMultiplier, cameraSizeMin, cameraSizeMax));
     }
+
     private void HandleLeftClick()
     {
         if (!inDoubleClickRange)
@@ -80,6 +83,14 @@ public class CameraController : MonoBehaviour
             SelectFocusTarget();
             inDoubleClickRange = false;
         }
+    }
+
+    private void UpdateOrthographicSize(float newOrthoSize)
+    {
+        if (newOrthoSize == targetOrthographicSize)
+            return;
+        targetOrthographicSize = newOrthoSize;
+        OrthographicSizeChangeEvent(cameraSizeMin, cameraSizeMax, targetOrthographicSize); // Invoke delegate
     }
 
     private IEnumerator DoubleClickRange()
@@ -106,6 +117,6 @@ public class CameraController : MonoBehaviour
 
     private void ResetOrthographicSize()
     {
-        targetOrthographicSize = defaultOrthographicSize;
+        UpdateOrthographicSize(defaultOrthographicSize);
     }
 }

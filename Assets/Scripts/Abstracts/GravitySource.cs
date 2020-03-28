@@ -39,7 +39,8 @@ public abstract class GravitySource : OrbitalBody
             return;
         updateIteratively = false;
         Vector3 sourceRelativePosition = (Vector3)Position - (Vector3)CurrentGravitySource.Position;
-        Vector3 sourceRelativeVelocity = (Vector3)body.velocity - (Vector3)CurrentGravitySource.Velocity;
+        Vector3 sourceRelativeVelocity = (Vector3)body.velocity - (Vector3)CurrentGravitySource.startVelocity;
+        Debug.LogFormat("{0}'s source vel: {1}", gameObject.name, CurrentGravitySource.startVelocity);
         CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity);
     }
 

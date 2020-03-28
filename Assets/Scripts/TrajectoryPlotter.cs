@@ -5,8 +5,10 @@ using UnityEngine;
 [RequireComponent(typeof(LineRenderer), typeof(OrbitalBody))]
 public class TrajectoryPlotter : MonoBehaviour
 {
-    LineRenderer lineRenderer;
-    OrbitalBody orbitalBody;
+    private float[] lineWidthRange;
+    private float currentLineWidth;
+    private LineRenderer lineRenderer;
+    private OrbitalBody orbitalBody;
     private float _semiminorAxis;
     private Vector2 _center;
     private float eccentricityTolerance = 0.05f;
@@ -34,16 +36,23 @@ public class TrajectoryPlotter : MonoBehaviour
     #region UNITY
     private void Awake()
     {
+        lineWidthRange = new float[2];
+        lineWidthRange[0] = 0.05f;
+        lineWidthRange[1] = 1f;
         lineRenderer = GetComponent<LineRenderer>();
         orbitalBody = GetComponent<OrbitalBody>();
-        //BuildEllipse();
+    }
+
+    private void Start()
+    {
+        CameraController.OrthographicSizeChangeEvent += AdjustLineThickness;    
     }
 
     private void Update()
     {
-        
         if (orbitalBody.CurrentGravitySource == null)
             return;
+
         if (orbitalBody.Eccentricity >= 1f)
         {
             BuildHyperbola();
@@ -107,6 +116,12 @@ public class TrajectoryPlotter : MonoBehaviour
     private Vector3 TranslateVector(Vector3 vertex, Vector3 distance)
     {
         return new Vector3(vertex.x + distance.x, vertex.y + distance.y, 0);
+    }
+
+    private void AdjustLineThickness(float minOrthoSize, float maxOrthoSize, float targetOrthoSize)
+    {
+        float newLineWidth = MathUtilities.RescaleFloat(targetOrthoSize, minOrthoSize, maxOrthoSize, lineWidthRange[0], lineWidthRange[1]);
+        lineRenderer.startWidth = lineRenderer.endWidth = newLineWidth;
     }
 
     #region GIZMOS

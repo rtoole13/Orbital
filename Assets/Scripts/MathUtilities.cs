@@ -21,5 +21,5 @@ public static class MathUtilities
         float newRange = newMax - newMin;
         return (x - currentMin) * (newRange / currentRange) + newMin;
     }
-    #endregion 
+    #endregion
 }

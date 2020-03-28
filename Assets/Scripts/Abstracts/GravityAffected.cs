@@ -29,7 +29,7 @@ public abstract class GravityAffected : OrbitalBody
         updateIteratively = false;
         body.isKinematic = true;
         Vector3 sourceRelativePosition = (Vector3)Position - (Vector3)CurrentGravitySource.Position;
-        Vector3 sourceRelativeVelocity = (Vector3)body.velocity - (Vector3)CurrentGravitySource.Velocity;
+        Vector3 sourceRelativeVelocity = (Vector3)body.velocity - (Vector3)CurrentGravitySource.startVelocity;
         CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity);
     }
     protected virtual void Update(){
