@@ -9,12 +9,12 @@ public class CameraController : MonoBehaviour
     private float zoomMultiplier = 4f;
 
     [SerializeField]
-    [Range(0.01f, 0.5f)]
-    private float trackingDeltaDistance = 0.075f;
+    [Range(0.01f, 1f)]
+    private float moveSmoothTime = 0.5f;
 
     [SerializeField]
-    [Range(0, 4)]
-    private float zoomDeltaDistance = 2f;
+    [Range(0.01f, 1f)]
+    private float zoomSmoothTime = 0.15f;
 
     [SerializeField]
     private float cameraSizeMin = 5f;
@@ -27,6 +27,9 @@ public class CameraController : MonoBehaviour
 
     [SerializeField]
     private float doubleClickSelectInterval;
+
+    private Vector3 moveVelocity = Vector3.zero;
+    private float zoomVelocity = 0f;
     private float firstClickTime;
     private bool inDoubleClickRange = false;
     private Camera mainCamera;
@@ -45,10 +48,9 @@ public class CameraController : MonoBehaviour
     void Update()
     {
         HandleMouseInputs();
-
-        Vector3 target = new Vector3(currentTarget.transform.position.x, currentTarget.transform.position.y, mainCamera.transform.position.z);
-        mainCamera.transform.position = Vector3.MoveTowards(mainCamera.transform.position, target, trackingDeltaDistance);
-        mainCamera.orthographicSize = Mathf.MoveTowards(mainCamera.orthographicSize, targetOrthographicSize, zoomDeltaDistance);
+        Vector3 target = new Vector3(currentTarget.transform.position.x, currentTarget.transform.position.y, transform.position.z);
+        mainCamera.transform.position = Vector3.SmoothDamp(mainCamera.transform.position, target, ref moveVelocity, moveSmoothTime);
+        mainCamera.orthographicSize = Mathf.SmoothDamp(mainCamera.orthographicSize, targetOrthographicSize, ref zoomVelocity, zoomSmoothTime);
     }
 
     private void HandleMouseInputs()
