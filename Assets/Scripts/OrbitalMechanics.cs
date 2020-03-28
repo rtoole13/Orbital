@@ -273,6 +273,9 @@ public static class OrbitalMechanics
 
     public static float TrueAnomaly(float eccentricity, float eccentricAnomaly, Vector3 specificRelativeAngularMomentum)
     {
+        if (eccentricity == 0f)
+            return eccentricAnomaly;
+
         // Angle b/w relative position vector and eccentricityVectory
         float sinNu = Mathf.Sqrt(1f - Mathf.Pow(eccentricity, 2)) * Mathf.Sin(eccentricAnomaly);
         float cosNu = Mathf.Cos(eccentricAnomaly) - eccentricity;
@@ -389,6 +392,9 @@ public static class OrbitalMechanics
 
     public static float EccentricAnomaly(float meanAnomaly, float eccentricity, int maxIterations)
     {
+        if (eccentricity == 0f)
+            return meanAnomaly;
+
         // Newton's method
         int currentIter = 0;
         float E = meanAnomaly;
