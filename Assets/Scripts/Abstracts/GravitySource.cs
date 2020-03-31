@@ -5,7 +5,10 @@ using UnityEngine;
 [RequireComponent(typeof(CircleCollider2D), typeof(Rigidbody2D))]
 public abstract class GravitySource : OrbitalBody
 {
+    private float _radiusOfInfluence;
+    private int _sourceRank = 0;
     private CircleCollider2D bodyCollider;
+    private SphereOfInfluence sphereOfInfluence;
     private List<GravityAffected> gravityAffectedObjects = new List<GravityAffected>();
 
     #region GETSET
@@ -14,22 +17,40 @@ public abstract class GravitySource : OrbitalBody
     {
         get { return bodyCollider.radius; }
     }
+
+    public float RadiusOfInfluence
+    {
+        get { return _radiusOfInfluence; }
+        private set {
+            _radiusOfInfluence = value;
+            sphereOfInfluence.UpdateRadius(value);
+        }
+    }
+
+    public int SourceRank
+    {
+        get { return _sourceRank; }
+        private set { _sourceRank = value; }
+    }
     #endregion GETSET
 
     #region UNITY
     protected override void Awake()
     {
         base.Awake();
-        // Get gravityCollider
-        CircleCollider2D[] colliders = GetComponents<CircleCollider2D>();
-        for (int i = 0; i < colliders.Length; i++)
+        
+        // Get bodyCollider
+        bodyCollider = GetComponent<CircleCollider2D>();
+        if (bodyCollider.isTrigger)
         {
-            CircleCollider2D collider = colliders[i];
-            if (!collider.isTrigger)
-            {
-                bodyCollider = collider;
-            }
+            throw new UnityException(string.Format("{0}'s circle collider must not be isTrigger!", gameObject.name));
         }
+        sphereOfInfluence = GetComponentInChildren<SphereOfInfluence>();
+        if (sphereOfInfluence == null)
+        {
+            throw new UnityException(string.Format("{0} must have a SphereOfInfluence child!", gameObject.name));
+        }
+        SourceRank = CalculateSourceRank(0);
     }
 
     protected override void Start()
@@ -50,6 +71,22 @@ public abstract class GravitySource : OrbitalBody
 
     #endregion UNITY
 
+    public int CalculateSourceRank(int count)
+    {
+        if (CurrentGravitySource == null)
+        {
+            return count;
+        }
+        return CurrentGravitySource.CalculateSourceRank(count + 1);
+    }
+    protected override void CalculateOrbitalParametersFromStateVectors(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)
+    {
+        base.CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity);
+        RadiusOfInfluence = CurrentGravitySource == null
+            ? Mathf.Infinity
+            : OrbitalMechanics.RadiusOfInfluence(SemimajorAxis, Mass, CurrentGravitySource.Mass);
+    }
+
     public Vector2 CalculateGravitationalForceAtPosition(Vector2 position, float mass) //DEPRECATED, remove in favor of OrbitalMechanics method
     {
         Vector2 distance = (Vector2)bodyCollider.transform.position - position;
@@ -66,5 +103,16 @@ public abstract class GravitySource : OrbitalBody
     public void RemoveAffectedBody(GravityAffected body)
     {
         gravityAffectedObjects.Remove(body);
+    }
+
+    protected override void OnDrawGizmos()
+    {
+        if (CurrentGravitySource == null || body == null)
+            return;
+
+        // Draw SOI
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(Position, RadiusOfInfluence);
+        base.OnDrawGizmos();
     }
 }

@@ -45,7 +45,12 @@ public class TrajectoryPlotter : MonoBehaviour
 
     private void Start()
     {
-        CameraController.OrthographicSizeChangeEvent += AdjustLineThickness;    
+        CameraController.OrthographicSizeChangeEvent += AdjustLineThickness;  
+    }
+
+    private void OnDisable()
+    {
+        CameraController.OrthographicSizeChangeEvent -= AdjustLineThickness;
     }
 
     private void Update()

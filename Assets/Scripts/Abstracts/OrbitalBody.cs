@@ -14,7 +14,6 @@ public abstract class OrbitalBody : MonoBehaviour
     private float _flightPathAngle;
     [SerializeField]
     private GravitySource _gravitySource;
-    private float _currentSphereOfInfluence;
     private Vector2 _hyperbolicAsymptote;
     private float _hyperbolicExcessVelocity;
     private float _trueAnomalyOfAsymptote;
@@ -75,11 +74,6 @@ public abstract class OrbitalBody : MonoBehaviour
     {
         get { return _flightPathAngle; }
         private set { _flightPathAngle = value; }
-    }
-    public float RadiusOfInfluence
-    {
-        get { return _currentSphereOfInfluence; }
-        private set { _currentSphereOfInfluence = value; }
     }
 
     public Vector2 HyperbolicAsymptote
@@ -293,7 +287,7 @@ public abstract class OrbitalBody : MonoBehaviour
     #endregion UNITY
 
     #region PHYSICS
-    protected void CalculateOrbitalParametersFromStateVectors(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)
+    protected virtual void CalculateOrbitalParametersFromStateVectors(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)
     {
         OrbitalSpeed = sourceRelativeVelocity.magnitude;
         SpecificRelativeAngularMomentum = OrbitalMechanics.SpecificRelativeAngularMomentum(sourceRelativePosition, sourceRelativeVelocity);
@@ -301,10 +295,6 @@ public abstract class OrbitalBody : MonoBehaviour
         EccentricityVector = OrbitalMechanics.EccentricityVector(sourceRelativePosition, sourceRelativeVelocity, SpecificRelativeAngularMomentum, CurrentGravitySource.Mass);
         SemimajorAxis = OrbitalMechanics.SemimajorAxis(sourceRelativePosition.magnitude, sourceRelativeVelocity.sqrMagnitude, CurrentGravitySource.Mass);
         SemiminorAxis = OrbitalMechanics.SemiminorAxis(SemimajorAxis, Eccentricity);
-        RadiusOfInfluence = CurrentGravitySource == null
-            ? Mathf.Infinity
-            : OrbitalMechanics.RadiusOfInfluence(SemimajorAxis, Mass, CurrentGravitySource.Mass);
-
         SpecificOrbitalEnergy = OrbitalMechanics.SpecificOrbitalEnergy(CurrentGravitySource.Mass, Mass, SemimajorAxis);
         ArgumentOfPeriapsis = OrbitalMechanics.ArgumentOfPeriapse(EccentricityVector, sourceRelativePosition);
 
@@ -341,14 +331,12 @@ public abstract class OrbitalBody : MonoBehaviour
 
     #region GENERAL
 
-    protected void UpdateDeterministically(){
+    protected virtual void UpdateDeterministically(){
         //Time.timeScale = .1f;
         //Time.fixedDeltaTime *= Time.timeScale;
         if (CurrentGravitySource == null)
             return;
-        
-        if (LeavingSphereOfInfluence())
-            LeaveSphereOfInfluence();
+
         if (TrajectoryType == OrbitalMechanics.TrajectoryType.Ellipse)
         {
             UpdateElliptically();
@@ -411,38 +399,12 @@ public abstract class OrbitalBody : MonoBehaviour
         }
         transform.position = OrbitalPositionToWorld;
     }
-
-    protected bool LeavingSphereOfInfluence()
-    {
-        if (CurrentGravitySource.CurrentGravitySource == null)
-            return false;
-        if (OrbitalRadius < CurrentGravitySource.RadiusOfInfluence)
-        {
-            return false;
-        }
-        Debug.LogFormat("Leaving {0}'s sphere of influence. Entering {1}'s.", CurrentGravitySource.name, CurrentGravitySource.CurrentGravitySource.name);
-        return true;
-    }
-
-    protected void LeaveSphereOfInfluence()
-    {
-        Vector2 velocity = Velocity; // world vel
-        Vector2 position = Position; // world position
-        CurrentGravitySource = CurrentGravitySource.CurrentGravitySource;
-        velocity -= CurrentGravitySource.Velocity; // world vel - new source vel
-        position -= CurrentGravitySource.Position; // world pos - new source pos
-        CalculateOrbitalParametersFromStateVectors(position, velocity);
-    }
-
     #endregion GENERAL
-    private void OnDrawGizmos()
+
+    protected virtual void OnDrawGizmos()
     {
         if (CurrentGravitySource == null || body == null)
             return;
-        Gizmos.color = Color.green;
-
-        // Draw radius of SOI
-        Gizmos.DrawWireSphere(Position, RadiusOfInfluence);
         
         // Draw velocityVector
         Gizmos.color = Color.red;

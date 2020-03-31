@@ -7,20 +7,18 @@ public abstract class GravityAffected : OrbitalBody
 {
 
     protected bool nonGravitationalForcesAdded = true;
-    
-    //GIZMOS VARS
+
+    private bool recentlyChangedSource = false;
+    private float sourceChangeInterval = .2f;
     private List<Vector2> nonGravitationalForces;
-    private bool canUpdateEpochs = true;
-    private Vector2 currentEpochPosition = Vector2.zero;
-    private float elapsedEpochTime = 0f;
-    private Vector2 lastEpochPos = Vector2.zero;
-    private Vector2 trajectoryPosition = Vector2.zero;
+    private List<GravitySource> possibleGravitySources;
 
     #region UNITY
     protected override void Awake()
     {
         base.Awake();
         nonGravitationalForces = new List<Vector2>();
+        possibleGravitySources = new List<GravitySource>();
     }
 
     protected override void Start()
@@ -32,25 +30,20 @@ public abstract class GravityAffected : OrbitalBody
         Vector3 sourceRelativeVelocity = (Vector3)body.velocity - (Vector3)CurrentGravitySource.startVelocity;
         CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity);
     }
-    protected virtual void Update(){
+    protected virtual void Update()
+    {
 
     }
 
     private void FixedUpdate()
     {
-        if (CurrentGravitySource == null)
+        if (CurrentGravitySource == null) //FIXME remove w/e bandaid this is..
             return;
 
-        if (updateIteratively)
-        {
-            // Apply forces, regular rigidbody stuff.
-            UpdateIteratively();
-        }
-        else
-        {
-            UpdateDeterministically();
-        }
+        if (UpdateCurrentGravitySource())
+            return;
 
+        UpdateDeterministically();
     }
 
     private void OnCollisionStay2D(Collision2D collision)
@@ -81,9 +74,6 @@ public abstract class GravityAffected : OrbitalBody
         body.velocity = OrbitalVelocity.RotateVector(ArgumentOfPeriapsis);
     }
 
-    #endregion UNITY
-
-    #region ITERATIVE
     // Basically, rigidbody.iskinematic = false;
     private void UpdateIteratively()
     {
@@ -121,7 +111,12 @@ public abstract class GravityAffected : OrbitalBody
             //Debug.Log("New: " + OrbitalMechanics.CalculateVelocityFromOrbitalParameters(SpecificRelativeAngularMomentum, SourceRelativePosition, CurrentGravitySource.Mass, SemimajorAxis));
         }
     }
-    #endregion ITERATIVE
+
+    protected override void UpdateDeterministically()
+    {
+        base.UpdateDeterministically();
+    }
+    #endregion UNITY
 
     #region PHYSICS
 
@@ -139,28 +134,89 @@ public abstract class GravityAffected : OrbitalBody
         }
         nonGravitationalForces.Clear();
     }
+
+    protected bool LeavingSphereOfInfluence()
+    {
+        if (CurrentGravitySource.CurrentGravitySource == null)
+            return false;
+        if (OrbitalRadius < CurrentGravitySource.RadiusOfInfluence)
+        {
+            return false;
+        }
+        return true;
+    }
+
+    public void EnterSphereOfInfluence(GravitySource newSource)
+    {
+        //Debug.LogFormat("Entering {0}'s SOI", newSource.gameObject.name);
+        possibleGravitySources.Add(newSource);
+    }
+
+    public void InitializeNewOrbit(GravitySource newSource)
+    {
+        Debug.LogFormat("Changing to {0}'s SOI", newSource.gameObject.name);
+        Vector2 velocity = Velocity; // world vel
+        Vector2 position = Position; // world position
+        CurrentGravitySource = newSource;
+        velocity -= CurrentGravitySource.Velocity; // world vel - new source vel
+        position -= CurrentGravitySource.Position; // world pos - new source pos
+        CalculateOrbitalParametersFromStateVectors(position, velocity);
+
+        recentlyChangedSource = true;
+        IEnumerator recentSourceChangeCoroutine = ChangeSourceTimer();
+        StartCoroutine(recentSourceChangeCoroutine);
+    }
+
+    private bool UpdateCurrentGravitySource()
+    {
+        if (recentlyChangedSource)
+            return false;
+
+        if (LeavingSphereOfInfluence()) // Leaving current source
+        {
+            if (CurrentGravitySource.CurrentGravitySource == null)
+                return false;
+
+            Debug.LogFormat("{0}'s leaving {1}'s sphere of influence. Entering {2}'s.", gameObject.name, CurrentGravitySource.name, CurrentGravitySource.CurrentGravitySource.name);
+            InitializeNewOrbit(CurrentGravitySource.CurrentGravitySource);
+            return true;
+        }
+
+        if (possibleGravitySources.Count == 0) // No new SOIs encountered this frame
+            return false;
+
+        GravitySource gravitySource = possibleGravitySources[0];   
+        for (int i = 1; i < possibleGravitySources.Count; i++)
+        {
+            GravitySource thisGravitySource = possibleGravitySources[i];
+            if (thisGravitySource.SourceRank > gravitySource.SourceRank)
+            {
+                gravitySource = thisGravitySource;
+            }
+        }
+        possibleGravitySources.Clear();
+        
+        if (gravitySource == CurrentGravitySource)
+        {
+            return false;
+        }
+        Debug.LogFormat("{0} ?< {1}", (gravitySource.Position - Position).magnitude, gravitySource.RadiusOfInfluence);
+        if ((gravitySource.Position - Position).magnitude >= gravitySource.RadiusOfInfluence)
+        {
+            Debug.Log("not close");
+            return false;
+        }
+        InitializeNewOrbit(gravitySource);
+        return true;
+    }
     #endregion PHYSICS
 
-
-    //private void OnDrawGizmos()
-    //{
-    //    Gizmos.color = Color.red;
-    //    Gizmos.DrawCube(lastEpochPos, new Vector3(.5f, .5f, .5f));
-    //    Gizmos.color = Color.green;
-    //    Gizmos.DrawCube(currentEpochPosition, new Vector3(.5f, .5f, .5f));
-    //    float updateInterval = 0.05f;
-    //    if (TimeSinceEpoch > 0 && TimeSinceEpoch < updateInterval && canUpdateEpochs)
-    //    {
-    //        lastEpochPos = currentEpochPosition + CurrentGravitySource.Position;
-    //        currentEpochPosition = body.position + CurrentGravitySource.Position;
-    //        canUpdateEpochs = false;
-    //        elapsedEpochTime = 0f;
-    //    }
-    //    elapsedEpochTime += Time.fixedDeltaTime;
-    //    if (elapsedEpochTime > updateInterval + 1f)
-    //        canUpdateEpochs = true;
-
-    //    Gizmos.color = Color.blue;
-    //    Gizmos.DrawCube(trajectoryPosition, new Vector3(.5f, .5f, .5f));
-    //}
+    private IEnumerator ChangeSourceTimer()
+    {
+        // Waits until interval expires, then sets bool back to false   
+        yield return new WaitForSeconds(sourceChangeInterval);
+        recentlyChangedSource = false;
+        Debug.LogFormat("Timer {0}", recentlyChangedSource);
+    }
 }
+
