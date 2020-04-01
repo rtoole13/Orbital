@@ -37,7 +37,7 @@ public class TrajectoryPlotter : MonoBehaviour
     private void Awake()
     {
         lineWidthRange = new float[2];
-        lineWidthRange[0] = 0.05f;
+        lineWidthRange[0] = 0.5f;
         lineWidthRange[1] = 1f;
         lineRenderer = GetComponent<LineRenderer>();
         orbitalBody = GetComponent<OrbitalBody>();

@@ -40,8 +40,8 @@ public abstract class GravityAffected : OrbitalBody
         if (CurrentGravitySource == null) //FIXME remove w/e bandaid this is..
             return;
 
-        if (UpdateCurrentGravitySource())
-            return;
+        UpdateCurrentGravitySource();
+            
 
         UpdateDeterministically();
     }
@@ -112,10 +112,6 @@ public abstract class GravityAffected : OrbitalBody
         }
     }
 
-    protected override void UpdateDeterministically()
-    {
-        base.UpdateDeterministically();
-    }
     #endregion UNITY
 
     #region PHYSICS
@@ -148,21 +144,23 @@ public abstract class GravityAffected : OrbitalBody
 
     public void EnterSphereOfInfluence(GravitySource newSource)
     {
-        //Debug.LogFormat("Entering {0}'s SOI", newSource.gameObject.name);
+        //if (newSource == CurrentGravitySource)
+        //    return;
+
+        if (possibleGravitySources.Contains(newSource))
+            return;
+
         possibleGravitySources.Add(newSource);
     }
 
     public void InitializeNewOrbit(GravitySource newSource)
     {
-        Debug.LogFormat("Changing to {0}'s SOI", newSource.gameObject.name);
-        Vector2 velocity = Velocity; // world vel
-        Vector2 position = Position; // world position
+        Vector2 relVel = Velocity - newSource.Velocity;  // world vel - newSource.vel
+        Vector2 relPos = Position - newSource.Position; // world pos - newSource.pos
         CurrentGravitySource = newSource;
-        velocity -= CurrentGravitySource.Velocity; // world vel - new source vel
-        position -= CurrentGravitySource.Position; // world pos - new source pos
-        CalculateOrbitalParametersFromStateVectors(position, velocity);
-
+        CalculateOrbitalParametersFromStateVectors(relPos, relVel);
         recentlyChangedSource = true;
+        Debug.Log(relVel.magnitude);
         IEnumerator recentSourceChangeCoroutine = ChangeSourceTimer();
         StartCoroutine(recentSourceChangeCoroutine);
     }
@@ -195,17 +193,15 @@ public abstract class GravityAffected : OrbitalBody
             }
         }
         possibleGravitySources.Clear();
-        
         if (gravitySource == CurrentGravitySource)
         {
             return false;
         }
-        Debug.LogFormat("{0} ?< {1}", (gravitySource.Position - Position).magnitude, gravitySource.RadiusOfInfluence);
         if ((gravitySource.Position - Position).magnitude >= gravitySource.RadiusOfInfluence)
         {
-            Debug.Log("not close");
             return false;
         }
+        Debug.LogFormat("{0}'s leaving {1}'s sphere of influence. Entering {2}'s.", gameObject.name, CurrentGravitySource.name, gravitySource.name);
         InitializeNewOrbit(gravitySource);
         return true;
     }
@@ -216,7 +212,6 @@ public abstract class GravityAffected : OrbitalBody
         // Waits until interval expires, then sets bool back to false   
         yield return new WaitForSeconds(sourceChangeInterval);
         recentlyChangedSource = false;
-        Debug.LogFormat("Timer {0}", recentlyChangedSource);
     }
 }
 

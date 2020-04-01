@@ -8,7 +8,6 @@ public abstract class GravitySource : OrbitalBody
     private float _radiusOfInfluence;
     private int _sourceRank = 0;
     private CircleCollider2D bodyCollider;
-    private SphereOfInfluence sphereOfInfluence;
     private List<GravityAffected> gravityAffectedObjects = new List<GravityAffected>();
 
     #region GETSET
@@ -21,10 +20,7 @@ public abstract class GravitySource : OrbitalBody
     public float RadiusOfInfluence
     {
         get { return _radiusOfInfluence; }
-        private set {
-            _radiusOfInfluence = value;
-            sphereOfInfluence.UpdateRadius(value);
-        }
+        private set { _radiusOfInfluence = value; }
     }
 
     public int SourceRank
@@ -45,11 +41,7 @@ public abstract class GravitySource : OrbitalBody
         {
             throw new UnityException(string.Format("{0}'s circle collider must not be isTrigger!", gameObject.name));
         }
-        sphereOfInfluence = GetComponentInChildren<SphereOfInfluence>();
-        if (sphereOfInfluence == null)
-        {
-            throw new UnityException(string.Format("{0} must have a SphereOfInfluence child!", gameObject.name));
-        }
+
         SourceRank = CalculateSourceRank(0);
     }
 
@@ -64,21 +56,20 @@ public abstract class GravitySource : OrbitalBody
         CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity);
     }
 
+    protected virtual void Update()
+    {
+        CheckCurrentOrbitingObjects();
+        CheckForNewOrbitingObjects();
+    }
+
     private void FixedUpdate()
     {
         UpdateDeterministically();
     }
 
     #endregion UNITY
+    #region PHYSICS
 
-    public int CalculateSourceRank(int count)
-    {
-        if (CurrentGravitySource == null)
-        {
-            return count;
-        }
-        return CurrentGravitySource.CalculateSourceRank(count + 1);
-    }
     protected override void CalculateOrbitalParametersFromStateVectors(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)
     {
         base.CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity);
@@ -93,17 +84,52 @@ public abstract class GravitySource : OrbitalBody
         float forceMagnitude = OrbitalMechanics.GRAVITATIONALCONSTANT * Mass * mass / Vector2.SqrMagnitude(distance);
         Vector2 force = forceMagnitude * distance.normalized;
         return force;
+
+
+    }
+    #endregion PHYSICS
+
+    public void CheckForNewOrbitingObjects()
+    {
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(Position, RadiusOfInfluence);
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            Collider2D collider = colliders[i];
+            GravityAffected gravityAffected = collider.GetComponent<GravityAffected>();
+            if (gravityAffected == null)
+                continue;
+
+            float dist = (gravityAffected.Position - Position).magnitude;
+            if (dist <= RadiusOfInfluence && !gravityAffectedObjects.Contains(gravityAffected))
+            {
+                gravityAffected.EnterSphereOfInfluence(this);
+                gravityAffectedObjects.Add(gravityAffected);
+            }
+        }
     }
 
-    public void AddAffectedBody(GravityAffected body)
+    public void CheckCurrentOrbitingObjects()
     {
-        gravityAffectedObjects.Add(body);
+        for (int i = 0; i < gravityAffectedObjects.Count; i++)
+        {
+            GravityAffected gravityAffected = gravityAffectedObjects[i];
+            float dist = (gravityAffected.Position - Position).magnitude;
+            if (dist > RadiusOfInfluence)
+            {
+                gravityAffectedObjects.Remove(gravityAffected);
+            }
+        }
     }
 
-    public void RemoveAffectedBody(GravityAffected body)
+    public int CalculateSourceRank(int count)
     {
-        gravityAffectedObjects.Remove(body);
+        if (CurrentGravitySource == null)
+        {
+            return count;
+        }
+        return CurrentGravitySource.CalculateSourceRank(count + 1);
     }
+    
 
     protected override void OnDrawGizmos()
     {
