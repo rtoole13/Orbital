@@ -21,5 +21,42 @@ public static class MathUtilities
         float newRange = newMax - newMin;
         return (x - currentMin) * (newRange / currentRange) + newMin;
     }
+
+    public static float Cosh(float value)
+    {
+        return (Mathf.Exp(value) + Mathf.Exp(-value)) / 2f;
+    }
+
+    public static float ArcCosh(float value)
+    {
+        return Mathf.Log(value + Mathf.Sqrt(Mathf.Pow(value, 2) - 1f));
+    }
+
+    public static float Sinh(float value)
+    {
+        return (Mathf.Exp(value) - Mathf.Exp(-value)) / 2f;
+    }
+
+    public static float ArcSinh(float value)
+    {
+        return Mathf.Log(value + Mathf.Sqrt(Mathf.Pow(value, 2) + 1f));
+
+    }
+
+    public static float Tanh(float value)
+    {
+        return Sinh(value) / Cosh(value);
+    }
+
+    public static float ArcTanh(float value)
+    {
+        return 0.5f * (Mathf.Log(1f + value) - Mathf.Log(1f - value));
+    }
+
+    public static float HalfTanh(float value)
+    {
+        return Sinh(value) / (Cosh(value) + 1f);
+    }
+
     #endregion
 }

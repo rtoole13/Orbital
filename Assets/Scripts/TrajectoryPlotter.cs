@@ -95,7 +95,7 @@ public class TrajectoryPlotter : MonoBehaviour
         for (int i = 0; i < segments; i++)
         {
             float angle = ((float)i / (float)segments) * 2f  - 1f;
-            Vector3 vertex = new Vector3(SemimajorAxis * OrbitalMechanics.Cosh(angle), SemiminorAxis * OrbitalMechanics.Sinh(angle), 0);
+            Vector3 vertex = new Vector3(SemimajorAxis * MathUtilities.Cosh(angle), SemiminorAxis * MathUtilities.Sinh(angle), 0);
             vertex = TranslateVector(vertex, new Vector3(-SemimajorAxis * orbitalBody.Eccentricity, 0, 0));
             points[i] = RotateVertex(vertex, orbitalBody.ArgumentOfPeriapsis) + orbitalBody.CurrentGravitySource.transform.position;
         }

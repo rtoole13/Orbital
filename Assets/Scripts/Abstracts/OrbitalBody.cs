@@ -14,7 +14,7 @@ public abstract class OrbitalBody : MonoBehaviour
     private float _flightPathAngle;
     [SerializeField]
     private GravitySource _gravitySource;
-    private Vector2 _hyperbolicAsymptote;
+    private Vector2[] _hyperbolicAsymptotes;
     private float _hyperbolicExcessVelocity;
     private float _trueAnomalyOfAsymptote;
     [SerializeField]
@@ -76,10 +76,10 @@ public abstract class OrbitalBody : MonoBehaviour
         private set { _flightPathAngle = value; }
     }
 
-    public Vector2 HyperbolicAsymptote
+    public Vector2[] HyperbolicAsymptotes
     {
-        get { return _hyperbolicAsymptote; }
-        private set { _hyperbolicAsymptote = value; }
+        get { return _hyperbolicAsymptotes; }
+        private set { _hyperbolicAsymptotes = value; }
     }
     public float HyperbolicExcessSpeed
     {
@@ -289,7 +289,6 @@ public abstract class OrbitalBody : MonoBehaviour
     #region PHYSICS
     protected virtual void CalculateOrbitalParametersFromStateVectors(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)
     {
-        OrbitalSpeed = sourceRelativeVelocity.magnitude;
         SpecificRelativeAngularMomentum = OrbitalMechanics.SpecificRelativeAngularMomentum(sourceRelativePosition, sourceRelativeVelocity);
         clockWiseOrbit = SpecificRelativeAngularMomentum.z < 0;
         EccentricityVector = OrbitalMechanics.EccentricityVector(sourceRelativePosition, sourceRelativeVelocity, SpecificRelativeAngularMomentum, CurrentGravitySource.Mass);
@@ -301,32 +300,45 @@ public abstract class OrbitalBody : MonoBehaviour
         // Epoch parameters
         TimeSinceEpoch = 0f;
         MeanMotion = OrbitalMechanics.MeanMotion(CurrentGravitySource.Mass, SemimajorAxis);
+        Debug.LogFormat("MeanMotion: {0}", MeanMotion);
         if (TrajectoryType == OrbitalMechanics.TrajectoryType.Ellipse)
         {
-            OrbitalPeriod = OrbitalMechanics.OrbitalPeriod(MeanMotion);
-            EccentricAnomaly = OrbitalMechanics.EccentricAnomalyAtEpoch(sourceRelativePosition, sourceRelativeVelocity, CurrentGravitySource.Mass, EccentricityVector);
-            TrueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
-            //OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
+            CalculateEllipticalOrbitParameters(sourceRelativePosition, sourceRelativeVelocity);
         }
         else
         {
-            approachingHyperbolicExcessVelocity = false;
-            HyperbolicExcessSpeed = OrbitalMechanics.HyperbolicExcessVelocity(CurrentGravitySource.Mass, SemimajorAxis);
-            TrueAnomalyOfAsymptote = OrbitalMechanics.TrueAnomalyOfAsymptote(Eccentricity, clockWiseOrbit);
-            HyperbolicAsymptote = OrbitalMechanics.HyperbolicAsymptote(TrueAnomalyOfAsymptote, clockWiseOrbit);
-            TrueAnomaly = OrbitalMechanics.TrueAnomaly(sourceRelativePosition, sourceRelativeVelocity, EccentricityVector);
-            EccentricAnomaly = OrbitalMechanics.HyperbolicAnomaly(TrueAnomaly, Eccentricity);
-            //OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis); //BROKE
+            CalculateHyperbolicOrbitParameters(sourceRelativePosition, sourceRelativeVelocity);
         }
         FlightPathAngle = OrbitalMechanics.FlightPathAngle(Eccentricity, TrueAnomaly);
         MeanAnomalyAtEpoch = OrbitalMechanics.MeanAnomalyAtEpoch(EccentricAnomaly, Eccentricity);
         MeanAnomaly = MeanAnomalyAtEpoch;
-
+        Debug.LogFormat("MeanAnomaly: {0}", MeanAnomaly);
         OrbitalRadius = OrbitalMechanics.OrbitalRadius(Eccentricity, SemimajorAxis, TrueAnomaly);
         lastPosition = OrbitalPosition;
         OrbitalPosition = OrbitalMechanics.OrbitalPosition(OrbitalRadius, TrueAnomaly, clockWiseOrbit);
         OrbitalSpeed = OrbitalMechanics.OrbitalSpeed(CurrentGravitySource.Mass, OrbitalRadius, SemimajorAxis);
     }
+
+    private void CalculateEllipticalOrbitParameters(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)
+    {
+        OrbitalPeriod = OrbitalMechanics.OrbitalPeriod(MeanMotion);
+        EccentricAnomaly = OrbitalMechanics.EccentricAnomalyAtEpoch(sourceRelativePosition, sourceRelativeVelocity, CurrentGravitySource.Mass, EccentricityVector);
+        TrueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
+        //OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
+    }
+
+    private void CalculateHyperbolicOrbitParameters(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)
+    {
+        approachingHyperbolicExcessVelocity = false;
+        HyperbolicExcessSpeed = OrbitalMechanics.HyperbolicExcessVelocity(CurrentGravitySource.Mass, SemimajorAxis);
+        TrueAnomalyOfAsymptote = OrbitalMechanics.TrueAnomalyOfAsymptote(Eccentricity, clockWiseOrbit);
+        HyperbolicAsymptotes = OrbitalMechanics.HyperbolicAsymptotes(TrueAnomalyOfAsymptote, clockWiseOrbit);
+        TrueAnomaly = OrbitalMechanics.HyperbolicTrueAnomaly(sourceRelativePosition, sourceRelativeVelocity, SemimajorAxis, Eccentricity);
+        EccentricAnomaly = OrbitalMechanics.HyperbolicAnomalyAtEpoch(TrueAnomaly, Eccentricity);
+        Debug.LogFormat("HyperbolicAnomaly: {0}", EccentricAnomaly);
+        //OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis); //BROKE
+    }
+
     #endregion PHYSICS
 
     #region GENERAL
@@ -350,7 +362,7 @@ public abstract class OrbitalBody : MonoBehaviour
     protected void UpdateElliptically()
     {
         TimeSinceEpoch = (TimeSinceEpoch + Time.fixedDeltaTime) % OrbitalPeriod;
-        MeanAnomaly = OrbitalMechanics.MeanAnomaly(MeanAnomalyAtEpoch, MeanMotion, TimeSinceEpoch);
+        MeanAnomaly = OrbitalMechanics.MeanAnomaly(MeanAnomalyAtEpoch, MeanMotion, TimeSinceEpoch, true);
         EccentricAnomaly = OrbitalMechanics.EccentricAnomaly(MeanAnomaly, Eccentricity, 6);
         TrueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
         FlightPathAngle = OrbitalMechanics.FlightPathAngle(Eccentricity, TrueAnomaly);
@@ -366,7 +378,7 @@ public abstract class OrbitalBody : MonoBehaviour
     protected void UpdateHyperbolically()
     {
         TimeSinceEpoch += Time.fixedDeltaTime;
-        MeanAnomaly = OrbitalMechanics.MeanAnomaly(MeanAnomalyAtEpoch, MeanMotion, TimeSinceEpoch);
+        MeanAnomaly = OrbitalMechanics.MeanAnomaly(MeanAnomalyAtEpoch, MeanMotion, TimeSinceEpoch, false);
         EccentricAnomaly = OrbitalMechanics.EccentricAnomaly(MeanAnomaly, Eccentricity, 6);
         TrueAnomaly = OrbitalMechanics.HyperbolicTrueAnomaly(Eccentricity, EccentricAnomaly, clockWiseOrbit);
         FlightPathAngle = OrbitalMechanics.FlightPathAngle(Eccentricity, TrueAnomaly);
@@ -379,9 +391,10 @@ public abstract class OrbitalBody : MonoBehaviour
             OrbitalSpeed = OrbitalMechanics.OrbitalSpeed(CurrentGravitySource.Mass, calculatedOrbitalRadius, SemimajorAxis);
             if ((Mathf.Abs(OrbitalSpeed - HyperbolicExcessSpeed) < hyperbolicExcessVelocityApproxThreshold) && Mathf.Abs(measuredSpeed - OrbitalSpeed) > hyperbolicVelocityDiffThreshold)
             {
+                Debug.Log("uhoh");
                 // Setting speed to hyperbolic excess velocity, updating from that
                 approachingHyperbolicExcessVelocity = true;
-                OrbitalVelocity = OrbitalSpeed * HyperbolicAsymptote; // Could replace asymptote w/ OrbitalDirection vector?
+                //OrbitalVelocity = OrbitalSpeed * HyperbolicAsymptote; // Could replace asymptote w/ OrbitalDirection vector?
                 OrbitalPosition += OrbitalVelocity * Time.fixedDeltaTime;
             }
             else
@@ -394,7 +407,7 @@ public abstract class OrbitalBody : MonoBehaviour
         else
         {
             OrbitalSpeed = HyperbolicExcessSpeed;
-            OrbitalVelocity = HyperbolicExcessSpeed * HyperbolicAsymptote;
+            //OrbitalVelocity = HyperbolicExcessSpeed * HyperbolicAsymptote;
             OrbitalPosition += OrbitalVelocity * Time.fixedDeltaTime;
         }
         transform.position = OrbitalPositionToWorld;
@@ -410,5 +423,12 @@ public abstract class OrbitalBody : MonoBehaviour
         Gizmos.color = Color.red;
         Vector2 dir = OrbitalMechanics.OrbitalDirection(TrueAnomaly, FlightPathAngle, clockWiseOrbit);
         Gizmos.DrawRay(Position, dir.RotateVector(ArgumentOfPeriapsis));
+
+        if (HyperbolicAsymptotes != null)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawRay(CurrentGravitySource.Position - SemimajorAxis * (Vector2)EccentricityVector, 1000f * HyperbolicAsymptotes[0].RotateVector(ArgumentOfPeriapsis));
+            Gizmos.DrawRay(CurrentGravitySource.Position - SemimajorAxis * (Vector2)EccentricityVector, 1000f * HyperbolicAsymptotes[1].RotateVector(ArgumentOfPeriapsis));
+        }
     }
 }

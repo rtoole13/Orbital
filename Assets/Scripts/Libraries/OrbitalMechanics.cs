@@ -26,19 +26,16 @@ public static class OrbitalMechanics
     public static float TrueAnomalyOfAsymptote(float eccentricity, bool clockWise)
     {
         float nuInf = Mathf.Acos(-1f / eccentricity);
-
-        // move [-pi, pi] range to [0, 2pi]
-        float twoPi = 2f * Mathf.PI;
-        nuInf = (nuInf + twoPi) % twoPi;
         return nuInf;
     }
 
-    public static Vector2 HyperbolicAsymptote(float trueAnomalyOfAsymptote, bool clockWise)
+    public static Vector2[] HyperbolicAsymptotes(float trueAnomalyOfAsymptote, bool clockWise)
     {
-        float sin = clockWise
-            ? -Mathf.Sin(trueAnomalyOfAsymptote)
-            : Mathf.Sin(trueAnomalyOfAsymptote);
-        return new Vector2(Mathf.Cos(trueAnomalyOfAsymptote), sin);
+        Vector2[] asymptotes = new Vector2[2];
+        float sin = Mathf.Sin(trueAnomalyOfAsymptote);
+        asymptotes[0] = new Vector2(Mathf.Cos(trueAnomalyOfAsymptote), -sin);
+        asymptotes[1] = new Vector2(Mathf.Cos(trueAnomalyOfAsymptote), sin);
+        return asymptotes;
     }
 
     public static Vector2 GravitationalForceAtPosition(this GravitySource gravitySource, Vector2 position, float mass)
@@ -49,36 +46,7 @@ public static class OrbitalMechanics
         return force;
     }
 
-    public static float Cosh(float value)
-    {
-        return (Mathf.Exp(value) + Mathf.Exp(-value)) / 2f;
-    }
-
-    public static float ArcCosh(float value)
-    {
-        return Mathf.Log(value + Mathf.Sqrt(Mathf.Pow(value, 2) - 1f));
-    }
-
-    public static float Sinh(float value)
-    {
-        return (Mathf.Exp(value) - Mathf.Exp(-value)) / 2f;
-    }
-
-    public static float ArcSinh(float value)
-    {
-        return Mathf.Log(value + Mathf.Sqrt(Mathf.Pow(value, 2) + 1f));
-
-    }
-
-    public static float Tanh(float value)
-    {
-        return Sinh(value) / Cosh(value);
-    }
-
-    public static float HalfTanh(float value)
-    {
-        return Sinh(value) / (Cosh(value) + 1f);
-    }
+    
     #endregion GENERAL
 
     #region STATEVECTORS
@@ -128,10 +96,13 @@ public static class OrbitalMechanics
         return Mathf.Abs(semimajorAxis) * Mathf.Pow(orbitingMass / mainMass, 2f / 5f);
     }
 
-    public static float HyperbolicTrueAnomaly(float orbitalDistance, float semimajorAxis, float eccentricity)
+    public static float HyperbolicTrueAnomaly(Vector3 relativePosition, Vector3 relativeVelocity, float semimajorAxis, float eccentricity)
     {
-        float cosNu = (SemilatusRectum(semimajorAxis, eccentricity) / orbitalDistance - 1f) / eccentricity;
-        return Mathf.Acos(cosNu);
+        float cosNu = (SemilatusRectum(semimajorAxis, eccentricity) / relativePosition.magnitude - 1f) / eccentricity;
+        float nu = Mathf.Acos(Mathf.Clamp(cosNu, -1, 1));
+        if (Vector3.Dot(relativePosition, relativeVelocity) < 0f)
+            nu *= -1f;
+        return nu;
     }
 
     public static float EccentricAnomalyAtEpoch(Vector3 relativePosition, Vector3 relativeVelocity, float bodyMass, Vector3 eccentricityVector)
@@ -149,11 +120,11 @@ public static class OrbitalMechanics
         return MathUtilities.Modulo(E, 2f * Mathf.PI);
     }
 
-    public static float HyperbolicAnomaly(float trueAnomaly, float eccentricity)
+    public static float HyperbolicAnomalyAtEpoch(float trueAnomaly, float eccentricity)
     {
-        float cosW = Mathf.Cos(trueAnomaly);
-        float coshE = (cosW + eccentricity) / (1 + eccentricity * cosW);
-        return ArcCosh(coshE);
+        Debug.LogFormat("TrueAnomaly: {0}", trueAnomaly * Mathf.Rad2Deg);
+        float sqrt = Mathf.Sqrt((eccentricity - 1f) / (eccentricity + 1f));
+        return 2f * MathUtilities.ArcTanh(sqrt * Mathf.Tan(trueAnomaly / 2f));
     }
     #endregion STATEVECTORS
 
@@ -172,6 +143,7 @@ public static class OrbitalMechanics
     //}
     public static Vector2 OrbitalDirection(float trueAnomaly, float flightPathAngle, bool clockWise)
     {
+        trueAnomaly = MathUtilities.RescaleFloat(trueAnomaly, -Mathf.PI, Mathf.PI, 0f, 2f * Mathf.PI);
         float psi = trueAnomaly + Mathf.PI/2 - flightPathAngle;
         float sin = clockWise
             ? -Mathf.Sin(psi)
@@ -289,11 +261,11 @@ public static class OrbitalMechanics
 
     public static float HyperbolicTrueAnomaly(float eccentricity, float hyperbolicEccentricAnomaly, bool clockWise)
     {
-        float nu = 2f * Mathf.Atan(HalfTanh(hyperbolicEccentricAnomaly) * Mathf.Sqrt((eccentricity + 1f) / (eccentricity - 1f)));
+        float nu = 2f * Mathf.Atan(MathUtilities.HalfTanh(hyperbolicEccentricAnomaly) * Mathf.Sqrt((eccentricity + 1f) / (eccentricity - 1f)));
         
         // move [-pi, pi] range to [0, 2pi]
-        float twoPi = 2f * Mathf.PI;
-        nu = (nu + twoPi) % twoPi; 
+        //float twoPi = 2f * Mathf.PI;
+        //nu = (nu + twoPi) % twoPi; 
         return nu;
     }
 
@@ -313,7 +285,7 @@ public static class OrbitalMechanics
 
     public static float HyperbolicOrbitalRadius(float eccentricity, float semimajorAxis, float hyperbolicEccentricAnomaly)
     {
-        return semimajorAxis * (1f - eccentricity * Cosh(hyperbolicEccentricAnomaly));
+        return semimajorAxis * (1f - eccentricity * MathUtilities.Cosh(hyperbolicEccentricAnomaly));
     }
 
     public static Vector2 OrbitalPosition(float orbitalRadius, float trueAnomaly, bool clockWise)
@@ -350,7 +322,7 @@ public static class OrbitalMechanics
     {
         if (eccentricity >= 1)
         {
-            return eccentricity * Sinh(eccentricAnomaly) - eccentricAnomaly;
+            return eccentricity * MathUtilities.Sinh(eccentricAnomaly) - eccentricAnomaly;
         }
         return eccentricAnomaly - eccentricity * Mathf.Sin(eccentricAnomaly);
     }
@@ -375,12 +347,14 @@ public static class OrbitalMechanics
         return Mathf.Sqrt(StandardGravityParameter(bodyMass) / Mathf.Pow(absSemimajorAxis, 3));
     }
 
-    public static float MeanAnomaly(float meanAnomalyAtEpoch, float meanMotion, float timeSinceEpoch)
+    public static float MeanAnomaly(float meanAnomalyAtEpoch, float meanMotion, float timeSinceEpoch, bool modulate)
     {
         // Updated mean anomaly, assuming mean anomaly at epoch has been calculated!
         float M = meanAnomalyAtEpoch + meanMotion * timeSinceEpoch;
 
-        return MathUtilities.Modulo(M, 2 * Mathf.PI);
+        if (modulate)
+            M = MathUtilities.Modulo(M, 2 * Mathf.PI);
+        return M;
     }
 
     public static float MeanAnomaly(float meanAnomalyAtEpoch, float bodyMass, float semimajorAxis, float timeSinceEpoch)
@@ -407,25 +381,26 @@ public static class OrbitalMechanics
                 if (currentIter > maxIterations)
                     break;
 
-                float deltaE = (eccentricity * Sinh(E) - E - meanAnomaly) / (eccentricity * Cosh(E) - 1f);
+                float deltaE = (eccentricity * MathUtilities.Sinh(E) - E - meanAnomaly) / (eccentricity * MathUtilities.Cosh(E) - 1f);
                 E -= deltaE;
                 if (Mathf.Abs(deltaE) < 1e-6)
                     break;
             }
-            return E;
         }
-
-        // Ellipse
-        while (true)
+        else
         {
-            currentIter += 1;
-            if (currentIter > maxIterations)
-                break;
+            // Ellipse
+            while (true)
+            {
+                currentIter += 1;
+                if (currentIter > maxIterations)
+                    break;
 
-            float deltaE = (E - eccentricity * Mathf.Sin(E) - meanAnomaly) / (1f - eccentricity * Mathf.Cos(E));
-            E -= deltaE;
-            if (Mathf.Abs(deltaE) < 1e-6)
-                break;
+                float deltaE = (E - eccentricity * Mathf.Sin(E) - meanAnomaly) / (1f - eccentricity * Mathf.Cos(E));
+                E -= deltaE;
+                if (Mathf.Abs(deltaE) < 1e-6)
+                    break;
+            }
         }
         return E;
     }
