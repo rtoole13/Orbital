@@ -44,7 +44,11 @@ public class CameraController : MonoBehaviour
         mainCamera = GetComponent<Camera>();
         targetOrthographicSize = defaultOrthographicSize = mainCamera.orthographicSize;
     }
-    
+
+    private void Start()
+    {
+        OrthographicSizeChangeEvent(cameraSizeMin, cameraSizeMax, targetOrthographicSize); // Invoke delegate
+    }
     void Update()
     {
         HandleMouseInputs();
