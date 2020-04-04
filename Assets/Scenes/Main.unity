@@ -308,7 +308,7 @@ MonoBehaviour:
   zoomSmoothTime: 0.5
   cameraSizeMin: 5
   cameraSizeMax: 300
-  currentTarget: {fileID: 703178207}
+  currentTarget: {fileID: 1992898137}
   doubleClickSelectInterval: 1
 --- !u!20 &519420031
 Camera:
@@ -337,7 +337,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 50
+  orthographic size: 104.3
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -467,7 +467,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 703178207}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 231.68, y: 0, z: 0}
+  m_LocalPosition: {x: 231.68, y: -59.69, z: 0}
   m_LocalScale: {x: 0.576, y: 0.576, z: 0.576}
   m_Children: []
   m_Father: {fileID: 0}
@@ -511,7 +511,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 220b5a1c1ed8f7044bab621386eb5fa7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startVelocity: {x: 0, y: -6}
+  startVelocity: {x: 0, y: 6}
   _gravitySource: {fileID: 1908100516}
   _mass: 1
   clickForce: 2
@@ -1173,12 +1173,18 @@ MonoBehaviour:
     type: 3}
   m_PrefabInstance: {fileID: 6872017102472841883}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 1992898137}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 697b46c062f14374cb8bd08c44d5cc61, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1992898137 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6872017103272462084, guid: a06f41984aa48c141a393888b79b7bc6,
+    type: 3}
+  m_PrefabInstance: {fileID: 6872017102472841883}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &6872017102472841883
 PrefabInstance:
   m_ObjectHideFlags: 0
