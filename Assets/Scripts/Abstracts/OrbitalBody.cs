@@ -316,7 +316,6 @@ public abstract class OrbitalBody : MonoBehaviour
         // Epoch parameters
         TimeSinceEpoch = 0f;
         MeanMotion = OrbitalMechanics.MeanMotion(CurrentGravitySource.Mass, SemimajorAxis);
-        Debug.LogFormat("MeanMotion: {0}", MeanMotion);
         if (TrajectoryType == OrbitalMechanics.TrajectoryType.Ellipse)
         {
             CalculateEllipticalOrbitParameters(sourceRelativePosition, sourceRelativeVelocity);
@@ -492,15 +491,15 @@ public abstract class OrbitalBody : MonoBehaviour
             return;
         
         // Draw velocityVector
-        Gizmos.color = Color.red;
-        Vector2 dir = OrbitalMechanics.OrbitalDirection(TrueAnomaly, FlightPathAngle, clockWiseOrbit);
-        Gizmos.DrawRay(Position, 10f * dir.RotateVector(ArgumentOfPeriapsis));
+        //Gizmos.color = Color.red;
+        //Vector2 dir = OrbitalMechanics.OrbitalDirection(TrueAnomaly, FlightPathAngle, clockWiseOrbit);
+        //Gizmos.DrawRay(Position, 10f * dir.RotateVector(ArgumentOfPeriapsis));
 
-        if (HyperbolicAsymptotes != null)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawRay(CurrentGravitySource.Position - SemimajorAxis * (Vector2)EccentricityVector, 1000f * HyperbolicAsymptotes[0].RotateVector(ArgumentOfPeriapsis));
-            Gizmos.DrawRay(CurrentGravitySource.Position - SemimajorAxis * (Vector2)EccentricityVector, 1000f * HyperbolicAsymptotes[1].RotateVector(ArgumentOfPeriapsis));
-        }
+        //if (TrajectoryType == OrbitalMechanics.TrajectoryType.Hyperbola)
+        //{
+        //    Gizmos.color = Color.green;
+        //    Gizmos.DrawRay(CurrentGravitySource.Position - SemimajorAxis * (Vector2)EccentricityVector, 1000f * HyperbolicAsymptotes[0].RotateVector(ArgumentOfPeriapsis));
+        //    Gizmos.DrawRay(CurrentGravitySource.Position - SemimajorAxis * (Vector2)EccentricityVector, 1000f * HyperbolicAsymptotes[1].RotateVector(ArgumentOfPeriapsis));
+        //}
     }
 }

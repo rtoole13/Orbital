@@ -122,7 +122,6 @@ public static class OrbitalMechanics
 
     public static float HyperbolicAnomalyAtEpoch(float trueAnomaly, float eccentricity)
     {
-        Debug.LogFormat("TrueAnomaly: {0}", trueAnomaly * Mathf.Rad2Deg);
         float sqrt = Mathf.Sqrt((eccentricity - 1f) / (eccentricity + 1f));
         return 2f * MathUtilities.ArcTanh(sqrt * Mathf.Tan(trueAnomaly / 2f));
     }
@@ -201,7 +200,6 @@ public static class OrbitalMechanics
             float num = 1f + eccentricity * Mathf.Cos(trueAnomaly);
             phi = Mathf.Acos(num / denom);
         }
-        //Debug.Log("Phi: " + phi * Mathf.Rad2Deg);
         return phi;
     }
 
