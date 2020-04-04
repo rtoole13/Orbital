@@ -143,7 +143,6 @@ public static class OrbitalMechanics
     //}
     public static Vector2 OrbitalDirection(float trueAnomaly, float flightPathAngle, bool clockWise)
     {
-        trueAnomaly = MathUtilities.RescaleFloat(trueAnomaly, -Mathf.PI, Mathf.PI, 0f, 2f * Mathf.PI);
         float psi = trueAnomaly + Mathf.PI/2 - flightPathAngle;
         float sin = clockWise
             ? -Mathf.Sin(psi)
@@ -203,17 +202,6 @@ public static class OrbitalMechanics
             phi = Mathf.Acos(num / denom);
         }
         //Debug.Log("Phi: " + phi * Mathf.Rad2Deg);
-        return phi;
-    }
-
-    public static float EllipticalFlightPathAngle(Vector3 specificRelativeAngularMomentum, float orbitalRadius, float orbitalSpeed)
-    {
-        // ONLY valid for Elliptical orbitals
-        float phi = Mathf.Acos(specificRelativeAngularMomentum.magnitude / (orbitalRadius * orbitalSpeed));
-        phi = specificRelativeAngularMomentum.z > 0f // Clockwise
-            ? - phi
-            : phi;
-        //Debug.Log(phi * Mathf.Rad2Deg);
         return phi;
     }
 
