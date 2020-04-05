@@ -9,7 +9,7 @@ public class CameraController : MonoBehaviour
     private float zoomMultiplier = 4f;
 
     [SerializeField]
-    [Range(0.01f, 1f)]
+    [Range(0.0f, 1f)]
     private float moveSmoothTime = 0.5f;
 
     [SerializeField]

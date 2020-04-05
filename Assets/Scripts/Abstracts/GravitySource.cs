@@ -138,7 +138,7 @@ public abstract class GravitySource : OrbitalBody
 
         // Draw SOI
         Gizmos.color = Color.green;
-        //Gizmos.DrawWireSphere(Position, RadiusOfInfluence);
+        Gizmos.DrawWireSphere(Position, RadiusOfInfluence);
         base.OnDrawGizmos();
     }
 }
