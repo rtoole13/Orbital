@@ -115,7 +115,6 @@ public abstract class GravitySource : OrbitalBody
             GravitySource gravitySource = OrbitalBodies[i];
             if (gravitySource == null || !gravitySource.isActiveAndEnabled)
                 continue;
-            Debug.Log(gravitySource.name);
             gravitySource.UpdateSystem();
         }
         //for (int i = 0; i < OrbitalBodies.Count; i++)
