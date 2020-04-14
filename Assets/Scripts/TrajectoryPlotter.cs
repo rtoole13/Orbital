@@ -38,7 +38,7 @@ public class TrajectoryPlotter : MonoBehaviour
     {
         lineWidthRange = new float[2];
         lineWidthRange[0] = 0.5f;
-        lineWidthRange[1] = 1f;
+        lineWidthRange[1] = 5f;
         lineRenderer = GetComponent<LineRenderer>();
         orbitalBody = GetComponent<OrbitalBody>();
         CameraController.OrthographicSizeChangeEvent += AdjustLineThickness;

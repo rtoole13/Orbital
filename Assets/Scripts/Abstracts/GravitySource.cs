@@ -8,7 +8,10 @@ public abstract class GravitySource : OrbitalBody
     private float _radiusOfInfluence;
     private int _sourceRank = 0;
     private CircleCollider2D bodyCollider;
+
     private List<GravityAffected> gravityAffectedObjects = new List<GravityAffected>();
+    [SerializeField]
+    private List<GravitySource> _orbitalBodies;
 
     #region GETSET
 
@@ -27,6 +30,11 @@ public abstract class GravitySource : OrbitalBody
     {
         get { return _sourceRank; }
         private set { _sourceRank = value; }
+    }
+
+    public List<GravitySource> OrbitalBodies
+    {
+        get { return _orbitalBodies; }
     }
     #endregion GETSET
 
@@ -50,7 +58,7 @@ public abstract class GravitySource : OrbitalBody
         base.Start();
         if (CurrentGravitySource == null)
             return;
-        updateIteratively = false;
+        UpdatingIteratively = false;
         Vector3 sourceRelativePosition = (Vector3)Position - (Vector3)CurrentGravitySource.Position;
         Vector3 sourceRelativeVelocity = (Vector3)body.velocity - (Vector3)CurrentGravitySource.startVelocity;
         CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity);
@@ -64,7 +72,7 @@ public abstract class GravitySource : OrbitalBody
 
     private void FixedUpdate()
     {
-        UpdateDeterministically();
+        //UpdateDeterministically();
     }
 
     #endregion UNITY
@@ -88,6 +96,33 @@ public abstract class GravitySource : OrbitalBody
 
     }
     #endregion PHYSICS
+    #region GENERAL
+    public void InitializeSystem(GravitySource parent)
+    {
+        
+        CurrentGravitySource = parent;
+        for (int i = 0; i < OrbitalBodies.Count; i++)
+        {
+            OrbitalBodies[i].InitializeSystem(this);
+        }
+    }
+
+    public void UpdateSystem()
+    {
+        UpdateDeterministically();
+        for (int i = 0; i < OrbitalBodies.Count; i++)
+        {
+            GravitySource gravitySource = OrbitalBodies[i];
+            if (gravitySource == null || !gravitySource.isActiveAndEnabled)
+                continue;
+            Debug.Log(gravitySource.name);
+            gravitySource.UpdateSystem();
+        }
+        //for (int i = 0; i < OrbitalBodies.Count; i++)
+        //{
+        //    OrbitalBodies[i].UpdateSystem();
+        //}
+    }
 
     public void CheckForNewOrbitingObjects()
     {
@@ -129,7 +164,7 @@ public abstract class GravitySource : OrbitalBody
         }
         return CurrentGravitySource.CalculateSourceRank(count + 1);
     }
-    
+    #endregion GENERAL
 
     protected override void OnDrawGizmos()
     {
@@ -141,4 +176,5 @@ public abstract class GravitySource : OrbitalBody
         Gizmos.DrawWireSphere(Position, RadiusOfInfluence);
         base.OnDrawGizmos();
     }
+    
 }

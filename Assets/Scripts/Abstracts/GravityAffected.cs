@@ -24,7 +24,7 @@ public abstract class GravityAffected : OrbitalBody
     protected override void Start()
     {
         base.Start();
-        updateIteratively = false;
+        UpdatingIteratively = false;
         body.isKinematic = true;
         Vector3 sourceRelativePosition = (Vector3)Position - (Vector3)CurrentGravitySource.Position;
         Vector3 sourceRelativeVelocity = (Vector3)body.velocity - (Vector3)CurrentGravitySource.startVelocity;
@@ -55,21 +55,21 @@ public abstract class GravityAffected : OrbitalBody
     private void SwitchToDeterministicUpdate()
     {
         // Switching from iterative to deterministic trajectory update
-        if (!updateIteratively)
+        if (!UpdatingIteratively)
             return;
 
         //CalculateOrbitalParametersFromStateVectors();
-        updateIteratively = false;
+        UpdatingIteratively = false;
         body.isKinematic = true;
     }
 
     private void SwitchToIterativeUpdate()
     {
         // Switching from deterministic trajectory to iterative update
-        if (updateIteratively)
+        if (UpdatingIteratively)
             return;
 
-        updateIteratively = true;
+        UpdatingIteratively = true;
         body.isKinematic = false;
         body.velocity = OrbitalVelocity.RotateVector(ArgumentOfPeriapsis);
     }

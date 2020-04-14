@@ -26,6 +26,7 @@ public class Ship : GravityAffected, ICameraTrackable
 
         
     }
+
     #endregion UNITY
 
     private void AddClickForce()

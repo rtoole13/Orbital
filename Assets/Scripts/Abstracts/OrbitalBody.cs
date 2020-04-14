@@ -12,7 +12,6 @@ public abstract class OrbitalBody : MonoBehaviour
     private float _eccentricAnomaly;
     private Vector3 _eccentricityVector;
     private float _flightPathAngle;
-    [SerializeField]
     private GravitySource _gravitySource;
     private Vector2[] _hyperbolicAsymptotes;
     private float _hyperbolicExcessVelocity;
@@ -36,11 +35,10 @@ public abstract class OrbitalBody : MonoBehaviour
     private OrbitalMechanics.TrajectoryType _trajectoryType;
 
     protected Rigidbody2D body;
-    protected bool updateIteratively = true;
+    protected bool _updatingIteratively = true;
 
     private Vector2 lastPosition;
     private bool clockWiseOrbit = false;
-    //private float asymptoteTrueAnomalyThreshold = ;
     private float hyperbolicVelocityDiffThreshold = 0.02f; // If abs(position-this-frame - position-last-frame)/dt > this, vel is close enough to hyperbolic excess vel, update that way
     private float hyperbolicExcessVelocityApproxThreshold = 1.5f; // If calculated velocity - hyperbolic excess vel < this, check above
     private bool nearHyperbolicAsymptote = false;
@@ -50,6 +48,11 @@ public abstract class OrbitalBody : MonoBehaviour
     {
         get { return _gravitySource; }
         protected set { _gravitySource = value; }
+    }
+    public bool UpdatingIteratively
+    {
+        get { return _updatingIteratively; }
+        protected set { _updatingIteratively = value; }
     }
     public float Mass
     {
@@ -68,7 +71,7 @@ public abstract class OrbitalBody : MonoBehaviour
         // If iterative, body.velocity is dynamic, otherwise calculate world velocity from orbital vel
         get
         {
-            return updateIteratively ? body.velocity : OrbitalVelocityToWorld;
+            return UpdatingIteratively ? body.velocity : OrbitalVelocityToWorld;
         }
     }
     
@@ -371,7 +374,7 @@ public abstract class OrbitalBody : MonoBehaviour
     #region GENERAL
 
     protected virtual void UpdateDeterministically(){
-        //Time.timeScale = .1f;
+        //Time.timeScale = 1.5f;
         //Time.fixedDeltaTime *= Time.timeScale;
         if (CurrentGravitySource == null)
             return;
@@ -489,17 +492,17 @@ public abstract class OrbitalBody : MonoBehaviour
     {
         if (CurrentGravitySource == null || body == null)
             return;
-        
+
         // Draw velocityVector
         //Gizmos.color = Color.red;
         //Vector2 dir = OrbitalMechanics.OrbitalDirection(TrueAnomaly, FlightPathAngle, clockWiseOrbit);
         //Gizmos.DrawRay(Position, 10f * dir.RotateVector(ArgumentOfPeriapsis));
 
-        //if (TrajectoryType == OrbitalMechanics.TrajectoryType.Hyperbola)
-        //{
-        //    Gizmos.color = Color.green;
-        //    Gizmos.DrawRay(CurrentGravitySource.Position - SemimajorAxis * (Vector2)EccentricityVector, 1000f * HyperbolicAsymptotes[0].RotateVector(ArgumentOfPeriapsis));
-        //    Gizmos.DrawRay(CurrentGravitySource.Position - SemimajorAxis * (Vector2)EccentricityVector, 1000f * HyperbolicAsymptotes[1].RotateVector(ArgumentOfPeriapsis));
-        //}
+        if (TrajectoryType == OrbitalMechanics.TrajectoryType.Hyperbola)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawRay(CurrentGravitySource.Position - SemimajorAxis * (Vector2)EccentricityVector, 1000f * HyperbolicAsymptotes[0].RotateVector(ArgumentOfPeriapsis));
+            Gizmos.DrawRay(CurrentGravitySource.Position - SemimajorAxis * (Vector2)EccentricityVector, 1000f * HyperbolicAsymptotes[1].RotateVector(ArgumentOfPeriapsis));
+        }
     }
 }
