@@ -303,6 +303,7 @@ public abstract class OrbitalBody : MonoBehaviour
     protected virtual void Start()
     {
     }
+
     #endregion UNITY
 
     #region PHYSICS
@@ -374,8 +375,6 @@ public abstract class OrbitalBody : MonoBehaviour
     #region GENERAL
 
     protected virtual void UpdateDeterministically(){
-        //Time.timeScale = 1.5f;
-        //Time.fixedDeltaTime *= Time.timeScale;
         if (CurrentGravitySource == null)
             return;
         
