@@ -44,7 +44,6 @@ public class TimeController : MonoBehaviour
         float currentTimeScale = currentMultiplier;
         currentMultiplier = timeMultipliers[currentMultiplierIndex];
         Time.timeScale = currentMultiplier;
-        Time.fixedDeltaTime *= Time.timeScale;
         Debug.LogFormat("Updating time warp from {0}x to {1}x.", currentTimeScale, Time.timeScale);
     }
 
