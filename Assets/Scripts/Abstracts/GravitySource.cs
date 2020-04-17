@@ -50,7 +50,7 @@ public abstract class GravitySource : OrbitalBody
             throw new UnityException(string.Format("{0}'s circle collider must not be isTrigger!", gameObject.name));
         }
 
-        SourceRank = CalculateSourceRank(0);
+        //SourceRank = CalculateSourceRank(0);
     }
 
     protected override void Start()
@@ -62,6 +62,7 @@ public abstract class GravitySource : OrbitalBody
         Vector3 sourceRelativePosition = (Vector3)Position - (Vector3)CurrentGravitySource.Position;
         Vector3 sourceRelativeVelocity = (Vector3)body.velocity - (Vector3)CurrentGravitySource.startVelocity;
         CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity);
+        
     }
 
     protected virtual void Update()
@@ -101,6 +102,15 @@ public abstract class GravitySource : OrbitalBody
     {
         
         CurrentGravitySource = parent;
+        if (parent == null)
+        {
+            SourceRank = 0;
+        }
+        else
+        {
+            SourceRank = CurrentGravitySource.SourceRank + 1;
+        }
+        Debug.LogFormat("{0}'s source rank: {1}", name, SourceRank);
         for (int i = 0; i < OrbitalBodies.Count; i++)
         {
             OrbitalBodies[i].InitializeSystem(this);

@@ -183,6 +183,9 @@ MonoBehaviour:
   - 3
   - 4
   - 5
+  - 10
+  - 20
+  - 50
 --- !u!1001 &488861473
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -446,7 +449,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!50 &703178208
 Rigidbody2D:
   serializedVersion: 4
@@ -569,7 +572,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 220b5a1c1ed8f7044bab621386eb5fa7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startVelocity: {x: 2, y: 9.5}
+  startVelocity: {x: -4, y: 9.5}
   _mass: 1
   clickForce: 2
 --- !u!114 &703178213
