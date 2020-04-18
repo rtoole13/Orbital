@@ -328,10 +328,10 @@ public abstract class OrbitalBody : MonoBehaviour
         {
             CalculateHyperbolicOrbitParameters(sourceRelativePosition, sourceRelativeVelocity);
         }
-        FlightPathAngle = OrbitalMechanics.FlightPathAngle(Eccentricity, TrueAnomaly);
         OrbitalPosition = OrbitalMechanics.OrbitalPosition(OrbitalRadius, TrueAnomaly, clockWiseOrbit);
         lastPosition = OrbitalPosition;
-        OrbitalSpeed = OrbitalMechanics.OrbitalSpeed(CurrentGravitySource.Mass, OrbitalRadius, SemimajorAxis);
+        Debug.Log(OrbitalPosition);
+        Debug.Log(OrbitalVelocity);
     }
 
     private void CalculateEllipticalOrbitParameters(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)
@@ -342,7 +342,9 @@ public abstract class OrbitalBody : MonoBehaviour
         MeanAnomalyAtEpoch = OrbitalMechanics.MeanAnomalyAtEpoch(EccentricAnomaly, Eccentricity);
         MeanAnomaly = MeanAnomalyAtEpoch;
         OrbitalRadius = OrbitalMechanics.OrbitalRadius(Eccentricity, SemimajorAxis, TrueAnomaly);
-        //OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
+        FlightPathAngle = OrbitalMechanics.FlightPathAngle(Eccentricity, TrueAnomaly);
+        OrbitalSpeed = OrbitalMechanics.OrbitalSpeed(CurrentGravitySource.Mass, OrbitalRadius, SemimajorAxis);
+        OrbitalVelocity = OrbitalSpeed * OrbitalMechanics.OrbitalDirection(TrueAnomaly, FlightPathAngle, clockWiseOrbit);
     }
 
     private void CalculateHyperbolicOrbitParameters(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)
@@ -367,7 +369,9 @@ public abstract class OrbitalBody : MonoBehaviour
         {
             OrbitalRadius = calculatedOrbitalRadius;
         }
-        //OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis); //BROKE
+        FlightPathAngle = OrbitalMechanics.FlightPathAngle(Eccentricity, TrueAnomaly);
+        OrbitalSpeed = OrbitalMechanics.OrbitalSpeed(CurrentGravitySource.Mass, OrbitalRadius, SemimajorAxis);
+        OrbitalVelocity = OrbitalSpeed * OrbitalMechanics.OrbitalDirection(TrueAnomaly, FlightPathAngle, clockWiseOrbit);
     }
 
     #endregion PHYSICS

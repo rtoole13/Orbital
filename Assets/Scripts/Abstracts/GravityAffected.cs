@@ -5,7 +5,6 @@ using UnityEngine;
 [RequireComponent(typeof(Collider2D), typeof(Rigidbody2D))]
 public abstract class GravityAffected : OrbitalBody
 {
-
     protected bool nonGravitationalForcesAdded = true;
 
     private bool recentlyChangedSource = false;
@@ -26,10 +25,10 @@ public abstract class GravityAffected : OrbitalBody
         base.Start();
         UpdatingIteratively = false;
         body.isKinematic = true;
-        //Vector3 sourceRelativePosition = (Vector3)Position - (Vector3)CurrentGravitySource.Position;
-        //Vector3 sourceRelativeVelocity = (Vector3)body.velocity - (Vector3)CurrentGravitySource.startVelocity;
-        //CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity);
+        DeterministicSystem system = FindObjectOfType<DeterministicSystem>();
+        InitializeNewOrbit(system.PrimarySource.GetGravitySourceAtPosition(Position, false));
     }
+
     protected virtual void Update()
     {
 
@@ -40,11 +39,11 @@ public abstract class GravityAffected : OrbitalBody
 
         UpdateCurrentGravitySource();
 
-        if (CurrentGravitySource == null)
-        {
-            //fixme remove w/e bandaid this is..
-            return;
-        }
+        //if (CurrentGravitySource == null)
+        //{
+        //    //fixme remove w/e bandaid this is..
+        //    return;
+        //}
         UpdateDeterministically();
     }
 
@@ -133,6 +132,12 @@ public abstract class GravityAffected : OrbitalBody
         nonGravitationalForces.Clear();
     }
 
+    protected void CheckSpheresOfInfluence()
+    {
+        GravitySource dominantGravitySource = CurrentGravitySource.GetGravitySourceAtPosition(Position, true);
+        EnterSphereOfInfluence(dominantGravitySource);
+    }
+
     protected bool LeavingSphereOfInfluence()
     {
         if (CurrentGravitySource == null)
@@ -158,7 +163,7 @@ public abstract class GravityAffected : OrbitalBody
         possibleGravitySources.Add(newSource);
     }
 
-    public void InitializeNewOrbit(GravitySource newSource)
+    protected void InitializeNewOrbit(GravitySource newSource)
     {
         Vector2 relVel = Velocity - newSource.Velocity;  // world vel - newSource.vel
         Vector2 relPos = Position - newSource.Position; // world pos - newSource.pos

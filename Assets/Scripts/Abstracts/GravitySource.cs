@@ -6,10 +6,12 @@ using UnityEngine;
 public abstract class GravitySource : OrbitalBody
 {
     private float _radiusOfInfluence;
+    private float _radiusOfInfluenceSq;
     private int _sourceRank = 0;
     private CircleCollider2D bodyCollider;
 
     private List<GravityAffected> gravityAffectedObjects = new List<GravityAffected>();
+
     [SerializeField]
     private List<GravitySource> _orbitalBodies;
 
@@ -23,7 +25,16 @@ public abstract class GravitySource : OrbitalBody
     public float RadiusOfInfluence
     {
         get { return _radiusOfInfluence; }
-        private set { _radiusOfInfluence = value; }
+        private set
+        {
+            _radiusOfInfluence = value;
+            _radiusOfInfluenceSq = Mathf.Pow(value, 2);
+        }
+    }
+
+    public float RadiusOfInfluenceSq
+    {
+        get { return _radiusOfInfluenceSq; }
     }
 
     public int SourceRank
@@ -42,27 +53,24 @@ public abstract class GravitySource : OrbitalBody
     protected override void Awake()
     {
         base.Awake();
-        
         // Get bodyCollider
         bodyCollider = GetComponent<CircleCollider2D>();
         if (bodyCollider.isTrigger)
         {
             throw new UnityException(string.Format("{0}'s circle collider must not be isTrigger!", gameObject.name));
         }
-
-        //SourceRank = CalculateSourceRank(0);
+        UpdatingIteratively = false;
+        if (CurrentGravitySource == null)
+            return;
+        Vector3 sourceRelativePosition = (Vector3)Position - (Vector3)CurrentGravitySource.transform.position;
+        Vector3 sourceRelativeVelocity = (Vector3)body.velocity - (Vector3)CurrentGravitySource.startVelocity;
+        CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity);
     }
 
     protected override void Start()
     {
-        base.Start();
-        if (CurrentGravitySource == null)
-            return;
-        UpdatingIteratively = false;
-        Vector3 sourceRelativePosition = (Vector3)Position - (Vector3)CurrentGravitySource.Position;
-        Vector3 sourceRelativeVelocity = (Vector3)body.velocity - (Vector3)CurrentGravitySource.startVelocity;
-        CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity);
         
+        base.Start();
     }
 
     protected virtual void Update()
@@ -73,7 +81,6 @@ public abstract class GravitySource : OrbitalBody
 
     private void FixedUpdate()
     {
-        //UpdateDeterministically();
     }
 
     #endregion UNITY
@@ -100,7 +107,6 @@ public abstract class GravitySource : OrbitalBody
     #region GENERAL
     public void InitializeSystem(GravitySource parent)
     {
-        
         CurrentGravitySource = parent;
         if (parent == null)
         {
@@ -110,7 +116,6 @@ public abstract class GravitySource : OrbitalBody
         {
             SourceRank = CurrentGravitySource.SourceRank + 1;
         }
-        Debug.LogFormat("{0}'s source rank: {1}", name, SourceRank);
         for (int i = 0; i < OrbitalBodies.Count; i++)
         {
             OrbitalBodies[i].InitializeSystem(this);
@@ -131,6 +136,30 @@ public abstract class GravitySource : OrbitalBody
         //{
         //    OrbitalBodies[i].UpdateSystem();
         //}
+    }
+
+    public GravitySource GetGravitySourceAtPosition(Vector2 position, bool firstLevel)
+    {
+        // Given a position, get the most influential gravity source.
+        // firstLevel defines whether to recurse through gravitySources or not
+        
+        for (int i = 0; i < OrbitalBodies.Count; i++)
+        {
+            GravitySource gravitySource = OrbitalBodies[i];
+            float distSq = Vector2.SqrMagnitude(gravitySource.Position - position);
+            if (distSq < gravitySource.RadiusOfInfluenceSq)
+            {
+                if (firstLevel)
+                {
+                    return gravitySource;
+                }
+                else
+                {
+                    return gravitySource.GetGravitySourceAtPosition(position, false);
+                }
+            }
+        }
+        return this;
     }
 
     public void CheckForNewOrbitingObjects()

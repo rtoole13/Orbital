@@ -150,7 +150,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5740d0557df1f554da433694ab95e046, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  primarySource: {fileID: 1165682704}
+  _primarySource: {fileID: 1165682704}
 --- !u!4 &353827872
 Transform:
   m_ObjectHideFlags: 0
@@ -572,7 +572,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 220b5a1c1ed8f7044bab621386eb5fa7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startVelocity: {x: -4, y: 9.5}
+  startVelocity: {x: 2.5, y: 9.5}
   _mass: 1
   clickForce: 2
 --- !u!114 &703178213
