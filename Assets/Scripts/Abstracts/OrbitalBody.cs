@@ -330,8 +330,6 @@ public abstract class OrbitalBody : MonoBehaviour
         }
         OrbitalPosition = OrbitalMechanics.OrbitalPosition(OrbitalRadius, TrueAnomaly, clockWiseOrbit);
         lastPosition = OrbitalPosition;
-        Debug.Log(OrbitalPosition);
-        Debug.Log(OrbitalVelocity);
     }
 
     private void CalculateEllipticalOrbitParameters(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)

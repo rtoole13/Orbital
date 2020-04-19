@@ -37,14 +37,12 @@ public abstract class GravityAffected : OrbitalBody
 
     private void FixedUpdate()
     {
+        if (nonGravitationalForcesAdded && !UpdatingIteratively)
+        {
+
+        }
         UpdateCurrentGravitySource();
         UpdateDeterministically();
-    }
-
-    private void OnCollisionStay2D(Collision2D collision)
-    {
-        // On Collision w/ an object, stop deterministic trajectory update (normal force)
-        SwitchToIterativeUpdate();
     }
 
     private void SwitchToDeterministicUpdate()
@@ -69,42 +67,14 @@ public abstract class GravityAffected : OrbitalBody
         body.velocity = OrbitalVelocity.RotateVector(ArgumentOfPeriapsis);
     }
 
-    // Basically, rigidbody.iskinematic = false;
     private void UpdateIteratively()
     {
-        //Add other forces. Collisions?
-        /*
-        if (nonGravitationalForces.Count == 0 && currentTrajectoryType == TrajectoryType.Ellipse)
-        {
-            nonGravitationalForcesAdded = false;
-            SwitchToDeterministicUpdate();
-            return;
-        }
-        */
+        // Gravitational force
         Vector2 gravitationalForce = CurrentGravitySource.CalculateGravitationalForceAtPosition(transform.position, Mass);
         body.AddForce(gravitationalForce);
 
+        // Other forces
         ApplyNonGravitationalForces();
-        if (Input.GetMouseButtonUp(0))
-        {
-            //CalculateOrbitalParametersFromStateVectors();
-        }
-        if (Input.GetMouseButton(1))
-        {
-            //CalculateOrbitalParametersFromStateVectors();
-        }
-        TimeSinceEpoch = (TimeSinceEpoch + Time.fixedDeltaTime) % OrbitalPeriod;
-        //MeanAnomaly = OrbitalMechanics.MeanAnomaly(MeanAnomalyAtEpoch, MeanMotion, TimeSinceEpoch);
-        //if (MeanAnomaly >= 0f) //FIXME this check shouldnt exist.
-        //{
-        //    EccentricAnomaly = OrbitalMechanics.EccentricAnomaly(MeanAnomaly, Eccentricity, 6);
-        //    //TrueAnomaly = OrbitalMechanics.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
-        //    //OrbitalPosition = OrbitalMechanics.OrbitalPosition(Eccentricity, SemimajorAxis, TrueAnomaly);
-        //    //OrbitalVelocity = OrbitalMechanics.OrbitalVelocity(MeanMotion, EccentricAnomaly, Eccentricity, SemimajorAxis);
-        //    //trajectoryPosition = OrbitalPositionToWorld;
-        //    //Debug.Log("Old: " + CalculateVelocityFromOrbitalParameters());
-        //    //Debug.Log("New: " + OrbitalMechanics.CalculateVelocityFromOrbitalParameters(SpecificRelativeAngularMomentum, SourceRelativePosition, CurrentGravitySource.Mass, SemimajorAxis));
-        //}
     }
 
     #endregion UNITY
@@ -113,6 +83,12 @@ public abstract class GravityAffected : OrbitalBody
 
     public void AddExternalForce(Vector2 forceVector)
     {
+        if (Time.timeScale != 1f) // FIXME: Potential float comparison issue
+        {
+            Debug.LogFormat("Force applied! Dropping time warp from {0}x to 1x.", Time.timeScale);
+            Time.timeScale = 1f;
+        }
+        
         nonGravitationalForcesAdded = true;
         nonGravitationalForces.Add(forceVector);
     }
@@ -121,7 +97,8 @@ public abstract class GravityAffected : OrbitalBody
     {
         for (int i = 0; i < nonGravitationalForces.Count; i++)
         {
-            body.AddForce(nonGravitationalForces[i]);
+            body.AddForce(nonGravitationalForces[i], ForceMode2D.Impulse);
+            //body.AddForce(nonGravitationalForces[i]);
         }
         nonGravitationalForces.Clear();
     }
@@ -146,6 +123,12 @@ public abstract class GravityAffected : OrbitalBody
         Vector2 relPos = Position - newSource.Position; // world pos - newSource.pos
         CurrentGravitySource = newSource;
         CalculateOrbitalParametersFromStateVectors(relPos, relVel);
+        //Debug.LogFormat("SemimajorAxis: {0}", SemimajorAxis);
+        //Debug.LogFormat("Eccentricity: {0}", Eccentricity);
+        //Debug.LogFormat("EccentricAnomaly: {0}", EccentricAnomaly);
+        //Debug.LogFormat("MeanAnomaly: {0}", MeanAnomaly);
+        //Debug.LogFormat("OrbitalRadius: {0}", OrbitalRadius);
+        //Debug.LogFormat("OrbitalPosition: {0}", OrbitalPosition);
         recentlyChangedSource = true;
         IEnumerator recentSourceChangeCoroutine = ChangeSourceTimer();
         StartCoroutine(recentSourceChangeCoroutine);
