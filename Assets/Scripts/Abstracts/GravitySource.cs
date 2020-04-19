@@ -10,8 +10,6 @@ public abstract class GravitySource : OrbitalBody
     private int _sourceRank = 0;
     private CircleCollider2D bodyCollider;
 
-    private List<GravityAffected> gravityAffectedObjects = new List<GravityAffected>();
-
     [SerializeField]
     private List<GravitySource> _orbitalBodies;
 
@@ -73,16 +71,8 @@ public abstract class GravitySource : OrbitalBody
         base.Start();
     }
 
-    protected virtual void Update()
-    {
-        CheckCurrentOrbitingObjects();
-        CheckForNewOrbitingObjects();
-    }
-
-    private void FixedUpdate()
-    {
-    }
-
+    protected virtual void Update(){}
+    protected virtual void FixedUpdate(){}
     #endregion UNITY
     #region PHYSICS
 
@@ -132,17 +122,12 @@ public abstract class GravitySource : OrbitalBody
                 continue;
             gravitySource.UpdateSystem();
         }
-        //for (int i = 0; i < OrbitalBodies.Count; i++)
-        //{
-        //    OrbitalBodies[i].UpdateSystem();
-        //}
     }
 
     public GravitySource GetGravitySourceAtPosition(Vector2 position, bool firstLevel)
     {
         // Given a position, get the most influential gravity source.
         // firstLevel defines whether to recurse through gravitySources or not
-        
         for (int i = 0; i < OrbitalBodies.Count; i++)
         {
             GravitySource gravitySource = OrbitalBodies[i];
@@ -160,38 +145,6 @@ public abstract class GravitySource : OrbitalBody
             }
         }
         return this;
-    }
-
-    public void CheckForNewOrbitingObjects()
-    {
-        Collider2D[] colliders = Physics2D.OverlapCircleAll(Position, RadiusOfInfluence);
-        for (int i = 0; i < colliders.Length; i++)
-        {
-            Collider2D collider = colliders[i];
-            GravityAffected gravityAffected = collider.GetComponent<GravityAffected>();
-            if (gravityAffected == null)
-                continue;
-
-            float dist = (gravityAffected.Position - Position).magnitude;
-            if (dist <= RadiusOfInfluence && !gravityAffectedObjects.Contains(gravityAffected))
-            {
-                gravityAffected.EnterSphereOfInfluence(this);
-                gravityAffectedObjects.Add(gravityAffected);
-            }
-        }
-    }
-
-    public void CheckCurrentOrbitingObjects()
-    {
-        for (int i = 0; i < gravityAffectedObjects.Count; i++)
-        {
-            GravityAffected gravityAffected = gravityAffectedObjects[i];
-            float dist = (gravityAffected.Position - Position).magnitude;
-            if (dist > RadiusOfInfluence)
-            {
-                gravityAffectedObjects.Remove(gravityAffected);
-            }
-        }
     }
 
     public int CalculateSourceRank(int count)
