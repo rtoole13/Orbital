@@ -37,12 +37,27 @@ public abstract class GravityAffected : OrbitalBody
 
     private void FixedUpdate()
     {
-        if (nonGravitationalForcesAdded && !UpdatingIteratively)
-        {
-
-        }
         UpdateCurrentGravitySource();
-        UpdateDeterministically();
+        if (UpdatingIteratively)
+        {
+            if (!nonGravitationalForcesAdded)
+            {
+                UpdatingIteratively = false;
+                UpdateDeterministically();
+                return;
+            }
+            UpdateIteratively();
+        }
+        else
+        {
+            if (nonGravitationalForcesAdded)
+            {
+                UpdatingIteratively = true;
+                UpdateIteratively();
+                return;
+            }
+            UpdateDeterministically();
+        }
     }
 
     private void SwitchToDeterministicUpdate()
