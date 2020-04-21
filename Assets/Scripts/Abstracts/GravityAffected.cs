@@ -5,7 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(Collider2D), typeof(Rigidbody2D))]
 public abstract class GravityAffected : OrbitalBody
 {
-    protected bool nonGravitationalForcesAdded = true;
+    protected bool nonGravitationalForcesAdded = false;
 
     private bool recentlyChangedSource = false;
     private float sourceChangeInterval = .2f;
@@ -42,7 +42,7 @@ public abstract class GravityAffected : OrbitalBody
         {
             if (!nonGravitationalForcesAdded)
             {
-                UpdatingIteratively = false;
+                SwitchToDeterministicUpdate();
                 UpdateDeterministically();
                 return;
             }
@@ -52,7 +52,7 @@ public abstract class GravityAffected : OrbitalBody
         {
             if (nonGravitationalForcesAdded)
             {
-                UpdatingIteratively = true;
+                SwitchToIterativeUpdate();
                 UpdateIteratively();
                 return;
             }
@@ -62,24 +62,16 @@ public abstract class GravityAffected : OrbitalBody
 
     private void SwitchToDeterministicUpdate()
     {
-        // Switching from iterative to deterministic trajectory update
-        if (!UpdatingIteratively)
-            return;
-
-        //CalculateOrbitalParametersFromStateVectors();
-        UpdatingIteratively = false;
         body.isKinematic = true;
+        InitializeNewOrbit(CurrentGravitySource);
+        UpdatingIteratively = false;
     }
 
     private void SwitchToIterativeUpdate()
     {
-        // Switching from deterministic trajectory to iterative update
-        if (UpdatingIteratively)
-            return;
-
-        UpdatingIteratively = true;
         body.isKinematic = false;
-        body.velocity = OrbitalVelocity.RotateVector(ArgumentOfPeriapsis);
+        UpdatingIteratively = true;
+        body.velocity = OrbitalVelocityToWorld;
     }
 
     private void UpdateIteratively()
@@ -87,7 +79,7 @@ public abstract class GravityAffected : OrbitalBody
         // Gravitational force
         Vector2 gravitationalForce = CurrentGravitySource.CalculateGravitationalForceAtPosition(transform.position, Mass);
         body.AddForce(gravitationalForce);
-
+        //body.AddForce(nonGravitationalForces[i], ForceMode2D.Impulse);
         // Other forces
         ApplyNonGravitationalForces();
     }
@@ -112,10 +104,11 @@ public abstract class GravityAffected : OrbitalBody
     {
         for (int i = 0; i < nonGravitationalForces.Count; i++)
         {
-            body.AddForce(nonGravitationalForces[i], ForceMode2D.Impulse);
-            //body.AddForce(nonGravitationalForces[i]);
+            //body.AddForce(nonGravitationalForces[i], ForceMode2D.Impulse);
+            body.AddForce(nonGravitationalForces[i]);
         }
         nonGravitationalForces.Clear();
+        nonGravitationalForcesAdded = false;
     }
     
     protected bool LeavingSphereOfInfluence()

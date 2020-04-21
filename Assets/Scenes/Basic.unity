@@ -369,7 +369,7 @@ MonoBehaviour:
   zoomSmoothTime: 0.5
   cameraSizeMin: 5
   cameraSizeMax: 300
-  currentTarget: {fileID: 974124287}
+  currentTarget: {fileID: 703178207}
   doubleClickSelectInterval: 1
 --- !u!20 &519420031
 Camera:
@@ -690,18 +690,12 @@ MonoBehaviour:
     type: 3}
   m_PrefabInstance: {fileID: 1698389681}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 974124287}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 697b46c062f14374cb8bd08c44d5cc61, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!1 &974124287 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6872017103272462084, guid: a06f41984aa48c141a393888b79b7bc6,
-    type: 3}
-  m_PrefabInstance: {fileID: 1698389681}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &991928301 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6872017103272462143, guid: a06f41984aa48c141a393888b79b7bc6,
