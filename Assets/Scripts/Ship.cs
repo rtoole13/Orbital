@@ -4,8 +4,22 @@ using UnityEngine;
 
 public class Ship : GravityAffected, ICameraTrackable
 {
-    public float clickForce = 1f;
+    public float fullThrust = 1f;
 
+    [SerializeField]
+    [Range(0.1f,2f)]
+    private float rotationAccel = 0.5f;
+
+    [SerializeField]
+    [Range(0.1f, 5f)]
+    private float rotationRateCap = 2f;
+    private float rotationRate = 0f;
+
+    [SerializeField]
+    [Range(0.01f, 0.5f)]
+    private float thrustAccel = 0.5f;
+    private float normalizedThrust = 0f;
+    private bool thrusting = false;
     #region UNITY
     /*
     private void Start()
@@ -18,23 +32,74 @@ public class Ship : GravityAffected, ICameraTrackable
         body.velocity = startVelocity;
     }
     */
-    protected override void Update()
+    protected override void FixedUpdate()
     {
-        if (Input.GetMouseButton(0))
-            AddClickForce();
-        base.Update();
-
+        Rotate();
+        ApplyThrust();
         
+        base.FixedUpdate();
     }
 
     #endregion UNITY
 
-    private void AddClickForce()
+    private void Rotate()
     {
-        Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
-        Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector2 distance = mousePosition - (Vector2)rigidbody.transform.position;
-        AddExternalForce(clickForce * distance.normalized);
+        if (Input.GetKey(KeyCode.T))
+        {
+            rotationRate = 0;
+            return;
+        }
+
+        if (Input.GetKey(KeyCode.A))
+        {
+            rotationRate += rotationAccel;
+        }
+        else if (Input.GetKey(KeyCode.D))
+        {
+            rotationRate -= rotationAccel;
+        }
+        rotationRate = Mathf.Clamp(rotationRate, -rotationRateCap, rotationRateCap);
+        transform.Rotate(Vector3.forward, rotationRate);
+    }
+
+    private void ApplyThrust()
+    {
+        if (Input.GetKey(KeyCode.X))
+        {
+            normalizedThrust = 0f;
+            thrusting = false;
+            return;
+        }
+
+        if (Input.GetKey(KeyCode.Z))
+        {
+            normalizedThrust = 1f;
+        }
+        else if (Input.GetKey(KeyCode.LeftShift))
+        {
+            normalizedThrust += thrustAccel;
+        }
+        else if (Input.GetKey(KeyCode.LeftControl))
+        {
+            normalizedThrust -= thrustAccel;
+        }
+        normalizedThrust = Mathf.Clamp(normalizedThrust, 0f, 1f);
+        if (normalizedThrust <= 0f)
+        {
+            thrusting = false;
+            return;
+        }
+        thrusting = true;
+        AddExternalForce(fullThrust * normalizedThrust * transform.up);
+    }
+
+    protected override void OnDrawGizmos()
+    {
+        base.OnDrawGizmos();
+        if (!thrusting)
+            return;
+        Gizmos.color = Color.red;
+        Gizmos.DrawRay(Position, fullThrust * normalizedThrust * transform.up);
     }
 }
 

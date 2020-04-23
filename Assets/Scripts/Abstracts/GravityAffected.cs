@@ -35,7 +35,7 @@ public abstract class GravityAffected : OrbitalBody
 
     protected virtual void Update(){}
 
-    private void FixedUpdate()
+    protected virtual void FixedUpdate()
     {
         UpdateCurrentGravitySource();
         if (UpdatingIteratively)
@@ -79,11 +79,16 @@ public abstract class GravityAffected : OrbitalBody
         // Gravitational force
         Vector2 gravitationalForce = CurrentGravitySource.CalculateGravitationalForceAtPosition(transform.position, Mass);
         body.AddForce(gravitationalForce);
-        //body.AddForce(nonGravitationalForces[i], ForceMode2D.Impulse);
+        
         // Other forces
         ApplyNonGravitationalForces();
+
+        Vector2 relVel = Velocity - CurrentGravitySource.Velocity;  // world vel - newSource.vel
+        Vector2 relPos = Position - CurrentGravitySource.Position; // world pos - newSource.pos
+        CalculateMinimalOrbitalParameters(relVel, relPos);
     }
 
+    
     #endregion UNITY
 
     #region PHYSICS

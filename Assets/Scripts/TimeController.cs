@@ -22,12 +22,6 @@ public class TimeController : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyUp(KeyCode.Period)){
-            Debug.Log("Up");
-        }
-        if (Input.GetKeyUp(KeyCode.Comma)){
-            Debug.Log("Down");
-        }
         if (Input.GetKeyUp(KeyCode.Period) && IncrementMultiplier())
         {
             ChangeFixedUpdateTime();

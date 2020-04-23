@@ -372,6 +372,17 @@ public abstract class OrbitalBody : MonoBehaviour
         OrbitalVelocity = OrbitalSpeed * OrbitalMechanics.OrbitalDirection(TrueAnomaly, FlightPathAngle, clockWiseOrbit);
     }
 
+    protected void CalculateMinimalOrbitalParameters(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)
+    {
+        SpecificRelativeAngularMomentum = OrbitalMechanics.SpecificRelativeAngularMomentum(sourceRelativePosition, sourceRelativeVelocity);
+        clockWiseOrbit = SpecificRelativeAngularMomentum.z < 0;
+        EccentricityVector = OrbitalMechanics.EccentricityVector(sourceRelativePosition, sourceRelativeVelocity, SpecificRelativeAngularMomentum, CurrentGravitySource.Mass);
+        SemimajorAxis = OrbitalMechanics.SemimajorAxis(sourceRelativePosition.magnitude, sourceRelativeVelocity.sqrMagnitude, CurrentGravitySource.Mass);
+        SemiminorAxis = OrbitalMechanics.SemiminorAxis(SemimajorAxis, Eccentricity);
+        SpecificOrbitalEnergy = OrbitalMechanics.SpecificOrbitalEnergy(CurrentGravitySource.Mass, Mass, SemimajorAxis);
+        ArgumentOfPeriapsis = OrbitalMechanics.ArgumentOfPeriapse(EccentricityVector, sourceRelativePosition);
+    }
+
     #endregion PHYSICS
 
     #region GENERAL
