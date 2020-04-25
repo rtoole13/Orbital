@@ -8,11 +8,13 @@ public class TimeController : MonoBehaviour
     private int currentMultiplierIndex = 0;
 
     [SerializeField]
-    private float[] timeMultipliers = new float[] { 1f, 2f, 3f, 4f, 5f };
+    private int[] timeMultipliers = new int[] { 1, 2, 3, 4, 5 };
 
+    public delegate void ChangingTimeScale(float newTimeScale);
+    public static event ChangingTimeScale TimeScaleChangeEvent;
     private void Awake()
     {
-        currentMultiplier = timeMultipliers[currentMultiplierIndex];
+        currentMultiplier = (float)timeMultipliers[currentMultiplierIndex];
     }
 
     private void Start()
@@ -24,11 +26,13 @@ public class TimeController : MonoBehaviour
     {
         if (Input.GetKeyUp(KeyCode.Period) && IncrementMultiplier())
         {
+            TimeScaleChangeEvent(currentMultiplier);
             ChangeFixedUpdateTime();
             return;
         }
         if (Input.GetKeyUp(KeyCode.Comma) && DecrementMultiplier())
         {
+            TimeScaleChangeEvent(currentMultiplier);
             ChangeFixedUpdateTime();
         }
     }
@@ -36,7 +40,7 @@ public class TimeController : MonoBehaviour
     private void ChangeFixedUpdateTime()
     {
         float currentTimeScale = currentMultiplier;
-        currentMultiplier = timeMultipliers[currentMultiplierIndex];
+        currentMultiplier = (float)timeMultipliers[currentMultiplierIndex];
         Time.timeScale = currentMultiplier;
         Debug.LogFormat("Updating time warp from {0}x to {1}x.", currentTimeScale, Time.timeScale);
     }

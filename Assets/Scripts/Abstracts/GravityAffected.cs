@@ -18,6 +18,7 @@ public abstract class GravityAffected : OrbitalBody
         base.Awake();
         nonGravitationalForces = new List<Vector2>();
         possibleGravitySources = new List<GravitySource>();
+        TimeController.TimeScaleChangeEvent += TimeScaleAdjusted;
     }
 
     protected override void Start()
@@ -31,6 +32,11 @@ public abstract class GravityAffected : OrbitalBody
         Vector3 sourceRelativePosition = (Vector3)Position - (Vector3)CurrentGravitySource.transform.position;
         Vector3 sourceRelativeVelocity = (Vector3)body.velocity - (Vector3)CurrentGravitySource.startVelocity;
         CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity);
+    }
+
+    private void OnDisable()
+    {
+        TimeController.TimeScaleChangeEvent -= TimeScaleAdjusted;
     }
 
     protected virtual void Update(){}
@@ -62,6 +68,8 @@ public abstract class GravityAffected : OrbitalBody
 
     private void SwitchToDeterministicUpdate()
     {
+        nonGravitationalForces.Clear();
+        nonGravitationalForcesAdded = false;
         body.isKinematic = true;
         InitializeNewOrbit(CurrentGravitySource);
         UpdatingIteratively = false;
@@ -85,22 +93,24 @@ public abstract class GravityAffected : OrbitalBody
 
         Vector2 relVel = Velocity - CurrentGravitySource.Velocity;  // world vel - newSource.vel
         Vector2 relPos = Position - CurrentGravitySource.Position; // world pos - newSource.pos
-        CalculateMinimalOrbitalParameters(relVel, relPos);
+        CalculateMinimalOrbitalParameters(relPos, relVel);
+        
     }
 
-    
+    protected virtual void TimeScaleAdjusted(float newTimeScale)
+    {
+        if (UpdatingIteratively && newTimeScale != 1f)
+        {
+            Debug.LogFormat("Time scale adjusted. {0} switching to deterministic update.", name);
+            SwitchToDeterministicUpdate();
+        }
+    }
     #endregion UNITY
 
     #region PHYSICS
 
     public void AddExternalForce(Vector2 forceVector)
-    {
-        if (Time.timeScale != 1f) // FIXME: Potential float comparison issue
-        {
-            Debug.LogFormat("Force applied! Dropping time warp from {0}x to 1x.", Time.timeScale);
-            Time.timeScale = 1f;
-        }
-        
+    {   
         nonGravitationalForcesAdded = true;
         nonGravitationalForces.Add(forceVector);
     }
@@ -109,7 +119,6 @@ public abstract class GravityAffected : OrbitalBody
     {
         for (int i = 0; i < nonGravitationalForces.Count; i++)
         {
-            //body.AddForce(nonGravitationalForces[i], ForceMode2D.Impulse);
             body.AddForce(nonGravitationalForces[i]);
         }
         nonGravitationalForces.Clear();

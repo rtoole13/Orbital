@@ -20,6 +20,8 @@ public class Ship : GravityAffected, ICameraTrackable
     private float thrustAccel = 0.5f;
     private float normalizedThrust = 0f;
     private bool thrusting = false;
+
+
     #region UNITY
     /*
     private void Start()
@@ -66,17 +68,26 @@ public class Ship : GravityAffected, ICameraTrackable
     {
         if (Input.GetKey(KeyCode.X))
         {
-            normalizedThrust = 0f;
-            thrusting = false;
+            ResetThrust();
             return;
         }
 
         if (Input.GetKey(KeyCode.Z))
         {
+            if (Time.timeScale != 1f) // FIXME: Potential float comparison issue
+            {
+                Debug.Log("Cannot apply thrust while time warping!");
+                return;
+            }
             normalizedThrust = 1f;
         }
         else if (Input.GetKey(KeyCode.LeftShift))
         {
+            if (Time.timeScale != 1f) // FIXME: Potential float comparison issue
+            {
+                Debug.Log("Cannot apply thrust while time warping!");
+                return;
+            }
             normalizedThrust += thrustAccel;
         }
         else if (Input.GetKey(KeyCode.LeftControl))
@@ -91,6 +102,18 @@ public class Ship : GravityAffected, ICameraTrackable
         }
         thrusting = true;
         AddExternalForce(fullThrust * normalizedThrust * transform.up);
+    }
+
+    private void ResetThrust()
+    {
+        normalizedThrust = 0f;
+        thrusting = false;
+    }
+
+    protected override void TimeScaleAdjusted(float newTimeScale)
+    {
+        ResetThrust();
+        base.TimeScaleAdjusted(newTimeScale);
     }
 
     protected override void OnDrawGizmos()
