@@ -291,6 +291,15 @@ public abstract class OrbitalBody : MonoBehaviour
         get { return _trueAnomaly; }
         set { _trueAnomaly = value; }
     }
+
+    public Vector2 OrbitalDirectionToWorld
+    {
+        get
+        {
+            Vector2 dir = OrbitalMechanics.OrbitalDirection(TrueAnomaly, FlightPathAngle, clockWiseOrbit);
+            return dir.RotateVector(ArgumentOfPeriapsis);
+        }
+    }
     #endregion GETSET
 
     #region UNITY
@@ -524,7 +533,7 @@ public abstract class OrbitalBody : MonoBehaviour
         // Draw velocityVector
         //Gizmos.color = Color.red;
         //Vector2 dir = OrbitalMechanics.OrbitalDirection(TrueAnomaly, FlightPathAngle, clockWiseOrbit);
-        //Gizmos.DrawRay(Position, 10f * dir.RotateVector(ArgumentOfPeriapsis));
+        //Gizmos.DrawRay(Position, 5f * dir.RotateVector(ArgumentOfPeriapsis));
 
         if (TrajectoryType == OrbitalMechanics.TrajectoryType.Hyperbola)
         {

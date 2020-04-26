@@ -15,6 +15,8 @@ public class Ship : GravityAffected, ICameraTrackable
     [Range(0.1f, 5f)]
     private float rotationRateCap = 2f;
     private float rotationRate = 0f;
+    private float rotationDampVel = 0;
+    private float rotationDampTime = .5f;
 
     [SerializeField]
     [Range(0.01f, 0.5f)]
@@ -27,6 +29,7 @@ public class Ship : GravityAffected, ICameraTrackable
     private TMP_Dropdown stabilityAssistDropdown;
     private ShipSystems.StabilityAssistMode stabilityAssistMode = ShipSystems.StabilityAssistMode.Hold;
     private bool stabilityAssist = false;
+    private float stabilityAssistAccel = 0.3f;
 
     #region UNITY
     protected override void Awake()
@@ -68,13 +71,6 @@ public class Ship : GravityAffected, ICameraTrackable
 
     private void Rotate()
     {
-
-        if (stabilityAssist)
-        {
-            rotationRate = 0;
-            return;
-        }
-
         if (Input.GetKey(KeyCode.A))
         {
             rotationRate += rotationAccel;
@@ -82,6 +78,50 @@ public class Ship : GravityAffected, ICameraTrackable
         else if (Input.GetKey(KeyCode.D))
         {
             rotationRate -= rotationAccel;
+        }
+        rotationRate = Mathf.Clamp(rotationRate, -rotationRateCap, rotationRateCap);
+
+        if (!stabilityAssist)
+        {
+            // Rotate freely
+            transform.Rotate(Vector3.forward, rotationRate);
+            return;
+        }
+
+        // Stability assist
+        if (stabilityAssistMode == ShipSystems.StabilityAssistMode.Hold)
+        {
+            // Hold position
+            rotationRate = Mathf.SmoothDamp(rotationRate, 0f, ref rotationDampVel, rotationDampTime);
+            transform.Rotate(Vector3.forward, rotationRate);
+            return;
+        }
+        else if (stabilityAssistMode == ShipSystems.StabilityAssistMode.Prograde)
+        {
+            // Rotate to prograde
+            //OrbitalDirectionToWorld
+            float sign = Mathf.Sign(Vector2.SignedAngle(transform.up, OrbitalDirectionToWorld));
+            rotationRate += (sign * stabilityAssistAccel);
+        }
+        else if (stabilityAssistMode == ShipSystems.StabilityAssistMode.Retrograde)
+        {
+            // Rotate to retrograde
+            float sign = Mathf.Sign(Vector2.SignedAngle(transform.up, OrbitalDirectionToWorld));
+            rotationRate -= (sign * stabilityAssistAccel);
+        }
+        else if (stabilityAssistMode == ShipSystems.StabilityAssistMode.RadialIn)
+        {
+            // Rotate to radial in
+            Vector2 dir = OrbitalPosition.RotateVector(ArgumentOfPeriapsis).normalized;
+            float sign = Vector2.SignedAngle(transform.up, -dir);
+            rotationRate += (sign * stabilityAssistAccel);
+        }
+        else
+        {
+            // Rotate to radial out
+            Vector2 dir = OrbitalPosition.RotateVector(ArgumentOfPeriapsis).normalized;
+            float sign = Vector2.SignedAngle(transform.up, dir);
+            rotationRate += (sign * stabilityAssistAccel);
         }
         rotationRate = Mathf.Clamp(rotationRate, -rotationRateCap, rotationRateCap);
         transform.Rotate(Vector3.forward, rotationRate);
@@ -139,18 +179,32 @@ public class Ship : GravityAffected, ICameraTrackable
         base.TimeScaleAdjusted(newTimeScale);
     }
 
-    protected override void OnDrawGizmos()
-    {
-        base.OnDrawGizmos();
-        if (!thrusting)
-            return;
-        Gizmos.color = Color.red;
-        Gizmos.DrawRay(Position, fullThrust * normalizedThrust * transform.up);
-    }
-
     public void ChangeStabilityAssist(int newValue)
     {
         stabilityAssistMode = (ShipSystems.StabilityAssistMode)newValue;
+    }
+
+    protected override void OnDrawGizmos()
+    {
+        base.OnDrawGizmos();
+        if (body == null)
+            return;
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawRay(Position, 5f * transform.up);
+
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawRay(Position, 5f * OrbitalDirectionToWorld);
+
+        Gizmos.color = Color.blue;
+        Gizmos.DrawRay(Position, 5f * OrbitalPosition.RotateVector(ArgumentOfPeriapsis).normalized);
+
+        //if (!thrusting)
+        //    return;
+        //Gizmos.color = Color.red;
+        //Gizmos.DrawRay(Position, fullThrust * normalizedThrust * transform.up);
+
     }
 }
 

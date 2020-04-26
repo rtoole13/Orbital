@@ -91,7 +91,7 @@ public abstract class GravityAffected : OrbitalBody
 
         Vector2 relVel = Velocity - CurrentGravitySource.Velocity;  // world vel - newSource.vel
         Vector2 relPos = Position - CurrentGravitySource.Position; // world pos - newSource.pos
-        CalculateMinimalOrbitalParameters(relPos, relVel);
+        CalculateOrbitalParametersFromStateVectors(relPos, relVel);
         
     }
 
