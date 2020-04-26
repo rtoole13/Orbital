@@ -381,6 +381,22 @@ public abstract class OrbitalBody : MonoBehaviour
         SemiminorAxis = OrbitalMechanics.SemiminorAxis(SemimajorAxis, Eccentricity);
         SpecificOrbitalEnergy = OrbitalMechanics.SpecificOrbitalEnergy(CurrentGravitySource.Mass, Mass, SemimajorAxis);
         ArgumentOfPeriapsis = OrbitalMechanics.ArgumentOfPeriapse(EccentricityVector, sourceRelativePosition);
+        if (TrajectoryType == OrbitalMechanics.TrajectoryType.Hyperbola)
+        {
+            HyperbolicExcessSpeed = OrbitalMechanics.HyperbolicExcessVelocity(CurrentGravitySource.Mass, SemimajorAxis);
+            TrueAnomalyOfAsymptote = OrbitalMechanics.TrueAnomalyOfAsymptote(Eccentricity, clockWiseOrbit);
+        }
+        else
+        {
+            HyperbolicExcessSpeed = 0f;
+            TrueAnomalyOfAsymptote = 0f;
+        }
+        HyperbolicAsymptotes = OrbitalMechanics.HyperbolicAsymptotes(TrueAnomalyOfAsymptote, clockWiseOrbit);
+        //Debug.LogFormat("SemimajorAxis: {0}", SemimajorAxis);
+        //Debug.LogFormat("SemiminorAxis: {0}", SemiminorAxis);
+        //Debug.LogFormat("EccentricityVector: {0}", EccentricityVector);
+        //Debug.LogFormat("ArgumentOfPeriapsis: {0}", ArgumentOfPeriapsis);
+        //Debug.LogFormat("GravSource: {0}", CurrentGravitySource);
     }
 
     #endregion PHYSICS

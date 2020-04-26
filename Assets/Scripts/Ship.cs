@@ -21,19 +21,25 @@ public class Ship : GravityAffected, ICameraTrackable
     private float normalizedThrust = 0f;
     private bool thrusting = false;
 
+    [SerializeField]
+    private int[] timeMultipliers = new int[] { 1, 2, 3, 4, 5 };
+
+    private bool stabilityAssist = false;
+    private ShipSystems.StabilityAssistMode stabilityAssistMode = ShipSystems.StabilityAssistMode.Hold;
+
 
     #region UNITY
-    /*
-    private void Start()
+    protected override void Awake()
     {
-        if (CurrentGravitySource != null)
-        {
-            body.velocity = startVelocity + CurrentGravitySource.startVelocity;
-            return;
-        }
-        body.velocity = startVelocity;
+        base.Awake();
+        StabilityAssistDropdownHandler.ValueChangedEvent += ChangeStabilityAssist;
     }
-    */
+
+    protected override void OnDisable()
+    {
+        base.OnDisable();
+        StabilityAssistDropdownHandler.ValueChangedEvent -= ChangeStabilityAssist;
+    }
     protected override void FixedUpdate()
     {
         Rotate();
@@ -123,6 +129,11 @@ public class Ship : GravityAffected, ICameraTrackable
             return;
         Gizmos.color = Color.red;
         Gizmos.DrawRay(Position, fullThrust * normalizedThrust * transform.up);
+    }
+
+    public void ChangeStabilityAssist(int newValue)
+    {
+        Debug.Log(newValue);
     }
 }
 

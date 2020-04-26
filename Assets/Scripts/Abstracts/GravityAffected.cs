@@ -34,7 +34,7 @@ public abstract class GravityAffected : OrbitalBody
         CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity);
     }
 
-    private void OnDisable()
+    protected virtual void OnDisable()
     {
         TimeController.TimeScaleChangeEvent -= TimeScaleAdjusted;
     }
@@ -145,12 +145,6 @@ public abstract class GravityAffected : OrbitalBody
         Vector2 relPos = Position - newSource.Position; // world pos - newSource.pos
         CurrentGravitySource = newSource;
         CalculateOrbitalParametersFromStateVectors(relPos, relVel);
-        //Debug.LogFormat("SemimajorAxis: {0}", SemimajorAxis);
-        //Debug.LogFormat("Eccentricity: {0}", Eccentricity);
-        //Debug.LogFormat("EccentricAnomaly: {0}", EccentricAnomaly);
-        //Debug.LogFormat("MeanAnomaly: {0}", MeanAnomaly);
-        //Debug.LogFormat("OrbitalRadius: {0}", OrbitalRadius);
-        //Debug.LogFormat("OrbitalPosition: {0}", OrbitalPosition);
         recentlyChangedSource = true;
         IEnumerator recentSourceChangeCoroutine = ChangeSourceTimer();
         StartCoroutine(recentSourceChangeCoroutine);

@@ -23,6 +23,7 @@ public sealed class InputHandler : MonoBehaviour
     public delegate void OnLeftClick();
     public static event OnLeftClick OnLeftClickEvent;
 
+    //public delegate void OnScrollDelta();
     private void Awake()
     {
         instance = new InputHandler();
