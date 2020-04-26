@@ -39,8 +39,6 @@ public abstract class GravityAffected : OrbitalBody
         TimeController.TimeScaleChangeEvent -= TimeScaleAdjusted;
     }
 
-    protected virtual void Update(){}
-
     protected virtual void FixedUpdate()
     {
         UpdateCurrentGravitySource();

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class Ship : GravityAffected, ICameraTrackable
 {
@@ -22,24 +23,30 @@ public class Ship : GravityAffected, ICameraTrackable
     private bool thrusting = false;
 
     [SerializeField]
-    private int[] timeMultipliers = new int[] { 1, 2, 3, 4, 5 };
-
-    private bool stabilityAssist = false;
+    private GameObject stabilityAssistUI;
+    private TMP_Dropdown stabilityAssistDropdown;
     private ShipSystems.StabilityAssistMode stabilityAssistMode = ShipSystems.StabilityAssistMode.Hold;
-
+    private bool stabilityAssist = false;
 
     #region UNITY
     protected override void Awake()
     {
         base.Awake();
-        StabilityAssistDropdownHandler.ValueChangedEvent += ChangeStabilityAssist;
+        stabilityAssistDropdown = stabilityAssistUI.GetComponentInChildren<TMP_Dropdown>();
+        stabilityAssistDropdown.onValueChanged.AddListener(ChangeStabilityAssist);
     }
 
     protected override void OnDisable()
     {
         base.OnDisable();
-        StabilityAssistDropdownHandler.ValueChangedEvent -= ChangeStabilityAssist;
+        stabilityAssistDropdown.onValueChanged.RemoveListener(ChangeStabilityAssist);
     }
+
+    private void Update()
+    {
+        ToggleStabilityAssist();
+    }
+
     protected override void FixedUpdate()
     {
         Rotate();
@@ -50,9 +57,19 @@ public class Ship : GravityAffected, ICameraTrackable
 
     #endregion UNITY
 
+    private void ToggleStabilityAssist()
+    {
+        if (!Input.GetKeyDown(KeyCode.T))
+            return;
+
+        stabilityAssist = !stabilityAssist;
+        stabilityAssistUI.SetActive(stabilityAssist);
+    }
+
     private void Rotate()
     {
-        if (Input.GetKey(KeyCode.T))
+
+        if (stabilityAssist)
         {
             rotationRate = 0;
             return;
@@ -133,7 +150,7 @@ public class Ship : GravityAffected, ICameraTrackable
 
     public void ChangeStabilityAssist(int newValue)
     {
-        Debug.Log(newValue);
+        stabilityAssistMode = (ShipSystems.StabilityAssistMode)newValue;
     }
 }
 

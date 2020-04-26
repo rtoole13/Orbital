@@ -403,7 +403,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &631876934
 RectTransform:
   m_ObjectHideFlags: 0
@@ -575,7 +575,7 @@ MonoBehaviour:
   rotationAccel: 0.5
   rotationRateCap: 2
   thrustAccel: 0.5
-  timeMultipliers: 0100000002000000030000000400000005000000
+  stabilityAssistUI: {fileID: 631876933}
 --- !u!114 &703178213
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1270,7 +1270,8 @@ PrefabInstance:
       propertyPath: m_Name
       value: DropdownSAS
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 7240125238015197101, guid: 3b8512916a581804390efd0b2fce59df, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 3b8512916a581804390efd0b2fce59df, type: 3}
 --- !u!1001 &7545048437735758814
 PrefabInstance:
