@@ -569,7 +569,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 220b5a1c1ed8f7044bab621386eb5fa7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startVelocity: {x: 10, y: 0}
+  startVelocity: {x: 12, y: 0}
   _mass: 1
   fullThrust: 2
   rotationAccel: 0.5

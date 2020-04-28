@@ -199,6 +199,9 @@ public static class OrbitalMechanics
             denom = Mathf.Sqrt(1f + Mathf.Pow(eccentricity, 2) + 2f * eccentricity * Mathf.Cos(trueAnomaly));
             float num = 1f + eccentricity * Mathf.Cos(trueAnomaly);
             phi = Mathf.Acos(num / denom);
+            phi = trueAnomaly > Mathf.PI
+                ? phi *= -1f
+                : phi;
         }
         return phi;
     }

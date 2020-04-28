@@ -66,6 +66,8 @@ public class Ship : GravityAffected, ICameraTrackable
             return;
 
         stabilityAssist = !stabilityAssist;
+        stabilityAssistMode = ShipSystems.StabilityAssistMode.Hold;
+        stabilityAssistDropdown.value = (int)ShipSystems.StabilityAssistMode.Hold;
         stabilityAssistUI.SetActive(stabilityAssist);
     }
 
@@ -99,7 +101,6 @@ public class Ship : GravityAffected, ICameraTrackable
         else if (stabilityAssistMode == ShipSystems.StabilityAssistMode.Prograde)
         {
             // Rotate to prograde
-            //OrbitalDirectionToWorld
             float sign = Mathf.Sign(Vector2.SignedAngle(transform.up, OrbitalDirectionToWorld));
             rotationRate += (sign * stabilityAssistAccel);
         }

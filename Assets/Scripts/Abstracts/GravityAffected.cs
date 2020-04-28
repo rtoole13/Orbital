@@ -61,6 +61,7 @@ public abstract class GravityAffected : OrbitalBody
                 return;
             }
             UpdateDeterministically();
+            //Debug.LogFormat("TrueAnomaly: {0}", TrueAnomaly);
         }
     }
 
@@ -92,7 +93,6 @@ public abstract class GravityAffected : OrbitalBody
         Vector2 relVel = Velocity - CurrentGravitySource.Velocity;  // world vel - newSource.vel
         Vector2 relPos = Position - CurrentGravitySource.Position; // world pos - newSource.pos
         CalculateOrbitalParametersFromStateVectors(relPos, relVel);
-        
     }
 
     protected virtual void TimeScaleAdjusted(float newTimeScale)
@@ -143,6 +143,10 @@ public abstract class GravityAffected : OrbitalBody
         Vector2 relPos = Position - newSource.Position; // world pos - newSource.pos
         CurrentGravitySource = newSource;
         CalculateOrbitalParametersFromStateVectors(relPos, relVel);
+        //Debug.LogFormat("SemimajorAxis: {0}", SemimajorAxis);
+        //Debug.LogFormat("SemiminorAxis: {0}", SemiminorAxis);
+        //Debug.LogFormat("EccentricityVector: {0}", EccentricityVector);
+        //Debug.LogFormat("Eccentricity: {0}", Eccentricity);
         recentlyChangedSource = true;
         IEnumerator recentSourceChangeCoroutine = ChangeSourceTimer();
         StartCoroutine(recentSourceChangeCoroutine);
