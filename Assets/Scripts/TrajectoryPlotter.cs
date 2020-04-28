@@ -80,7 +80,7 @@ public class TrajectoryPlotter : MonoBehaviour
         for (int i = 0; i < segments; i++)
         {
             float angle = ((float)i / (float)segments) * 2 * Mathf.PI;
-            Vector3 vertex = new Vector3(Mathf.Sin(angle) * SemimajorAxis, Mathf.Cos(angle) * SemiminorAxis, 0);
+            Vector3 vertex = new Vector3(Mathf.Sin(angle) * SemimajorAxis, Mathf.Cos(angle) * SemiminorAxis, 1f);
             vertex = TranslateVector(vertex, new Vector3(-SemimajorAxis * orbitalBody.Eccentricity, 0, 0));
             points[i] = RotateVertex(vertex, orbitalBody.ArgumentOfPeriapsis) + orbitalBody.CurrentGravitySource.transform.position;
         }
@@ -96,7 +96,7 @@ public class TrajectoryPlotter : MonoBehaviour
         for (int i = 0; i < segments; i++)
         {
             float angle = ((float)i / (float)segments) * 2f  - 1f;
-            Vector3 vertex = new Vector3(SemimajorAxis * MathUtilities.Cosh(angle), SemiminorAxis * MathUtilities.Sinh(angle), 0);
+            Vector3 vertex = new Vector3(SemimajorAxis * MathUtilities.Cosh(angle), SemiminorAxis * MathUtilities.Sinh(angle), 1f);
             vertex = TranslateVector(vertex, new Vector3(-SemimajorAxis * orbitalBody.Eccentricity, 0, 0));
             points[i] = RotateVertex(vertex, orbitalBody.ArgumentOfPeriapsis) + orbitalBody.CurrentGravitySource.transform.position;
         }
@@ -116,12 +116,12 @@ public class TrajectoryPlotter : MonoBehaviour
     private Vector3 RotateVertex(Vector3 vertex, float angle)
     {
         return new Vector3(vertex.x * Mathf.Cos(angle) - vertex.y * Mathf.Sin(angle),
-                       vertex.x * Mathf.Sin(angle) + vertex.y * Mathf.Cos(angle), 0);
+                       vertex.x * Mathf.Sin(angle) + vertex.y * Mathf.Cos(angle), vertex.z);
     }
     
     private Vector3 TranslateVector(Vector3 vertex, Vector3 distance)
     {
-        return new Vector3(vertex.x + distance.x, vertex.y + distance.y, 0);
+        return new Vector3(vertex.x + distance.x, vertex.y + distance.y, vertex.z);
     }
 
     private void AdjustLineThickness(float minOrthoSize, float maxOrthoSize, float targetOrthoSize)
