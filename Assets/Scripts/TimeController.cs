@@ -62,4 +62,14 @@ public class TimeController : MonoBehaviour
         currentMultiplierIndex += 1;
         return true;
     }
+
+    public void Pause()
+    {
+        Time.timeScale = 0f;
+    }
+
+    public void UnPause()
+    {
+        Time.timeScale = currentMultiplier;
+    }
 }

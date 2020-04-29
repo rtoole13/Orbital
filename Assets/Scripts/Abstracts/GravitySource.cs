@@ -156,16 +156,4 @@ public abstract class GravitySource : OrbitalBody
         return CurrentGravitySource.CalculateSourceRank(count + 1);
     }
     #endregion GENERAL
-
-    protected override void OnDrawGizmos()
-    {
-        if (CurrentGravitySource == null || body == null)
-            return;
-
-        // Draw SOI
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(Position, RadiusOfInfluence);
-        base.OnDrawGizmos();
-    }
-    
 }
