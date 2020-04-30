@@ -10,13 +10,16 @@ public class PauseHandler : MonoBehaviour
     [SerializeField]
     private GameObject pauseUI;
 
+    [SerializeField]
+    private GameObject pauseTooltip;
+
     private bool pauseGame = false;
 
     #region UNITY
     private void Awake()
     {
         timeController = GetComponent<TimeController>();
-        TogglePause();
+        //TogglePause();
     }
 
     void Update()
@@ -40,5 +43,6 @@ public class PauseHandler : MonoBehaviour
             timeController.UnPause();
         }
         pauseUI.SetActive(pauseGame);
+        pauseTooltip.SetActive(!pauseGame);
     }
 }
