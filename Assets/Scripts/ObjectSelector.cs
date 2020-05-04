@@ -134,13 +134,13 @@ public class ObjectSelector : MonoBehaviour
 
     private void DeselectTarget()
     {
-        // Deselect if anything selected
-        SelectedObject = null;
-        OnObjectSelectionEvent(SelectedObject);
-
         // Cleanup
         selectedShip = null;
         stabilityAssistUI.SetActive(false);
+        
+        // Deselect if anything selected
+        SelectedObject = null;
+        OnObjectSelectionEvent(SelectedObject);   
     }
 
     #region FROMUI

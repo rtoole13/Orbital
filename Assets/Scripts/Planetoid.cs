@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Planetoid : GravitySource, ISelectable, ICameraTrackable
 {
+    #region UNITY
     protected override void Awake()
     {
         base.Awake();
@@ -16,15 +17,33 @@ public class Planetoid : GravitySource, ISelectable, ICameraTrackable
         Collider2D[] colliders = GetComponentsInChildren<Collider2D>();
         for (int i = 0; i < colliders.Length; i++)
         {
-            if (1 << colliders[i].gameObject.layer == targetMask)
+            GameObject hitBoxObject = colliders[i].gameObject;
+            if (1 << hitBoxObject.layer != targetMask)
             {
-                valid = true;
-                break;
+                continue;
             }
+            SpriteRenderer hitBoxSprite = hitBoxObject.GetComponent<SpriteRenderer>();
+            if (hitBoxSprite == null)
+                hitBoxSprite = hitBoxObject.GetComponentInChildren<SpriteRenderer>();
+
+
+            if (hitBoxSprite == null)
+            {
+                // SpriteRenderer not on object or child
+                continue;
+            }
+            valid = true;
         }
         if (!valid)
         {
-            throw new UnityException(string.Format("For {0} to implement ISelectable, there must be a child GameObject on layer 'ObjectSelection' with some type of collider!", name));
+            throw new UnityException(string.Format("For {0} to implement ISelectable, there must be a child GameObject on layer 'ObjectSelection' with some type of collider, and a SpriteRenderer on it or on a child!", name));
         }
+    }
+    
+    #endregion UNITY
+
+    public void ToggleSelectionSprite()
+    {
+        throw new System.NotImplementedException();
     }
 }

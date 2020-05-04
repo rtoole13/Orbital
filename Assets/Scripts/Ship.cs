@@ -9,7 +9,7 @@ public class Ship : GravityAffected, ISelectable, ICameraTrackable
 
     private bool _stabilityAssistEnabled = false;
     private ShipSystems.StabilityAssistMode _stabilityAssistMode = ShipSystems.StabilityAssistMode.Hold;
-
+    
     [SerializeField]
     [Range(0.1f, 2f)]
     private float rotationAccel = 0.5f;
@@ -51,17 +51,34 @@ public class Ship : GravityAffected, ISelectable, ICameraTrackable
         Collider2D[] colliders = GetComponentsInChildren<Collider2D>();
         for (int i = 0; i < colliders.Length; i++)
         {
-            if (1 << colliders[i].gameObject.layer == targetMask)
+            GameObject hitBoxObject = colliders[i].gameObject;
+            if (1 << hitBoxObject.layer != targetMask)
             {
-                valid = true;
-                break;
+                continue;
             }
+            SpriteRenderer hitBoxSprite = hitBoxObject.GetComponent<SpriteRenderer>();
+            if (hitBoxSprite == null)
+                hitBoxSprite = hitBoxObject.GetComponentInChildren<SpriteRenderer>();
+
+
+            if (hitBoxSprite == null)
+            {
+                // SpriteRenderer not on object or child
+                continue;
+            }
+            valid = true;
         }
         if (!valid)
         {
-            throw new UnityException(string.Format("For {0} to implement ISelectable, there must be a child GameObject on layer 'ObjectSelection' with some type of collider!", name));
+            throw new UnityException(string.Format("For {0} to implement ISelectable, there must be a child GameObject on layer 'ObjectSelection' with some type of collider, and a SpriteRenderer on it or on a child!", name));
         }
     }
+
+    protected override void Awake()
+    {
+        base.Awake();
+    }
+
     private void Update()
     {
         //ToggleStabilityAssist();
@@ -196,7 +213,12 @@ public class Ship : GravityAffected, ISelectable, ICameraTrackable
         ResetThrust();
         base.TimeScaleAdjusted(newTimeScale);
     }
-    
+
+    public void ToggleSelectionSprite()
+    {
+
+
+    }
     protected override void OnDrawGizmos()
     {
         base.OnDrawGizmos();
