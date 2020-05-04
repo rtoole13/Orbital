@@ -1,5 +1,9 @@
-﻿public interface ISelectable
+﻿using UnityEngine;
+
+public interface ISelectable
 {
     void OnValidate();
-    void ToggleSelectionSprite();
+    void ToggleSelectionSprite(bool enabled);
+    GameObject GetRootObject();
+    SelectionHitBoxHandler GetHitBoxHandler();
 }

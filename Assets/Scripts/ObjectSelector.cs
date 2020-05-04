@@ -13,6 +13,7 @@ public class ObjectSelector : MonoBehaviour
 
     private GameObject _selectedObject;
     private Ship selectedShip;
+    private SelectionHitBoxHandler selectedHitBoxHandler;
 
     [SerializeField]
     private GameObject stabilityAssistUI;
@@ -113,16 +114,20 @@ public class ObjectSelector : MonoBehaviour
             {
                 continue;
             }
-            SelectTarget(hit.collider.transform.parent.gameObject); // Well this is gross
+            SelectTarget(selectable);
             
             return;
         }
     }
 
-    private void SelectTarget(GameObject newTarget)
+    private void SelectTarget(ISelectable selectable)
     {
-        Debug.LogFormat("Selected {0}", newTarget.name);
-        SelectedObject = newTarget;
+        // Deselect current
+        DeselectTarget();
+
+        SelectedObject = selectable.GetRootObject();
+        selectedHitBoxHandler = selectable.GetHitBoxHandler();
+        selectedHitBoxHandler.ToggleSelectionSprite(true);
         OnObjectSelectionEvent(SelectedObject);
         selectedShip = SelectedObject.GetComponent<Ship>(); // Null if not ship
         if (selectedShip != null)
@@ -130,17 +135,23 @@ public class ObjectSelector : MonoBehaviour
             stabilityAssistDropdown.value = (int)selectedShip.StabilityAssistMode;
             stabilityAssistUI.SetActive(selectedShip.StabilityAssistEnabled);
         }
+        Debug.LogFormat("Selected {0}", SelectedObject.name);
     }
 
     private void DeselectTarget()
     {
+        if (SelectedObject == null)
+            return;
+
         // Cleanup
-        selectedShip = null;
+        selectedHitBoxHandler.ToggleSelectionSprite(false);
         stabilityAssistUI.SetActive(false);
-        
+
         // Deselect if anything selected
+        selectedShip = null;
+        selectedHitBoxHandler = null;
         SelectedObject = null;
-        OnObjectSelectionEvent(SelectedObject);   
+        OnObjectSelectionEvent(SelectedObject);
     }
 
     #region FROMUI
