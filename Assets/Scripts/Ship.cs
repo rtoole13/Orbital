@@ -8,6 +8,8 @@ public class Ship : GravityAffected, ISelectable, ICameraTrackable
     public float fullThrust = 1f;
 
     private bool _stabilityAssistEnabled = false;
+    private ShipSystems.StabilityAssistMode _stabilityAssistMode = ShipSystems.StabilityAssistMode.Hold;
+
     [SerializeField]
     [Range(0.1f, 2f)]
     private float rotationAccel = 0.5f;
@@ -25,7 +27,7 @@ public class Ship : GravityAffected, ISelectable, ICameraTrackable
     private float normalizedThrust = 0f;
     private bool thrusting = false;
 
-    private ShipSystems.StabilityAssistMode stabilityAssistMode = ShipSystems.StabilityAssistMode.Hold;
+    
     private float stabilityAssistAccel = 0.3f;
     #region GETSET
     public bool StabilityAssistEnabled
@@ -34,11 +36,17 @@ public class Ship : GravityAffected, ISelectable, ICameraTrackable
         private set { _stabilityAssistEnabled = value; }
     }
 
+    public ShipSystems.StabilityAssistMode StabilityAssistMode
+    {
+        get { return _stabilityAssistMode; }
+        private set { _stabilityAssistMode = value; }
+    }
+
     #endregion GETSET
     #region UNITY
     private void Update()
     {
-        ToggleStabilityAssist();
+        //ToggleStabilityAssist();
     }
 
     protected override void FixedUpdate()
@@ -70,12 +78,16 @@ public class Ship : GravityAffected, ISelectable, ICameraTrackable
 
     public void ChangeStabilityAssistMode(int newValue)
     {
-        stabilityAssistMode = (ShipSystems.StabilityAssistMode)newValue;
+        StabilityAssistMode = (ShipSystems.StabilityAssistMode)newValue;
+    }
+
+    public void ResetThrust()
+    {
+        normalizedThrust = 0f;
+        thrusting = false;
     }
 
     #endregion CALLBACKS
-
-
 
     private void Rotate()
     {
@@ -89,26 +101,26 @@ public class Ship : GravityAffected, ISelectable, ICameraTrackable
         }
 
         // Stability assist
-        if (stabilityAssistMode == ShipSystems.StabilityAssistMode.Hold)
+        if (StabilityAssistMode == ShipSystems.StabilityAssistMode.Hold)
         {
             // Hold position
             rotationRate = Mathf.SmoothDamp(rotationRate, 0f, ref rotationDampVel, rotationDampTime);
             transform.Rotate(Vector3.forward, rotationRate);
             return;
         }
-        else if (stabilityAssistMode == ShipSystems.StabilityAssistMode.Prograde)
+        else if (StabilityAssistMode == ShipSystems.StabilityAssistMode.Prograde)
         {
             // Rotate to prograde
             float sign = Mathf.Sign(Vector2.SignedAngle(transform.up, OrbitalDirectionToWorld));
             rotationRate += (sign * stabilityAssistAccel);
         }
-        else if (stabilityAssistMode == ShipSystems.StabilityAssistMode.Retrograde)
+        else if (StabilityAssistMode == ShipSystems.StabilityAssistMode.Retrograde)
         {
             // Rotate to retrograde
             float sign = Mathf.Sign(Vector2.SignedAngle(transform.up, OrbitalDirectionToWorld));
             rotationRate -= (sign * stabilityAssistAccel);
         }
-        else if (stabilityAssistMode == ShipSystems.StabilityAssistMode.RadialIn)
+        else if (StabilityAssistMode == ShipSystems.StabilityAssistMode.RadialIn)
         {
             // Rotate to radial in
             Vector2 dir = OrbitalPosition.RotateVector(ArgumentOfPeriapsis).normalized;
@@ -166,23 +178,12 @@ public class Ship : GravityAffected, ISelectable, ICameraTrackable
         AddExternalForce(fullThrust * normalizedThrust * transform.up);
     }
 
-    private void ResetThrust()
-    {
-        normalizedThrust = 0f;
-        thrusting = false;
-    }
-
     protected override void TimeScaleAdjusted(float newTimeScale)
     {
         ResetThrust();
         base.TimeScaleAdjusted(newTimeScale);
     }
-
-    public void ChangeStabilityAssist(int newValue)
-    {
-        stabilityAssistMode = (ShipSystems.StabilityAssistMode)newValue;
-    }
-
+    
     protected override void OnDrawGizmos()
     {
         base.OnDrawGizmos();

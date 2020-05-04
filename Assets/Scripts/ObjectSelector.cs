@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using TMPro;
 
 public class ObjectSelector : MonoBehaviour
 {
@@ -9,9 +10,15 @@ public class ObjectSelector : MonoBehaviour
     private Camera mainCamera;
 
     private GameObject _selectedObject;
+    private Ship selectedShip;
+
+    [SerializeField]
+    private GameObject stabilityAssistUI;
+    private TMP_Dropdown stabilityAssistDropdown;
+
 
     public delegate void OnObjectSelection(GameObject selectedObject);
-    public event OnObjectSelection OnObjectSelectionEvent;
+    public static event OnObjectSelection OnObjectSelectionEvent;
 
     // Singleton style
     private static ObjectSelector _instance;
@@ -59,13 +66,27 @@ public class ObjectSelector : MonoBehaviour
         {
             throw new UnityException(string.Format("For ObjectSelector on {0} to work, reference a camera in the scene!", name));
         }
+        // Listen to UI
+        stabilityAssistDropdown = stabilityAssistUI.GetComponentInChildren<TMP_Dropdown>();
+        stabilityAssistDropdown.onValueChanged.AddListener(ChangeStabilityAssistMode);
+
+        // Listen to InputHandler
+        InputHandler.ToggleStabilityAssistUIEvent += ToggleStabilityAssistUI;
     }
-    
+
+    private void OnDisable()
+    {
+        // Stop listening to UI
+        stabilityAssistDropdown.onValueChanged.RemoveListener(ChangeStabilityAssistMode);
+
+        // Stop listening to InputHandler
+        InputHandler.ToggleStabilityAssistUIEvent -= ToggleStabilityAssistUI;
+    }
     private void Update()
     {
         if (Input.GetMouseButtonDown(0))
         {
-            SelectTarget();
+            SearchForNewTarget();
         }
 
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -75,7 +96,7 @@ public class ObjectSelector : MonoBehaviour
     }
     #endregion UNITY
 
-    private void SelectTarget()
+    private void SearchForNewTarget()
     {
         RaycastHit2D[] rayHits = Physics2D.GetRayIntersectionAll(mainCamera.ScreenPointToRay(Input.mousePosition));
         for (int i = 0; i < rayHits.Length; i++)
@@ -86,9 +107,22 @@ public class ObjectSelector : MonoBehaviour
             {
                 continue;
             }
-            SelectedObject = hit.collider.gameObject;
-            OnObjectSelectionEvent(SelectedObject);
+            SelectTarget(hit.collider.gameObject);
+            
             return;
+        }
+    }
+
+    private void SelectTarget(GameObject newTarget)
+    {
+        Debug.LogFormat("Selected {0}", newTarget.name);
+        SelectedObject = newTarget;
+        OnObjectSelectionEvent(SelectedObject);
+        selectedShip = SelectedObject.GetComponent<Ship>(); // Null if not ship
+        if (selectedShip != null)
+        {
+            stabilityAssistDropdown.value = (int)selectedShip.StabilityAssistMode;
+            stabilityAssistUI.SetActive(selectedShip.StabilityAssistEnabled);
         }
     }
 
@@ -97,6 +131,27 @@ public class ObjectSelector : MonoBehaviour
         // Deselect if anything selected
         SelectedObject = null;
         OnObjectSelectionEvent(SelectedObject);
-        // Any other cleanup logic
+
+        // Cleanup
+        selectedShip = null;
+        stabilityAssistUI.SetActive(false);
     }
+
+    #region FROMUI
+    private void ChangeStabilityAssistMode(int newValue)
+    {
+        if (selectedShip != null)
+            selectedShip.ChangeStabilityAssistMode(newValue);
+
+    }
+    #endregion FROMUI
+
+    #region FROMINPUTMODEL
+
+    private void ToggleStabilityAssistUI()
+    {
+        stabilityAssistDropdown.value = (int)ShipSystems.StabilityAssistMode.Hold;
+        stabilityAssistUI.SetActive(selectedShip.StabilityAssistEnabled);
+    }
+    #endregion FROMINPUTMODEL
 }

@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 2934157134936708650}
   - component: {fileID: 2934157134936708648}
   - component: {fileID: 2934157134936708651}
+  - component: {fileID: 3622310611426666917}
   m_Layer: 0
   m_Name: Ship
   m_TagString: Untagged
@@ -101,7 +102,6 @@ MonoBehaviour:
   rotationAccel: 0.5
   rotationRateCap: 2
   thrustAccel: 0.5
-  stabilityAssistUI: {fileID: 0}
 --- !u!120 &2934157134936708648
 LineRenderer:
   m_ObjectHideFlags: 0
@@ -213,6 +213,18 @@ MonoBehaviour:
   zepth: 1
   lineWidthRange: {x: 0.5, y: 5}
   segments: 32
+--- !u!114 &3622310611426666917
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2934157134936708625}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66b82a7545126194899fc60a525c03aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &4911959672117613530
 GameObject:
   m_ObjectHideFlags: 0
