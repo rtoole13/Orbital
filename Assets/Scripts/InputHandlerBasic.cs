@@ -14,7 +14,7 @@ public class InputHandlerBasic : InputHandler
     
     protected override void HandleInputs()
     {
-        // Rotation
+        //------Rotation------//
         if (Input.GetKey(KeyCode.A))
         {
             // Rotate CCW
@@ -27,7 +27,7 @@ public class InputHandlerBasic : InputHandler
             ship.DecrementRotationRate();
         }
 
-        // Stability Assist
+        //------Stability Assist------//
         if (Input.GetKeyDown(KeyCode.T))
         {
             // Toggle stability assist on ship
@@ -37,7 +37,7 @@ public class InputHandlerBasic : InputHandler
             InvokeToggleStabilityAssistEvent();
         }
 
-        // Thrust Controls
+        //------Thrust Controls------//
         if (Input.GetKey(KeyCode.X))
         {
             ship.ResetThrust();
@@ -47,14 +47,17 @@ public class InputHandlerBasic : InputHandler
         if (Input.GetKey(KeyCode.Z))
         {
             // Throttle to max thrust
+            ship.ThrottleMax();
         }
         else if (Input.GetKey(KeyCode.LeftShift))
         {
             // Throttle up
+            ship.ThrottleUp();
         }
         else if (Input.GetKey(KeyCode.LeftControl))
         {
             // Throttle down
+            ship.ThrottleDown();
         }
     }
 }

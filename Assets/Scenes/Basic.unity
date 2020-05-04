@@ -1290,6 +1290,11 @@ PrefabInstance:
       propertyPath: mainCamera
       value: 
       objectReference: {fileID: 519420031}
+    - target: {fileID: 1344217848770134116, guid: 375478fa4f0786c408dccb304e5822ca,
+        type: 3}
+      propertyPath: layerMask.m_Bits
+      value: 256
+      objectReference: {fileID: 0}
     - target: {fileID: 1403753712271435706, guid: 375478fa4f0786c408dccb304e5822ca,
         type: 3}
       propertyPath: _primarySource

@@ -49,7 +49,12 @@ public abstract class InputHandler : MonoBehaviour
 
     private void ObjectSelectionChanged(GameObject selectedObject)
     {
-        Ship shipComponent = selectedObject.GetComponent<Ship>(); // if null, should be fine too
+        if (selectedObject == null)
+        {
+            isActive = false;
+            return;
+        }
+        Ship shipComponent = selectedObject.GetComponent<Ship>(); 
         isActive = (shipComponent == ship);
     }
 }

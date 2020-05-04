@@ -27,15 +27,15 @@ public class Ship : GravityAffected, ISelectable, ICameraTrackable
     private float normalizedThrust = 0f;
     private bool thrusting = false;
 
-    
     private float stabilityAssistAccel = 0.3f;
+
     #region GETSET
     public bool StabilityAssistEnabled
     {
         get { return _stabilityAssistEnabled; }
         private set { _stabilityAssistEnabled = value; }
     }
-
+    
     public ShipSystems.StabilityAssistMode StabilityAssistMode
     {
         get { return _stabilityAssistMode; }
@@ -44,6 +44,24 @@ public class Ship : GravityAffected, ISelectable, ICameraTrackable
 
     #endregion GETSET
     #region UNITY
+    public void OnValidate()
+    {
+        bool valid = false;
+        int targetMask = LayerMask.GetMask("ObjectSelection");
+        Collider2D[] colliders = GetComponentsInChildren<Collider2D>();
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            if (1 << colliders[i].gameObject.layer == targetMask)
+            {
+                valid = true;
+                break;
+            }
+        }
+        if (!valid)
+        {
+            throw new UnityException(string.Format("For {0} to implement ISelectable, there must be a child GameObject on layer 'ObjectSelection' with some type of collider!", name));
+        }
+    }
     private void Update()
     {
         //ToggleStabilityAssist();
@@ -87,6 +105,29 @@ public class Ship : GravityAffected, ISelectable, ICameraTrackable
         thrusting = false;
     }
 
+    public void ThrottleMax()
+    {
+        if (Time.timeScale != 1f)
+        {
+            Debug.Log("Cannot apply thrust while time warping!");
+        }
+        normalizedThrust = 1f;
+    }
+
+    public void ThrottleUp()
+    {
+        if (Time.timeScale != 1f)
+        {
+            Debug.Log("Cannot apply thrust while time warping!");
+        }
+        normalizedThrust += thrustAccel;
+    }
+
+    public void ThrottleDown()
+    {
+        normalizedThrust -= thrustAccel;
+    }
+    
     #endregion CALLBACKS
 
     private void Rotate()
@@ -140,34 +181,6 @@ public class Ship : GravityAffected, ISelectable, ICameraTrackable
 
     private void ApplyThrust()
     {
-        if (Input.GetKey(KeyCode.X))
-        {
-            ResetThrust();
-            return;
-        }
-
-        if (Input.GetKey(KeyCode.Z))
-        {
-            if (Time.timeScale != 1f) // FIXME: Potential float comparison issue
-            {
-                Debug.Log("Cannot apply thrust while time warping!");
-                return;
-            }
-            normalizedThrust = 1f;
-        }
-        else if (Input.GetKey(KeyCode.LeftShift))
-        {
-            if (Time.timeScale != 1f) // FIXME: Potential float comparison issue
-            {
-                Debug.Log("Cannot apply thrust while time warping!");
-                return;
-            }
-            normalizedThrust += thrustAccel;
-        }
-        else if (Input.GetKey(KeyCode.LeftControl))
-        {
-            normalizedThrust -= thrustAccel;
-        }
         normalizedThrust = Mathf.Clamp(normalizedThrust, 0f, 1f);
         if (normalizedThrust <= 0f)
         {

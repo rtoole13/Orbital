@@ -9,6 +9,8 @@ public class ObjectSelector : MonoBehaviour
     [SerializeField]
     private Camera mainCamera;
 
+    private int selectionLayerMask; //FIXME: make an enum for editor.
+
     private GameObject _selectedObject;
     private Ship selectedShip;
 
@@ -72,6 +74,9 @@ public class ObjectSelector : MonoBehaviour
 
         // Listen to InputHandler
         InputHandler.ToggleStabilityAssistUIEvent += ToggleStabilityAssistUI;
+
+        selectionLayerMask = LayerMask.GetMask("ObjectSelection");
+        //Debug.Log(selectionLayerMask);
     }
 
     private void OnDisable()
@@ -98,16 +103,17 @@ public class ObjectSelector : MonoBehaviour
 
     private void SearchForNewTarget()
     {
-        RaycastHit2D[] rayHits = Physics2D.GetRayIntersectionAll(mainCamera.ScreenPointToRay(Input.mousePosition));
+        RaycastHit2D[] rayHits = Physics2D.GetRayIntersectionAll(mainCamera.ScreenPointToRay(Input.mousePosition), 100f, selectionLayerMask);
         for (int i = 0; i < rayHits.Length; i++)
         {
             RaycastHit2D hit = rayHits[i];
-            ISelectable selectable = hit.collider.GetComponent<ISelectable>();
+            
+            ISelectable selectable = hit.collider.GetComponentInParent<ISelectable>();
             if (hit.collider.isTrigger || selectable == null)
             {
                 continue;
             }
-            SelectTarget(hit.collider.gameObject);
+            SelectTarget(hit.collider.transform.parent.gameObject); // Well this is gross
             
             return;
         }

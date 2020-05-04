@@ -26,7 +26,7 @@ public class CameraController : MonoBehaviour
     private GameObject currentTarget; // Make this an interface, ICameraTrackable
 
     [SerializeField]
-    private float doubleClickSelectInterval = 1f;
+    private float doubleClickSelectInterval = .5f;
 
     private Vector3 moveVelocity = Vector3.zero;
     private float zoomVelocity = 0f;
