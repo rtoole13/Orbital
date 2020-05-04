@@ -2,6 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Planetoid : GravitySource, ICameraTrackable
+public class Planetoid : GravitySource, ISelectable, ICameraTrackable
 {
 }

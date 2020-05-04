@@ -23,6 +23,7 @@ public sealed class DeterministicSystem : MonoBehaviour
                 }
                 else if (systems.Length == 0)
                 {
+                    // Impossible to hit this..
                     throw new UnityException(string.Format("No DeterministicSystem found in the scene! Add a DeterministicSystem to a game object."));
                 }
                 instance = systems[0];

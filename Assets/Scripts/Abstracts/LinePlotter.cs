@@ -13,15 +13,12 @@ public abstract class LinePlotter : MonoBehaviour
     private Vector2 lineWidthRange = new Vector2(0.5f, 5f);
     private float currentLineWidth;
 
-    [Range(3, 36)]
+    [Range(3, 64)]
     public int segments;
 
     #region UNITY
     protected virtual void Awake()
     {
-        //lineWidthRange = new float[2];
-        //lineWidthRange[0] = 0.5f;
-        //lineWidthRange[1] = 5f;
         lineRenderer = GetComponent<LineRenderer>();
         CameraController.OrthographicSizeChangeEvent += AdjustLineThickness;
     }

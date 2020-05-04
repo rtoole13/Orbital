@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-public class Ship : GravityAffected, ICameraTrackable
+public class Ship : GravityAffected, ISelectable, ICameraTrackable
 {
     public float fullThrust = 1f;
 
+    private bool _stabilityAssistEnabled = false;
     [SerializeField]
-    [Range(0.1f,2f)]
+    [Range(0.1f, 2f)]
     private float rotationAccel = 0.5f;
 
     [SerializeField]
@@ -24,27 +25,17 @@ public class Ship : GravityAffected, ICameraTrackable
     private float normalizedThrust = 0f;
     private bool thrusting = false;
 
-    [SerializeField]
-    private GameObject stabilityAssistUI;
-    private TMP_Dropdown stabilityAssistDropdown;
     private ShipSystems.StabilityAssistMode stabilityAssistMode = ShipSystems.StabilityAssistMode.Hold;
-    private bool stabilityAssist = false;
     private float stabilityAssistAccel = 0.3f;
+    #region GETSET
+    public bool StabilityAssistEnabled
+    {
+        get { return _stabilityAssistEnabled; }
+        private set { _stabilityAssistEnabled = value; }
+    }
 
+    #endregion GETSET
     #region UNITY
-    protected override void Awake()
-    {
-        base.Awake();
-        stabilityAssistDropdown = stabilityAssistUI.GetComponentInChildren<TMP_Dropdown>();
-        stabilityAssistDropdown.onValueChanged.AddListener(ChangeStabilityAssist);
-    }
-
-    protected override void OnDisable()
-    {
-        base.OnDisable();
-        stabilityAssistDropdown.onValueChanged.RemoveListener(ChangeStabilityAssist);
-    }
-
     private void Update()
     {
         ToggleStabilityAssist();
@@ -54,36 +45,43 @@ public class Ship : GravityAffected, ICameraTrackable
     {
         Rotate();
         ApplyThrust();
-        
+
         base.FixedUpdate();
     }
 
     #endregion UNITY
 
-    private void ToggleStabilityAssist()
+    #region CALLBACKS
+    public void DecrementRotationRate()
     {
-        if (!Input.GetKeyDown(KeyCode.T))
-            return;
-
-        stabilityAssist = !stabilityAssist;
-        stabilityAssistMode = ShipSystems.StabilityAssistMode.Hold;
-        stabilityAssistDropdown.value = (int)ShipSystems.StabilityAssistMode.Hold;
-        stabilityAssistUI.SetActive(stabilityAssist);
+        rotationRate -= rotationAccel;
     }
+
+    public void IncrementRotationRate()
+    {
+        rotationRate += rotationAccel;
+    }
+
+    public void ToggleStabilityAssist()
+    {
+        StabilityAssistEnabled = !StabilityAssistEnabled;
+        ChangeStabilityAssistMode((int)ShipSystems.StabilityAssistMode.Hold);
+    }
+
+    public void ChangeStabilityAssistMode(int newValue)
+    {
+        stabilityAssistMode = (ShipSystems.StabilityAssistMode)newValue;
+    }
+
+    #endregion CALLBACKS
+
+
 
     private void Rotate()
     {
-        if (Input.GetKey(KeyCode.A))
-        {
-            rotationRate += rotationAccel;
-        }
-        else if (Input.GetKey(KeyCode.D))
-        {
-            rotationRate -= rotationAccel;
-        }
         rotationRate = Mathf.Clamp(rotationRate, -rotationRateCap, rotationRateCap);
 
-        if (!stabilityAssist)
+        if (!StabilityAssistEnabled)
         {
             // Rotate freely
             transform.Rotate(Vector3.forward, rotationRate);
@@ -200,12 +198,6 @@ public class Ship : GravityAffected, ICameraTrackable
 
         Gizmos.color = Color.blue;
         Gizmos.DrawRay(Position, 5f * OrbitalPosition.RotateVector(ArgumentOfPeriapsis).normalized);
-
-        //if (!thrusting)
-        //    return;
-        //Gizmos.color = Color.red;
-        //Gizmos.DrawRay(Position, fullThrust * normalizedThrust * transform.up);
-
     }
 }
 
