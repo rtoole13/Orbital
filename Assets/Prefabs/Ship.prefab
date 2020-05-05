@@ -211,7 +211,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dfda3b1f811a61c42b390b5a833c7b09, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  zepth: 1
+  zepth: 2
   lineWidthRange: {x: 0.5, y: 5}
   segments: 32
 --- !u!114 &3622310611426666917

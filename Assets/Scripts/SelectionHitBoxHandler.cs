@@ -5,6 +5,8 @@ using UnityEngine;
 [RequireComponent(typeof(Collider2D))]
 public class SelectionHitBoxHandler : MonoBehaviour, ISelectable
 {
+    [Range(-5f,5f)]
+    public float zepth = 1f;
 
     private SpriteRenderer spriteRenderer;
 
@@ -12,6 +14,7 @@ public class SelectionHitBoxHandler : MonoBehaviour, ISelectable
     private void Awake()
     {
         spriteRenderer = GetSpriteRenderer();
+        transform.position = new Vector3(transform.position.x, transform.position.y, zepth);
     }
 
     public void OnValidate()
