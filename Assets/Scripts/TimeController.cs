@@ -8,7 +8,7 @@ public class TimeController : MonoBehaviour
     private int currentMultiplierIndex = 0;
 
     [SerializeField]
-    private int[] timeMultipliers = new int[] { 1, 2, 3, 4, 5 };
+    private float[] timeMultipliers = new float[] { 1f, 2f, 3f, 4f, 5f};
 
     public delegate void ChangingTimeScale(float newTimeScale);
     public static event ChangingTimeScale TimeScaleChangeEvent;
