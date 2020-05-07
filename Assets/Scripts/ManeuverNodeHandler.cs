@@ -2,20 +2,36 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-
 public class ManeuverNodeHandler : MonoBehaviour
 {
-    public Camera mainCamera;
     public GameObject nodePrefab;
 
+    
+    private Camera mainCamera;
     private bool isActive = false;
-    private Ship selectedShip;
-    private Vector2 orbitalPosition;
+    private Ship ship;
+    private List<ManeuverNode> plannedManeuvers;
+    private ManeuverNode selectedNode;
     private GameObject instantiatedNode;
 
     #region UNITY
     private void Awake()
     {
+        mainCamera = Camera.main;
+
+        ship = GetComponentInParent<Ship>();
+        if (ship == null)
+            throw new UnityException(string.Format("{0}'s ManeuverNodeHandler must have a 'Ship' component on its parent!", name));
+
+        ManeuverNode[] maneuverNodes = nodePrefab.GetComponentsInChildren<ManeuverNode>();
+        if (maneuverNodes.Length != 1)
+        {
+            throw new UnityException(string.Format("{0}'s ManeuverNodeHandler must have a prefab with a single ManeuverNode component on it selected!", name));
+        }
+        
+        // FIXME: Should probably check for SelectionHitBoxHandler too
+
+        plannedManeuvers = new List<ManeuverNode>();
         ObjectSelector.OnObjectSelectionEvent += ObjectSelectionChanged;
     }
 
@@ -43,15 +59,25 @@ public class ManeuverNodeHandler : MonoBehaviour
         if (Input.GetMouseButton(1))
         {
             Vector2 clickPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            float trueAnomaly = CalculateTrueAnomalyOfPosition(selectedShip.WorldPositionToPerifocalPosition(clickPosition));
-            float orbitalRadius = OrbitalMechanics.OrbitalRadius(selectedShip.Eccentricity, selectedShip.SemimajorAxis, trueAnomaly);
-            orbitalPosition = OrbitalMechanics.OrbitalPosition(orbitalRadius, trueAnomaly, selectedShip.ClockWiseOrbit);
-            instantiatedNode.transform.position = OrbitalPositionToWorld();
+            float trueAnomaly = CalculateTrueAnomalyOfPosition(ship.WorldPositionToPerifocalPosition(clickPosition));
+            float orbitalRadius = OrbitalMechanics.OrbitalRadius(ship.Eccentricity, ship.SemimajorAxis, trueAnomaly);
+            Vector2 orbitalPosition = OrbitalMechanics.OrbitalPosition(orbitalRadius, trueAnomaly, ship.ClockWiseOrbit);
+            instantiatedNode.transform.position = OrbitalPositionToWorld(orbitalPosition);
         }
+        if (Input.GetMouseButtonUp(1))
+        {
+            
+        }
+
     }
     #endregion UNITY
 
     #region GENERAL
+    //private ManeuverNode raycastSelectManeuverNode()
+    //{
+
+    //}
+
     private float CalculateTrueAnomalyOfPosition(Vector2 position)
     {
         Vector2 periapse = new Vector2(1f, 0f);
@@ -60,12 +86,12 @@ public class ManeuverNodeHandler : MonoBehaviour
         return (angle + twoPi) % twoPi;
     }
 
-    private Vector2 OrbitalPositionToWorld()
+    private Vector2 OrbitalPositionToWorld(Vector2 perifocalPosition)
     {
-        Vector2 translation = selectedShip.CurrentGravitySource != null
-            ? selectedShip.CurrentGravitySource.Position
+        Vector2 translation = ship.CurrentGravitySource != null
+            ? ship.CurrentGravitySource.Position
             : Vector2.zero;
-        return orbitalPosition.RotateVector(selectedShip.ArgumentOfPeriapsis) + translation;
+        return perifocalPosition.RotateVector(ship.ArgumentOfPeriapsis) + translation;
     }
 
     private void ObjectSelectionChanged(GameObject newlySelectedObject)
@@ -73,13 +99,12 @@ public class ManeuverNodeHandler : MonoBehaviour
         if (newlySelectedObject == null)
         {
             isActive = false;
-            selectedShip = null;
             return;
         }
         else
         {
-            selectedShip = newlySelectedObject.GetComponent<Ship>();
-            isActive = (selectedShip != null);
+            Ship newlySelectedShip = newlySelectedObject.GetComponent<Ship>();
+            isActive = (ship == newlySelectedShip);
         }
 
         if (instantiatedNode != null)
