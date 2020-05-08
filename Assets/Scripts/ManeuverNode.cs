@@ -8,12 +8,21 @@ public class ManeuverNode : MonoBehaviour
     public float trueAnomaly;
     public int rank; //intended to specify whether maneuver is on current trajectory, rank 0, or a future trajectory 1+
     public float hitRadius;
-    public List<ManeuverNode> maneuverNodes;
+
+    private List<ManeuverNode> maneuverNodes;
+
+    [SerializeField]
+    private SpriteRenderer nodeSprite;
+
+    [SerializeField]
+    private Animator tangentialVectorAnimator;
+    private SpriteRenderer tangentialVectorSprite;
+
+    [SerializeField]
+    private Animator orthogonalVectorAnimator;
+    private SpriteRenderer orthogonalVectorSprite;
 
     private float _hitRadiusSq;
-
-    [HideInInspector]
-    public SpriteRenderer spriteRenderer;
 
     #region GETSET
     public float HitRadiusSq
@@ -25,12 +34,8 @@ public class ManeuverNode : MonoBehaviour
     #region UNITY
     public void Awake()
     {
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        if (spriteRenderer == null)
-            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-
-        if (spriteRenderer == null)
-            throw new UnityException(string.Format("Expecting ManeuverNode to have a SpriterRenderer or have a child with a SpriteRenderer"));
+        if (nodeSprite == null)
+            throw new UnityException(string.Format("Expecting ManeuverNode to have a SpriterRenderer on a child object"));
 
         HitRadiusSq = hitRadius * hitRadius;
         maneuverNodes = new List<ManeuverNode>();
@@ -44,7 +49,7 @@ public class ManeuverNode : MonoBehaviour
         {
             maneuverNodes[i].ShowNode();
         }
-        spriteRenderer.enabled = true;
+        nodeSprite.enabled = true;
     }
 
     public void HideNode()
@@ -54,9 +59,8 @@ public class ManeuverNode : MonoBehaviour
             maneuverNodes[i].HideNode();
 
         }
-        spriteRenderer.enabled = false;
+        nodeSprite.enabled = false;
     }
-
 
     public void ClearNodes()
     {
@@ -66,6 +70,14 @@ public class ManeuverNode : MonoBehaviour
         }
         maneuverNodes.Clear();
     }
+
+    private void HideSprites()
+    {
+        nodeSprite.enabled = false;
+        //tangentialVectorAnimator.
+        nodeSprite.enabled = false;
+    }
+
     #endregion
 
     private void OnDrawGizmos()

@@ -1794,22 +1794,22 @@ PrefabInstance:
     - target: {fileID: 2175427695880967090, guid: 911c6c05be0bd1f44914329141d400b6,
         type: 3}
       propertyPath: m_textInfo.characterCount
-      value: 179
+      value: 207
       objectReference: {fileID: 0}
     - target: {fileID: 2175427695880967090, guid: 911c6c05be0bd1f44914329141d400b6,
         type: 3}
       propertyPath: m_textInfo.spaceCount
-      value: 32
+      value: 36
       objectReference: {fileID: 0}
     - target: {fileID: 2175427695880967090, guid: 911c6c05be0bd1f44914329141d400b6,
         type: 3}
       propertyPath: m_textInfo.wordCount
-      value: 32
+      value: 37
       objectReference: {fileID: 0}
     - target: {fileID: 2175427695880967090, guid: 911c6c05be0bd1f44914329141d400b6,
         type: 3}
       propertyPath: m_textInfo.lineCount
-      value: 7
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2175427695880967090, guid: 911c6c05be0bd1f44914329141d400b6,
         type: 3}
@@ -1833,7 +1833,7 @@ PrefabInstance:
 
         Double-LClick - Focus object
 
-'
+        RClick - Place maneuver node'
       objectReference: {fileID: 0}
     - target: {fileID: 2175427695880967090, guid: 911c6c05be0bd1f44914329141d400b6,
         type: 3}
