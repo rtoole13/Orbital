@@ -103,6 +103,8 @@ public class ManeuverNodeHandler : MonoBehaviour
         }
         newNode.trueAnomaly = trueAnomaly;
         plannedManeuvers.Add(newNode);
+        Debug.Log(plannedManeuvers.Count);
+        Debug.Log(plannedManeuvers[0].spriteRenderer);
         return newNode;
     }
 

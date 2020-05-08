@@ -11,7 +11,9 @@ public class ManeuverNode : MonoBehaviour
     public List<ManeuverNode> maneuverNodes;
 
     private float _hitRadiusSq;
-    private SpriteRenderer spriteRenderer;
+
+    [HideInInspector]
+    public SpriteRenderer spriteRenderer;
 
     #region GETSET
     public float HitRadiusSq
@@ -23,7 +25,7 @@ public class ManeuverNode : MonoBehaviour
     #region UNITY
     public void Awake()
     {
-        SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer == null)
             spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
