@@ -241,7 +241,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   nodePrefab: {fileID: 6535381538784737762, guid: 7d70c0aef671f774283948410cac974e,
     type: 3}
-  mainCamera: {fileID: 0}
+  maneuverNodeMaxCount: 2
 --- !u!1 &4911959672117613530
 GameObject:
   m_ObjectHideFlags: 0

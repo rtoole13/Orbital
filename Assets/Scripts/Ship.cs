@@ -50,11 +50,6 @@ public class Ship : GravityAffected, ICameraTrackable
         base.Awake();
     }
 
-    private void Update()
-    {
-        //ToggleStabilityAssist();
-    }
-
     protected override void FixedUpdate()
     {
         Rotate();

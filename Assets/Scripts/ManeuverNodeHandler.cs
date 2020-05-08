@@ -6,13 +6,15 @@ public class ManeuverNodeHandler : MonoBehaviour
 {
     public GameObject nodePrefab;
 
-    
+    [Range(1,5)]
+    public int maneuverNodeMaxCount = 2;
+
     private Camera mainCamera;
     private bool isActive = false;
     private Ship ship;
     private List<ManeuverNode> plannedManeuvers;
     private ManeuverNode selectedNode;
-    private GameObject instantiatedNode;
+    private int maneuverLayerMask;
 
     #region UNITY
     private void Awake()
@@ -23,14 +25,15 @@ public class ManeuverNodeHandler : MonoBehaviour
         if (ship == null)
             throw new UnityException(string.Format("{0}'s ManeuverNodeHandler must have a 'Ship' component on its parent!", name));
 
-        ManeuverNode[] maneuverNodes = nodePrefab.GetComponentsInChildren<ManeuverNode>();
-        if (maneuverNodes.Length != 1)
+        ManeuverNode[] maneuverNodeScripts = nodePrefab.GetComponentsInChildren<ManeuverNode>();
+        if (maneuverNodeScripts.Length != 1)
         {
             throw new UnityException(string.Format("{0}'s ManeuverNodeHandler must have a prefab with a single ManeuverNode component on it selected!", name));
         }
-        
+
         // FIXME: Should probably check for SelectionHitBoxHandler too
 
+        maneuverLayerMask = LayerMask.GetMask("ObjectSelection");
         plannedManeuvers = new List<ManeuverNode>();
         ObjectSelector.OnObjectSelectionEvent += ObjectSelectionChanged;
     }
@@ -39,51 +42,85 @@ public class ManeuverNodeHandler : MonoBehaviour
     {
         ObjectSelector.OnObjectSelectionEvent -= ObjectSelectionChanged;
     }
-    void Start()
-    {
-        
-    }
-
+    
     void Update()
     {
         if (!isActive)
             return;
 
-        if (Input.GetMouseButtonDown(1))
-        {
-            if (instantiatedNode == null)
-                instantiatedNode = Instantiate(nodePrefab);
-            if (!instantiatedNode.activeInHierarchy)
-                instantiatedNode.SetActive(true);
-        }
-        if (Input.GetMouseButton(1))
-        {
-            Vector2 clickPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            float trueAnomaly = CalculateTrueAnomalyOfPosition(ship.WorldPositionToPerifocalPosition(clickPosition));
-            float orbitalRadius = OrbitalMechanics.OrbitalRadius(ship.Eccentricity, ship.SemimajorAxis, trueAnomaly);
-            Vector2 orbitalPosition = OrbitalMechanics.OrbitalPosition(orbitalRadius, trueAnomaly, ship.ClockWiseOrbit);
-            instantiatedNode.transform.position = OrbitalPositionToWorld(orbitalPosition);
-        }
         if (Input.GetMouseButtonUp(1))
         {
-            
+            return;
         }
+
+        if (Input.GetMouseButtonDown(1))
+        {
+            selectedNode = SelectManeuverNode(mainCamera.ScreenToWorldPoint(Input.mousePosition));
+        }
+
+        if (Input.GetMouseButton(1))
+        {
+            // May need a null selectedNode check. If so, something's prob set up wrong
+            float trueAnomaly = CalculateTrueAnomalyOfWorldPosition(mainCamera.ScreenToWorldPoint(Input.mousePosition));
+            selectedNode.transform.position = WorldPositionFromTrueAnomaly(trueAnomaly);
+        }
+        
 
     }
     #endregion UNITY
 
     #region GENERAL
-    //private ManeuverNode raycastSelectManeuverNode()
-    //{
-
-    //}
-
-    private float CalculateTrueAnomalyOfPosition(Vector2 position)
+    private ManeuverNode SelectManeuverNode(Vector2 mousePosition)
     {
+        for (int i = 0; i < plannedManeuvers.Count; i++)
+        {
+            ManeuverNode thisNode = plannedManeuvers[i];
+            float distSq = Vector2.SqrMagnitude(mousePosition - (Vector2)plannedManeuvers[i].transform.position);
+            if (distSq < thisNode.HitRadiusSq)
+                return thisNode;
+        }
+        return CreateManeuverNode(mousePosition);
+    }
+
+    private ManeuverNode CreateManeuverNode(Vector2 position)
+    {
+        float trueAnomaly = CalculateTrueAnomalyOfWorldPosition(position);
+        Vector2 worldPosition = WorldPositionFromTrueAnomaly(trueAnomaly);
+
+        ManeuverNode newNode;
+        if (plannedManeuvers.Count >= maneuverNodeMaxCount)
+        {
+            //Effectively pop first node - DELETING all child nodes
+            newNode = plannedManeuvers[0];
+            newNode.ClearNodes();
+            plannedManeuvers.RemoveAt(0);
+            newNode.transform.position = worldPosition;
+        }
+        else
+        {
+            GameObject newNodeObject = Instantiate(nodePrefab, worldPosition, Quaternion.identity);
+            newNode = newNodeObject.GetComponent<ManeuverNode>();
+        }
+        newNode.trueAnomaly = trueAnomaly;
+        plannedManeuvers.Add(newNode);
+        return newNode;
+    }
+
+    private float CalculateTrueAnomalyOfWorldPosition(Vector2 worldPosition)
+    {
+        // Angle b/w from eccentricity vector and vector pointing from CurrentGravitySource to position
+        Vector2 perifocalPosition = ship.WorldPositionToPerifocalPosition(worldPosition);
         Vector2 periapse = new Vector2(1f, 0f);
-        float angle = Vector2.SignedAngle(periapse, position) * Mathf.Deg2Rad;
+        float angle = Vector2.SignedAngle(periapse, perifocalPosition) * Mathf.Deg2Rad;
         float twoPi = 2f * Mathf.PI;
         return (angle + twoPi) % twoPi;
+    }
+
+    public Vector2 WorldPositionFromTrueAnomaly(float trueAnomaly)
+    {
+        float orbitalRadius = OrbitalMechanics.OrbitalRadius(ship.Eccentricity, ship.SemimajorAxis, trueAnomaly);
+        Vector2 orbitalPosition = OrbitalMechanics.OrbitalPosition(orbitalRadius, trueAnomaly, ship.ClockWiseOrbit);
+        return OrbitalPositionToWorld(orbitalPosition);
     }
 
     private Vector2 OrbitalPositionToWorld(Vector2 perifocalPosition)
@@ -99,7 +136,6 @@ public class ManeuverNodeHandler : MonoBehaviour
         if (newlySelectedObject == null)
         {
             isActive = false;
-            return;
         }
         else
         {
@@ -107,16 +143,33 @@ public class ManeuverNodeHandler : MonoBehaviour
             isActive = (ship == newlySelectedShip);
         }
 
-        if (instantiatedNode != null)
-            instantiatedNode.SetActive(false);
+        if (isActive)
+        {
+            ShowNodes();
+        }
+        else
+        {
+            HideNodes();
+        }
+    }
+
+    private void ShowNodes()
+    {
+        for (int i = 0; i < plannedManeuvers.Count; i++)
+        {
+            ManeuverNode thisNode = plannedManeuvers[i];
+            thisNode.ShowNode();
+        }
+    }
+
+    private void HideNodes()
+    {
+        for (int i = 0; i < plannedManeuvers.Count; i++)
+        {
+            ManeuverNode thisNode = plannedManeuvers[i];
+            thisNode.HideNode();
+        }
     }
 
     #endregion GENERAL
-    //private void OnDrawGizmos()
-    //{
-    //    if (!isActive)
-    //        return;
-    //    Gizmos.color = Color.red;
-    //    Gizmos.DrawSphere(OrbitalPositionToWorld(), 1f);
-    //}
 }

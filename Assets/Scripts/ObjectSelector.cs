@@ -77,7 +77,6 @@ public class ObjectSelector : MonoBehaviour
         InputHandler.ToggleStabilityAssistUIEvent += ToggleStabilityAssistUI;
 
         selectionLayerMask = LayerMask.GetMask("ObjectSelection");
-        //Debug.Log(selectionLayerMask);
     }
 
     private void OnDisable()
