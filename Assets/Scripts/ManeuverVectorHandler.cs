@@ -8,9 +8,12 @@ public class ManeuverVectorHandler : MonoBehaviour
     private Collider2D clickCollider;
     private Animator animator;
     private SpriteRenderer spriteRenderer;
-    private Camera mainCamera;
-    private int selectionLayerMask; //FIXME: make an enum for editor.
-    
+    private Vector2 selectionInitialPosition;
+
+    public delegate void SelectedVector();
+    public event SelectedVector selectedVectorEvent;
+
+    #region UNITY
     private void Awake()
     {
         clickCollider = GetComponent<Collider2D>();
@@ -24,31 +27,35 @@ public class ManeuverVectorHandler : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer == null)
             throw new UnityException(string.Format("Expecting {0} to have a SpriteRenderer!", gameObject.name));
-
-        mainCamera = Camera.main;
-        selectionLayerMask = LayerMask.GetMask("ManeuverVectorSelection");
     }
-
-    void Start()
+    #endregion UNITY
+    #region GENERAL
+    public void HideSprite()
     {
-        
+        spriteRenderer.enabled = false;
     }
 
-    void Update()
+    public void ShowSprite()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            SelectVector();
-        }
+        spriteRenderer.enabled = true;
     }
-    void SelectVector()
+    
+    public void InitializeVectorSelect(Vector2 initialPosition)
     {
-        RaycastHit2D[] rayHits = Physics2D.GetRayIntersectionAll(mainCamera.ScreenPointToRay(Input.mousePosition), 100f, selectionLayerMask);
-        for (int i = 0; i < rayHits.Length; i++)
-        {
-            RaycastHit2D hit = rayHits[i];
-            Debug.LogFormat("{0}", hit.transform.name);
-            
-        }
+        animator.SetBool("extended", true);
+        selectionInitialPosition = initialPosition;
     }
+
+    public void EndVectorSelect()
+    {
+        animator.SetBool("extended", false);
+    }
+
+    public void DragVector(Vector2 mousePosition)
+    {
+        Debug.Log("Dragging");
+    }
+    
+    #endregion GENERAL
+
 }

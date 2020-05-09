@@ -14,7 +14,8 @@ public class ManeuverNodeHandler : MonoBehaviour
     private Ship ship;
     private List<ManeuverNode> plannedManeuvers;
     private ManeuverNode selectedNode;
-    private int maneuverLayerMask;
+    private int vectorLayerMask; //FIXME: make an enum for editor.
+    private ManeuverVectorHandler selectedManeuverVector;
 
     #region UNITY
     private void Awake()
@@ -31,9 +32,7 @@ public class ManeuverNodeHandler : MonoBehaviour
             throw new UnityException(string.Format("{0}'s ManeuverNodeHandler must have a prefab with a single ManeuverNode component on it selected!", name));
         }
 
-        // FIXME: Should probably check for SelectionHitBoxHandler too
-
-        maneuverLayerMask = LayerMask.GetMask("ObjectSelection");
+        vectorLayerMask = LayerMask.GetMask("ManeuverVectorSelection");
         plannedManeuvers = new List<ManeuverNode>();
         ObjectSelector.OnObjectSelectionEvent += ObjectSelectionChanged;
     }
@@ -48,8 +47,17 @@ public class ManeuverNodeHandler : MonoBehaviour
         if (!isActive)
             return;
 
+        HandleNodeVectorAdjustment();
+        HandleNodePosition();
+    }
+    #endregion UNITY
+
+    #region GENERAL
+    void HandleNodePosition()
+    {
         if (Input.GetMouseButtonUp(1))
         {
+            selectedNode = null;
             return;
         }
 
@@ -60,16 +68,63 @@ public class ManeuverNodeHandler : MonoBehaviour
 
         if (Input.GetMouseButton(1))
         {
-            // May need a null selectedNode check. If so, something's prob set up wrong
             float trueAnomaly = CalculateTrueAnomalyOfWorldPosition(mainCamera.ScreenToWorldPoint(Input.mousePosition));
+            Vector2 orbitalDirection = CalculateOrbitalDirection(trueAnomaly);
+            Vector2 worldDirection = orbitalDirection.RotateVector(ship.ArgumentOfPeriapsis);
+            
+            // Update node position and rotation
             selectedNode.transform.position = WorldPositionFromTrueAnomaly(trueAnomaly);
+            selectedNode.transform.rotation = Quaternion.FromToRotation(selectedNode.transform.up, worldDirection) * selectedNode.transform.rotation;
+
+            // Update orbital parameters on node
+            selectedNode.UpdateValues(trueAnomaly, orbitalDirection);
         }
-        
-
     }
-    #endregion UNITY
 
-    #region GENERAL
+    void HandleNodeVectorAdjustment()
+    {
+        if (Input.GetMouseButtonUp(0))
+        {
+            DeselectManeuverNodeVector();
+            return;
+        }
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            SelectManeuverNodeVector();
+        }
+
+        if (selectedManeuverVector == null)
+            return;
+
+        if (Input.GetMouseButton(0))
+        {
+            selectedManeuverVector.DragVector(Input.mousePosition);
+        }
+    }
+    void DeselectManeuverNodeVector()
+    {
+        if (selectedManeuverVector == null)
+            return;
+
+        selectedManeuverVector.EndVectorSelect();
+        selectedManeuverVector = null;
+    }
+
+    void SelectManeuverNodeVector()
+    {
+        RaycastHit2D[] rayHits = Physics2D.GetRayIntersectionAll(mainCamera.ScreenPointToRay(Input.mousePosition), 100f, vectorLayerMask);
+        for (int i = 0; i < rayHits.Length; i++)
+        {
+            RaycastHit2D hit = rayHits[i];
+            selectedManeuverVector = hit.collider.GetComponent<ManeuverVectorHandler>();
+            if (selectedManeuverVector == null)
+                continue;
+
+            selectedManeuverVector.InitializeVectorSelect(Input.mousePosition);
+        }
+    }
+
     private ManeuverNode SelectManeuverNode(Vector2 mousePosition)
     {
         for (int i = 0; i < plannedManeuvers.Count; i++)
@@ -85,25 +140,39 @@ public class ManeuverNodeHandler : MonoBehaviour
     private ManeuverNode CreateManeuverNode(Vector2 position)
     {
         float trueAnomaly = CalculateTrueAnomalyOfWorldPosition(position);
+        Vector2 orbitalDirection = CalculateOrbitalDirection(trueAnomaly);
+        
+        // Direction and position in world coordinate space
+        Vector2 worldDirection = orbitalDirection.RotateVector(ship.ArgumentOfPeriapsis);
         Vector2 worldPosition = WorldPositionFromTrueAnomaly(trueAnomaly);
 
         ManeuverNode newNode;
         if (plannedManeuvers.Count >= maneuverNodeMaxCount)
         {
-            //Effectively pop first node - DELETING all child nodes
+            // Effectively pop first node - DELETING all child nodes
             newNode = plannedManeuvers[0];
             newNode.ClearNodes();
             plannedManeuvers.RemoveAt(0);
             newNode.transform.position = worldPosition;
+            Quaternion rotationTarget = Quaternion.FromToRotation(newNode.transform.up, worldDirection);
+            newNode.transform.rotation = rotationTarget * newNode.transform.rotation;
         }
         else
         {
-            GameObject newNodeObject = Instantiate(nodePrefab, worldPosition, Quaternion.identity);
+            Quaternion rotationTarget = Quaternion.FromToRotation(Vector3.up, worldDirection);
+            GameObject newNodeObject = Instantiate(nodePrefab, worldPosition, rotationTarget);
+            
             newNode = newNodeObject.GetComponent<ManeuverNode>();
         }
-        newNode.trueAnomaly = trueAnomaly;
+        newNode.UpdateValues(trueAnomaly, orbitalDirection);
         plannedManeuvers.Add(newNode);
         return newNode;
+    }
+
+    private Vector2 CalculateOrbitalDirection(float trueAnomaly)
+    {
+        float flightPathAngle = OrbitalMechanics.FlightPathAngle(ship.Eccentricity, trueAnomaly);
+        return OrbitalMechanics.OrbitalDirection(trueAnomaly, flightPathAngle, ship.ClockWiseOrbit);
     }
 
     private float CalculateTrueAnomalyOfWorldPosition(Vector2 worldPosition)

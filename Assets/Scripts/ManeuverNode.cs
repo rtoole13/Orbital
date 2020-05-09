@@ -4,9 +4,10 @@ using UnityEngine;
 
 public class ManeuverNode : MonoBehaviour
 {
-    public Vector2 velocity;
-    public float trueAnomaly;
-    public int rank; //intended to specify whether maneuver is on current trajectory, rank 0, or a future trajectory 1+
+    private Vector2 velocity;
+    private float trueAnomaly;
+    private Vector2 orbitalDirection;
+    private int rank; //intended to specify whether maneuver is on current trajectory, rank 0, or a future trajectory 1+
     public float hitRadius;
 
     private List<ManeuverNode> maneuverNodes;
@@ -15,12 +16,10 @@ public class ManeuverNode : MonoBehaviour
     private SpriteRenderer nodeSprite;
 
     [SerializeField]
-    private Animator tangentialVectorAnimator;
-    private SpriteRenderer tangentialVectorSprite;
+    private ManeuverVectorHandler tangentialVectorHandler;
 
     [SerializeField]
-    private Animator orthogonalVectorAnimator;
-    private SpriteRenderer orthogonalVectorSprite;
+    private ManeuverVectorHandler orthogonalVectorHandler;
 
     private float _hitRadiusSq;
 
@@ -35,7 +34,10 @@ public class ManeuverNode : MonoBehaviour
     public void Awake()
     {
         if (nodeSprite == null)
-            throw new UnityException(string.Format("Expecting ManeuverNode to have a SpriterRenderer on a child object"));
+            throw new UnityException(string.Format("Expecting ManeuverNode to have a SpriterRenderer on a child object!"));
+
+        if (tangentialVectorHandler == null || orthogonalVectorHandler == null)
+            throw new UnityException(string.Format("Expecting ManeuverNode to have a ManeuverVectorHandler on two on child objects!"));
 
         HitRadiusSq = hitRadius * hitRadius;
         maneuverNodes = new List<ManeuverNode>();
@@ -43,13 +45,20 @@ public class ManeuverNode : MonoBehaviour
 
     #endregion
     #region GENERAL
+
+    public void UpdateValues(float _trueAnomaly, Vector2 _orbitalDirection)
+    {
+        trueAnomaly = _trueAnomaly;
+        orbitalDirection = _orbitalDirection;
+    }
+
     public void ShowNode()
     {
         for (int i = 0; i < maneuverNodes.Count; i++)
         {
             maneuverNodes[i].ShowNode();
         }
-        nodeSprite.enabled = true;
+        ShowSprites();
     }
 
     public void HideNode()
@@ -59,7 +68,21 @@ public class ManeuverNode : MonoBehaviour
             maneuverNodes[i].HideNode();
 
         }
+        HideSprites();
+    }
+
+    private void HideSprites()
+    {
         nodeSprite.enabled = false;
+        tangentialVectorHandler.HideSprite();
+        orthogonalVectorHandler.HideSprite();
+    }
+
+    private void ShowSprites()
+    {
+        nodeSprite.enabled = true;
+        tangentialVectorHandler.ShowSprite();
+        orthogonalVectorHandler.ShowSprite();
     }
 
     public void ClearNodes()
@@ -69,13 +92,6 @@ public class ManeuverNode : MonoBehaviour
             maneuverNodes[i].ClearNodes();
         }
         maneuverNodes.Clear();
-    }
-
-    private void HideSprites()
-    {
-        nodeSprite.enabled = false;
-        //tangentialVectorAnimator.
-        nodeSprite.enabled = false;
     }
 
     #endregion

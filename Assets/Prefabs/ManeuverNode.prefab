@@ -51,8 +51,8 @@ MonoBehaviour:
   rank: 0
   hitRadius: 0.5
   nodeSprite: {fileID: 2131638984861109641}
-  tangentialVectorAnimator: {fileID: 975143775990578601}
-  orthogonalVectorAnimator: {fileID: 3387764807317501485}
+  tangentialVectorHandler: {fileID: 7359807278323803312}
+  orthogonalVectorHandler: {fileID: 2367626868972970368}
 --- !u!1 &7402013213746607420
 GameObject:
   m_ObjectHideFlags: 0
