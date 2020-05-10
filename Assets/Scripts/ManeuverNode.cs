@@ -4,9 +4,10 @@ using UnityEngine;
 
 public class ManeuverNode : MonoBehaviour
 {
-    private Vector2 velocity;
+    private Vector2 deltaOrbitalVelocity;
     private float trueAnomaly;
     private Vector2 orbitalDirection;
+    private Vector2 orthogonalDirection;
     private int rank; //intended to specify whether maneuver is on current trajectory, rank 0, or a future trajectory 1+
     public float hitRadius;
 
@@ -29,9 +30,17 @@ public class ManeuverNode : MonoBehaviour
         get { return _hitRadiusSq; }
         private set { _hitRadiusSq = value; }
     }
+    public float TrueAnomaly
+    {
+        get { return trueAnomaly; }
+    }
+    public Vector2 DeltaOrbitalVelocity
+    {
+        get { return deltaOrbitalVelocity; }
+    }
     #endregion
     #region UNITY
-    public void Awake()
+    private void Awake()
     {
         if (nodeSprite == null)
             throw new UnityException(string.Format("Expecting ManeuverNode to have a SpriterRenderer on a child object!"));
@@ -39,17 +48,42 @@ public class ManeuverNode : MonoBehaviour
         if (tangentialVectorHandler == null || orthogonalVectorHandler == null)
             throw new UnityException(string.Format("Expecting ManeuverNode to have a ManeuverVectorHandler on two on child objects!"));
 
+        // Event listeners for velocity mag change
+        tangentialVectorHandler.DeltaVelocityAdjustedEvent += AdjustVelocityTangentially;
+        orthogonalVectorHandler.DeltaVelocityAdjustedEvent += AdjustVelocityOrthogonally;
+
         HitRadiusSq = hitRadius * hitRadius;
         maneuverNodes = new List<ManeuverNode>();
     }
 
+    private void OnDisable()
+    {
+        // Event listeners for velocity mag change
+        tangentialVectorHandler.DeltaVelocityAdjustedEvent -= AdjustVelocityTangentially;
+        orthogonalVectorHandler.DeltaVelocityAdjustedEvent -= AdjustVelocityOrthogonally;
+    }
+
     #endregion
     #region GENERAL
+    private void AdjustVelocityTangentially(float velMag)
+    {
+        deltaOrbitalVelocity += velMag * orbitalDirection;
+        Debug.Log(deltaOrbitalVelocity);
+    }
 
-    public void UpdateValues(float _trueAnomaly, Vector2 _orbitalDirection)
+    private void AdjustVelocityOrthogonally(float velMag)
+    {
+        deltaOrbitalVelocity += velMag * orthogonalDirection;
+        Debug.Log(deltaOrbitalVelocity);
+    }
+
+    public void UpdateValues(float _trueAnomaly, Vector2 _orbitalDirection, Vector2 worldDirection)
     {
         trueAnomaly = _trueAnomaly;
         orbitalDirection = _orbitalDirection;
+        orthogonalDirection = orbitalDirection.RotateVector(-Mathf.PI / 2);
+        tangentialVectorHandler.UpdateDirection(worldDirection);
+        orthogonalVectorHandler.UpdateDirection(worldDirection.RotateVector(-Mathf.PI / 2));
     }
 
     public void ShowNode()
@@ -74,15 +108,15 @@ public class ManeuverNode : MonoBehaviour
     private void HideSprites()
     {
         nodeSprite.enabled = false;
-        tangentialVectorHandler.HideSprite();
-        orthogonalVectorHandler.HideSprite();
+        tangentialVectorHandler.HideVector();
+        orthogonalVectorHandler.HideVector();
     }
 
     private void ShowSprites()
     {
         nodeSprite.enabled = true;
-        tangentialVectorHandler.ShowSprite();
-        orthogonalVectorHandler.ShowSprite();
+        tangentialVectorHandler.ShowVector();
+        orthogonalVectorHandler.ShowVector();
     }
 
     public void ClearNodes()
@@ -94,11 +128,18 @@ public class ManeuverNode : MonoBehaviour
         maneuverNodes.Clear();
     }
 
+    public void ToggleManeuverExecution(bool executeManeuverMode)
+    {
+        nodeSprite.color = executeManeuverMode
+            ? Color.red
+            : Color.green;
+    }
+
     #endregion
 
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(transform.position, hitRadius);
-    }
+    //private void OnDrawGizmos()
+    //{
+    //    Gizmos.color = Color.green;
+    //    Gizmos.DrawWireSphere(transform.position, hitRadius);
+    //}
 }

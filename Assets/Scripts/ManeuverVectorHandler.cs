@@ -8,10 +8,11 @@ public class ManeuverVectorHandler : MonoBehaviour
     private Collider2D clickCollider;
     private Animator animator;
     private SpriteRenderer spriteRenderer;
+    private Vector2 worldDirection = Vector2.up;
     private Vector2 selectionInitialPosition;
-
-    public delegate void SelectedVector();
-    public event SelectedVector selectedVectorEvent;
+    private float dragDeltaVelFactor = 0.01f; // Used to dampen the user's drag input
+    public delegate void deltaVelocityAdjusted(float deltaVelocityMag);
+    public event deltaVelocityAdjusted DeltaVelocityAdjustedEvent;
 
     #region UNITY
     private void Awake()
@@ -30,16 +31,23 @@ public class ManeuverVectorHandler : MonoBehaviour
     }
     #endregion UNITY
     #region GENERAL
-    public void HideSprite()
+    public void HideVector()
     {
         spriteRenderer.enabled = false;
+        clickCollider.enabled = false;
     }
 
-    public void ShowSprite()
+    public void ShowVector()
     {
         spriteRenderer.enabled = true;
+        clickCollider.enabled = true;
     }
     
+    public void UpdateDirection(Vector2 newWorldDirection)
+    {
+        worldDirection = newWorldDirection;
+    }
+
     public void InitializeVectorSelect(Vector2 initialPosition)
     {
         animator.SetBool("extended", true);
@@ -51,11 +59,22 @@ public class ManeuverVectorHandler : MonoBehaviour
         animator.SetBool("extended", false);
     }
 
-    public void DragVector(Vector2 mousePosition)
+    public void DragVector(Vector2 mouseWorldPosition)
     {
-        Debug.Log("Dragging");
-    }
-    
-    #endregion GENERAL
+        Vector2 dragVector = mouseWorldPosition - selectionInitialPosition;
+        if (Vector2.Dot(dragVector, worldDirection) <= 0) // If dragging in wrong direction, ignore
+            return;
 
+        dragVector = dragVector.Projection(worldDirection);
+
+        // Invoke deltaV adjustment event
+        DeltaVelocityAdjustedEvent(Mathf.Max(0f, dragVector.magnitude * dragDeltaVelFactor));
+    }
+
+    #endregion GENERAL
+    //private void OnDrawGizmos()
+    //{
+    //    Gizmos.color = Color.green;
+    //    Gizmos.DrawLine(transform.position, transform.position + (Vector3)worldDirection * 2f);
+    //}
 }

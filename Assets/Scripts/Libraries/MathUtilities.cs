@@ -7,8 +7,24 @@ public static class MathUtilities
     #region VECTORS
     public static Vector2 RotateVector(this Vector2 vector, float angle)
     {
+        // Radians
         return new Vector2(vector.x * Mathf.Cos(angle) - vector.y * Mathf.Sin(angle), vector.x * Mathf.Sin(angle) + vector.y * Mathf.Cos(angle));
     }
+
+    public static Vector2 Projection(this Vector2 vector, Vector2 direction)
+    {
+        // Projects vector onto direction, returning the component of vector parallel to direction
+        float dotNum = Vector2.Dot(vector, direction);
+        float dotDenom = Vector2.Dot(direction, direction);
+        return (dotNum / dotDenom) * direction;
+    }
+
+    public static Vector2 Rejection(this Vector2 vector, Vector2 direction)
+    {
+        // returns the component of vector perpendicular to direction
+        return vector - vector.Projection(direction);
+    }
+
     #endregion VECTORS
     #region SCALARS
     public static float Modulo(float number, float modulus)

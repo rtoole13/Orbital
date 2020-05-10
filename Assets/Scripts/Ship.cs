@@ -111,6 +111,14 @@ public class Ship : GravityAffected, ICameraTrackable
         normalizedThrust -= thrustAccel;
     }
     
+    public void ExecuteInstantBurn(Vector2 deltaVelocity)
+    {
+        // Specifically velocity in world coordinates!
+        Vector2 relVel = OrbitalVelocityToWorld + deltaVelocity - CurrentGravitySource.Velocity;
+        Vector2 relPos = Position - CurrentGravitySource.Position; // world pos - newSource.pos
+        CalculateOrbitalParametersFromStateVectors(relPos, relVel);
+    }
+
     #endregion CALLBACKS
 
     private void Rotate()

@@ -11,6 +11,8 @@ public class ManeuverNodeHandler : MonoBehaviour
 
     private Camera mainCamera;
     private bool isActive = false;
+    private bool executeManeuvers = false;
+    private float trueAnomalyExecutionThreshold = 0.05f;
     private Ship ship;
     private List<ManeuverNode> plannedManeuvers;
     private ManeuverNode selectedNode;
@@ -49,10 +51,33 @@ public class ManeuverNodeHandler : MonoBehaviour
 
         HandleNodeVectorAdjustment();
         HandleNodePosition();
+        HandleManeuverExecution();
     }
     #endregion UNITY
 
     #region GENERAL
+    void HandleManeuverExecution()
+    {
+        if (Input.GetKeyDown(KeyCode.M))
+        {
+            ToggleManeuverExecution();
+        }
+
+        if (!executeManeuvers)
+            return;
+        
+        for (int i = 0; i < plannedManeuvers.Count; i++)
+        {
+            ManeuverNode thisNode = plannedManeuvers[i];
+            if (Mathf.Abs(thisNode.TrueAnomaly - ship.TrueAnomaly) <= trueAnomalyExecutionThreshold)
+            {
+                ExecuteManeuver(thisNode);
+                return;
+            }
+        }
+
+    }
+
     void HandleNodePosition()
     {
         if (Input.GetMouseButtonUp(1))
@@ -77,7 +102,7 @@ public class ManeuverNodeHandler : MonoBehaviour
             selectedNode.transform.rotation = Quaternion.FromToRotation(selectedNode.transform.up, worldDirection) * selectedNode.transform.rotation;
 
             // Update orbital parameters on node
-            selectedNode.UpdateValues(trueAnomaly, orbitalDirection);
+            selectedNode.UpdateValues(trueAnomaly, orbitalDirection, worldDirection);
         }
     }
 
@@ -99,7 +124,7 @@ public class ManeuverNodeHandler : MonoBehaviour
 
         if (Input.GetMouseButton(0))
         {
-            selectedManeuverVector.DragVector(Input.mousePosition);
+            selectedManeuverVector.DragVector(mainCamera.ScreenToWorldPoint(Input.mousePosition));
         }
     }
     void DeselectManeuverNodeVector()
@@ -120,8 +145,8 @@ public class ManeuverNodeHandler : MonoBehaviour
             selectedManeuverVector = hit.collider.GetComponent<ManeuverVectorHandler>();
             if (selectedManeuverVector == null)
                 continue;
-
-            selectedManeuverVector.InitializeVectorSelect(Input.mousePosition);
+            
+            selectedManeuverVector.InitializeVectorSelect(mainCamera.ScreenToWorldPoint(Input.mousePosition));
         }
     }
 
@@ -164,7 +189,8 @@ public class ManeuverNodeHandler : MonoBehaviour
             
             newNode = newNodeObject.GetComponent<ManeuverNode>();
         }
-        newNode.UpdateValues(trueAnomaly, orbitalDirection);
+        newNode.ToggleManeuverExecution(executeManeuvers);
+        newNode.UpdateValues(trueAnomaly, orbitalDirection, worldDirection);
         plannedManeuvers.Add(newNode);
         return newNode;
     }
@@ -238,6 +264,25 @@ public class ManeuverNodeHandler : MonoBehaviour
             ManeuverNode thisNode = plannedManeuvers[i];
             thisNode.HideNode();
         }
+    }
+
+    private void ToggleManeuverExecution()
+    {
+        executeManeuvers = !executeManeuvers;
+        for (int i = 0; i < plannedManeuvers.Count; i++)
+        {
+            ManeuverNode thisNode = plannedManeuvers[i];
+            thisNode.ToggleManeuverExecution(executeManeuvers);
+        }
+    }
+
+    private void ExecuteManeuver(ManeuverNode node)
+    {
+        Vector2 deltaVel = node.DeltaOrbitalVelocity.RotateVector(ship.ArgumentOfPeriapsis);
+        ship.ExecuteInstantBurn(deltaVel);
+        node.ClearNodes();
+        node.HideNode();
+        plannedManeuvers.Remove(node);
     }
 
     #endregion GENERAL

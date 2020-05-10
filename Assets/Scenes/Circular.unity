@@ -1833,7 +1833,9 @@ PrefabInstance:
 
         Double-LClick - Focus object
 
-        RClick - Place maneuver node'
+        RClick - Place maneuver node
+
+        M - Toggle maneuver execution'
       objectReference: {fileID: 0}
     - target: {fileID: 2175427695880967090, guid: 911c6c05be0bd1f44914329141d400b6,
         type: 3}
