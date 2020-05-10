@@ -266,6 +266,17 @@ public class ManeuverNodeHandler : MonoBehaviour
         }
     }
 
+    private void EmptyManeuvers()
+    {
+        for (int i = 0; i < plannedManeuvers.Count; i++)
+        {
+            ManeuverNode thisNode = plannedManeuvers[i];
+            thisNode.ClearNodes();
+            thisNode.HideNode();
+        }
+        plannedManeuvers.Clear();
+    }
+
     private void ToggleManeuverExecution()
     {
         executeManeuvers = !executeManeuvers;
@@ -280,9 +291,7 @@ public class ManeuverNodeHandler : MonoBehaviour
     {
         Vector2 deltaVel = node.DeltaOrbitalVelocity.RotateVector(ship.ArgumentOfPeriapsis);
         ship.ExecuteInstantBurn(deltaVel);
-        node.ClearNodes();
-        node.HideNode();
-        plannedManeuvers.Remove(node);
+        EmptyManeuvers();
     }
 
     #endregion GENERAL
