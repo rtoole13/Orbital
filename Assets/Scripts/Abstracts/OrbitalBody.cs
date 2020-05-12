@@ -43,6 +43,9 @@ public abstract class OrbitalBody : MonoBehaviour
     private float hyperbolicExcessVelocityApproxThreshold = 1.5f; // If calculated velocity - hyperbolic excess vel < this, check above
     private bool nearHyperbolicAsymptote = false;
 
+    public delegate void OnOrbitCalculation();
+    public event OnOrbitCalculation OnOrbitCalculationEvent;
+
     #region GETSET
     public GravitySource CurrentGravitySource
     {
@@ -344,6 +347,8 @@ public abstract class OrbitalBody : MonoBehaviour
         }
         OrbitalPosition = OrbitalMechanics.OrbitalPosition(OrbitalRadius, TrueAnomaly, ClockWiseOrbit);
         lastPosition = OrbitalPosition;
+
+        OnOrbitCalculationEvent(); // Invoke orbit calculation event, triggering things like trajectory drawing.
     }
 
     private void CalculateEllipticalOrbitParameters(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)
@@ -506,7 +511,7 @@ public abstract class OrbitalBody : MonoBehaviour
             : position;
         return position.RotateVector(-ArgumentOfPeriapsis);
     }
-
+    
     #endregion GENERAL
 
     protected virtual void OnDrawGizmos()

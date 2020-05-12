@@ -68,13 +68,11 @@ public class ManeuverNode : MonoBehaviour
     private void AdjustVelocityTangentially(float velMag)
     {
         deltaOrbitalVelocity += velMag * orbitalDirection;
-        Debug.Log(deltaOrbitalVelocity);
     }
 
     private void AdjustVelocityOrthogonally(float velMag)
     {
         deltaOrbitalVelocity += velMag * orthogonalDirection;
-        Debug.Log(deltaOrbitalVelocity);
     }
 
     public void UpdateValues(float _trueAnomaly, Vector2 _orbitalDirection, Vector2 worldDirection)

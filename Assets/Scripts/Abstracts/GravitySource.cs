@@ -11,8 +11,7 @@ public abstract class GravitySource : OrbitalBody
     private CircleCollider2D bodyCollider;
 
     [SerializeField]
-    private List<GravitySource> _orbitalBodies;
-
+    private List<GravitySource> _orbitalBodies;    
     #region GETSET
 
     public float Radius

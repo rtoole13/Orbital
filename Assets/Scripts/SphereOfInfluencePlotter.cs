@@ -18,28 +18,37 @@ public class SphereOfInfluencePlotter : LinePlotter
     {
         base.Awake();
         gravitySource = GetComponentInParent<GravitySource>();
+        GetComponentInParent<OrbitalBody>().OnOrbitCalculationEvent += DrawCircle; // Hack to listen to base class event
     }
 
+    private void Start()
+    {
+        DrawCircle();
+    }
+    protected override void OnDisable()
+    {
+        base.OnDisable();
+        OrbitalBody orbitalBody = GetComponentInParent<OrbitalBody>();
+        if (orbitalBody != null) // Prevent error on end of play
+            orbitalBody.OnOrbitCalculationEvent -= DrawCircle; // Hack to listen to base class event
+    }
     // Update is called once per frame
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.LeftAlt))
             ToggleDisplay();
-
-        if (display)
-            DrawCircle();
     }
     #endregion UNITY
 
     private void ToggleDisplay()
     {
         display = !display;
-        if (!display)
-            lineRenderer.positionCount = 0;
+        lineRenderer.enabled = display;
     }
 
     private void DrawCircle()
     {
+        lineRenderer.useWorldSpace = false; // Important for having SOI follow object
         if (Radius == Mathf.Infinity)
             return;
 
@@ -48,7 +57,7 @@ public class SphereOfInfluencePlotter : LinePlotter
         {
             float angle = ((float)i / (float)segments) * 2 * Mathf.PI;
             Vector3 vertex = new Vector3(Mathf.Sin(angle) * Radius, Mathf.Cos(angle) * Radius, zepth);
-            points[i] = vertex + gravitySource.transform.position;
+            points[i] = transform.worldToLocalMatrix * vertex;
         }
         points[segments] = points[0];
         lineRenderer.positionCount = segments + 1;
