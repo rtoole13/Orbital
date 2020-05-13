@@ -37,6 +37,7 @@ public class ManeuverNodeHandler : MonoBehaviour
         vectorLayerMask = LayerMask.GetMask("ManeuverVectorSelection");
         plannedManeuvers = new List<ManeuverNode>();
         ObjectSelector.OnObjectSelectionEvent += ObjectSelectionChanged;
+        //CameraController.OrthographicSizeChangeEvent +=
     }
 
     private void OnDisable()

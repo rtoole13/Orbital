@@ -141,5 +141,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   zepth: 3
-  lineWidthRange: {x: 0.5, y: 5}
+  lineWidthRange: {x: 0.25, y: 5}
   segments: 36

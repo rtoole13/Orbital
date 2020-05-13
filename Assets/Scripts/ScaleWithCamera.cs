@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ShipSpriteController : MonoBehaviour
+public class ScaleWithCamera : MonoBehaviour
 {
     [SerializeField]
     private Vector2 scaleRange = new Vector2(0.5f, 5f);
