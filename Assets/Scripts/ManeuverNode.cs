@@ -4,11 +4,17 @@ using UnityEngine;
 
 public class ManeuverNode : MonoBehaviour
 {
-    private Vector2 deltaOrbitalVelocity;
-    private float trueAnomaly;
+    [Range(0.0f, 0.5f)]
+    public float minimumDeltaVelocity;
+
+    private Ship ship;
+    private Vector2 _deltaOrbitalVelocity;
+    private float _trueAnomaly;
     private Vector2 orbitalDirection;
     private Vector2 orthogonalDirection;
     private int rank; //intended to specify whether maneuver is on current trajectory, rank 0, or a future trajectory 1+
+    private Orbit orbit;
+    private TrajectoryPlotter trajectoryPlotter;
     public float hitRadius;
 
     private List<ManeuverNode> maneuverNodes;
@@ -32,11 +38,11 @@ public class ManeuverNode : MonoBehaviour
     }
     public float TrueAnomaly
     {
-        get { return trueAnomaly; }
+        get { return _trueAnomaly; }
     }
     public Vector2 DeltaOrbitalVelocity
     {
-        get { return deltaOrbitalVelocity; }
+        get { return _deltaOrbitalVelocity; }
     }
     #endregion
     #region UNITY
@@ -45,12 +51,20 @@ public class ManeuverNode : MonoBehaviour
         if (nodeSprite == null)
             throw new UnityException(string.Format("Expecting ManeuverNode to have a SpriterRenderer on a child object!"));
 
+        trajectoryPlotter = GetComponent<TrajectoryPlotter>();
+        if (trajectoryPlotter == null)
+            throw new UnityException(string.Format("Expecting ManeuverNode to have a TrajectoryPlotter!"));
+
         if (tangentialVectorHandler == null || orthogonalVectorHandler == null)
             throw new UnityException(string.Format("Expecting ManeuverNode to have a ManeuverVectorHandler on two on child objects!"));
+
+        
 
         // Event listeners for velocity mag change
         tangentialVectorHandler.DeltaVelocityAdjustedEvent += AdjustVelocityTangentially;
         orthogonalVectorHandler.DeltaVelocityAdjustedEvent += AdjustVelocityOrthogonally;
+
+        orbit = new Orbit();
 
         HitRadiusSq = hitRadius * hitRadius;
         maneuverNodes = new List<ManeuverNode>();
@@ -67,21 +81,30 @@ public class ManeuverNode : MonoBehaviour
     #region GENERAL
     private void AdjustVelocityTangentially(float velMag)
     {
-        deltaOrbitalVelocity += velMag * orbitalDirection;
+        _deltaOrbitalVelocity += velMag * orbitalDirection;
+        UpdateOrbit();
     }
 
     private void AdjustVelocityOrthogonally(float velMag)
     {
-        deltaOrbitalVelocity += velMag * orthogonalDirection;
+        _deltaOrbitalVelocity += velMag * orthogonalDirection;
+        UpdateOrbit();
+    }
+    //Initialize(trueAnomaly, orbitalDirection, worldDirection, ship, ship.CurrentGravitySource);
+    public void Initialize(float _trueAnomaly, Vector2 _orbitalDirection, Vector2 worldDirection, Ship _ship)
+    {
+        ship = _ship;
+        UpdateValues(_trueAnomaly, _orbitalDirection, worldDirection);
     }
 
     public void UpdateValues(float _trueAnomaly, Vector2 _orbitalDirection, Vector2 worldDirection)
     {
-        trueAnomaly = _trueAnomaly;
+        this._trueAnomaly = _trueAnomaly;
         orbitalDirection = _orbitalDirection;
         orthogonalDirection = orbitalDirection.RotateVector(-Mathf.PI / 2);
         tangentialVectorHandler.UpdateDirection(worldDirection);
         orthogonalVectorHandler.UpdateDirection(worldDirection.RotateVector(-Mathf.PI / 2));
+        UpdateOrbit();
     }
 
     public void ShowNode()
@@ -131,6 +154,26 @@ public class ManeuverNode : MonoBehaviour
         nodeSprite.color = executeManeuverMode
             ? Color.red
             : Color.green;
+    }
+
+    private void UpdateOrbit()
+    {
+        if (DeltaOrbitalVelocity.magnitude < minimumDeltaVelocity)
+        {
+            return;
+        }
+        // Specifically velocity in world coordinates!
+        Vector2 relVel = ship.OrbitalVelocityToWorld + DeltaOrbitalVelocity - ship.CurrentGravitySource.Velocity;
+        Vector2 relPos = ship.Position - ship.CurrentGravitySource.Position; // world pos - newSource.pos
+        orbit.CalculateOrbitalParametersFromStateVectors(relPos, relVel, ship.CurrentGravitySource.Mass);
+        if (orbit.TrajectoryType == OrbitalMechanics.TrajectoryType.Ellipse)
+        {
+            trajectoryPlotter.BuildEllipticalTrajectory(orbit.SemimajorAxis, orbit.SemiminorAxis, orbit.Eccentricity, orbit.ArgumentOfPeriapsis);
+        }
+        else
+        {
+            trajectoryPlotter.BuildHyperbolicTrajectory(orbit.SemimajorAxis, orbit.SemiminorAxis, orbit.Eccentricity, orbit.ArgumentOfPeriapsis);
+        }
     }
 
     #endregion

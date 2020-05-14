@@ -37,7 +37,6 @@ public class ManeuverNodeHandler : MonoBehaviour
         vectorLayerMask = LayerMask.GetMask("ManeuverVectorSelection");
         plannedManeuvers = new List<ManeuverNode>();
         ObjectSelector.OnObjectSelectionEvent += ObjectSelectionChanged;
-        //CameraController.OrthographicSizeChangeEvent +=
     }
 
     private void OnDisable()
@@ -101,7 +100,7 @@ public class ManeuverNodeHandler : MonoBehaviour
             // Update node position and rotation
             selectedNode.transform.position = WorldPositionFromTrueAnomaly(trueAnomaly);
             selectedNode.transform.rotation = Quaternion.FromToRotation(selectedNode.transform.up, worldDirection) * selectedNode.transform.rotation;
-
+            
             // Update orbital parameters on node
             selectedNode.UpdateValues(trueAnomaly, orbitalDirection, worldDirection);
         }
@@ -191,7 +190,7 @@ public class ManeuverNodeHandler : MonoBehaviour
             newNode = newNodeObject.GetComponent<ManeuverNode>();
         }
         newNode.ToggleManeuverExecution(executeManeuvers);
-        newNode.UpdateValues(trueAnomaly, orbitalDirection, worldDirection);
+        newNode.Initialize(trueAnomaly, orbitalDirection, worldDirection, ship);
         plannedManeuvers.Add(newNode);
         return newNode;
     }

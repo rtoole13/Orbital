@@ -264,6 +264,11 @@ public static class OrbitalMechanics
         return 2 * Mathf.PI / meanMotion;
     }
 
+    public static float OrbitalPeriod(float semimajorAxis, float mainMass)
+    {
+        return 2 * Mathf.PI * Mathf.Sqrt(Mathf.Pow(semimajorAxis, 3) / StandardGravityParameter(mainMass));
+    }
+
     public static float OrbitalRadius(float eccentricity, float semimajorAxis, float trueAnomaly)
     {
         // Always ends up positive because of the negative convention of semimajorAxis for hyperbolas
