@@ -12,7 +12,7 @@ public class ManeuverNodeHandler : MonoBehaviour
     private Camera mainCamera;
     private bool isActive = false;
     private bool executeManeuvers = false;
-    private float trueAnomalyExecutionThreshold = 0.05f;
+    private float trueAnomalyExecutionThreshold = 0.01f;
     private Ship ship;
     private List<ManeuverNode> plannedManeuvers;
     private ManeuverNode selectedNode;
@@ -94,15 +94,9 @@ public class ManeuverNodeHandler : MonoBehaviour
         if (Input.GetMouseButton(1))
         {
             float trueAnomaly = CalculateTrueAnomalyOfWorldPosition(mainCamera.ScreenToWorldPoint(Input.mousePosition));
-            Vector2 orbitalDirection = CalculateOrbitalDirection(trueAnomaly);
-            Vector2 worldDirection = orbitalDirection.RotateVector(ship.ArgumentOfPeriapsis);
             
-            // Update node position and rotation
-            selectedNode.transform.position = WorldPositionFromTrueAnomaly(trueAnomaly);
-            selectedNode.transform.rotation = Quaternion.FromToRotation(selectedNode.transform.up, worldDirection) * selectedNode.transform.rotation;
-            
-            // Update orbital parameters on node
-            selectedNode.UpdateValues(trueAnomaly, orbitalDirection, worldDirection);
+            // Update node values, including position and rotation
+            selectedNode.UpdateParameters(trueAnomaly);
         }
     }
 
@@ -165,11 +159,6 @@ public class ManeuverNodeHandler : MonoBehaviour
     private ManeuverNode CreateManeuverNode(Vector2 position)
     {
         float trueAnomaly = CalculateTrueAnomalyOfWorldPosition(position);
-        Vector2 orbitalDirection = CalculateOrbitalDirection(trueAnomaly);
-        
-        // Direction and position in world coordinate space
-        Vector2 worldDirection = orbitalDirection.RotateVector(ship.ArgumentOfPeriapsis);
-        Vector2 worldPosition = WorldPositionFromTrueAnomaly(trueAnomaly);
 
         ManeuverNode newNode;
         if (plannedManeuvers.Count >= maneuverNodeMaxCount)
@@ -178,27 +167,16 @@ public class ManeuverNodeHandler : MonoBehaviour
             newNode = plannedManeuvers[0];
             newNode.ClearNodes();
             plannedManeuvers.RemoveAt(0);
-            newNode.transform.position = worldPosition;
-            Quaternion rotationTarget = Quaternion.FromToRotation(newNode.transform.up, worldDirection);
-            newNode.transform.rotation = rotationTarget * newNode.transform.rotation;
         }
         else
         {
-            Quaternion rotationTarget = Quaternion.FromToRotation(Vector3.up, worldDirection);
-            GameObject newNodeObject = Instantiate(nodePrefab, worldPosition, rotationTarget);
-            
+            GameObject newNodeObject = Instantiate(nodePrefab);
             newNode = newNodeObject.GetComponent<ManeuverNode>();
         }
+        newNode.Initialize(trueAnomaly, ship);
         newNode.ToggleManeuverExecution(executeManeuvers);
-        newNode.Initialize(trueAnomaly, orbitalDirection, worldDirection, ship);
         plannedManeuvers.Add(newNode);
         return newNode;
-    }
-
-    private Vector2 CalculateOrbitalDirection(float trueAnomaly)
-    {
-        float flightPathAngle = OrbitalMechanics.FlightPathAngle(ship.Eccentricity, trueAnomaly);
-        return OrbitalMechanics.OrbitalDirection(trueAnomaly, flightPathAngle, ship.ClockWiseOrbit);
     }
 
     private float CalculateTrueAnomalyOfWorldPosition(Vector2 worldPosition)
@@ -211,21 +189,9 @@ public class ManeuverNodeHandler : MonoBehaviour
         return (angle + twoPi) % twoPi;
     }
 
-    public Vector2 WorldPositionFromTrueAnomaly(float trueAnomaly)
-    {
-        float orbitalRadius = OrbitalMechanics.OrbitalRadius(ship.Eccentricity, ship.SemimajorAxis, trueAnomaly);
-        Vector2 orbitalPosition = OrbitalMechanics.OrbitalPosition(orbitalRadius, trueAnomaly, ship.ClockWiseOrbit);
-        return OrbitalPositionToWorld(orbitalPosition);
-    }
+    
 
-    private Vector2 OrbitalPositionToWorld(Vector2 perifocalPosition)
-    {
-        Vector2 translation = ship.CurrentGravitySource != null
-            ? ship.CurrentGravitySource.Position
-            : Vector2.zero;
-        return perifocalPosition.RotateVector(ship.ArgumentOfPeriapsis) + translation;
-    }
-
+   
     private void ObjectSelectionChanged(GameObject newlySelectedObject)
     {
         if (newlySelectedObject == null)

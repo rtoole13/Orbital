@@ -253,7 +253,7 @@ public abstract class OrbitalBody : MonoBehaviour
         {
             Vector2 velocity = CurrentGravitySource != null
                 ? CurrentGravitySource.Velocity
-                : body.velocity;
+                : Vector2.zero;
             return OrbitalVelocity.RotateVector(ArgumentOfPeriapsis) + velocity;
         }
     }

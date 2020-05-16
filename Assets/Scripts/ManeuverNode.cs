@@ -7,14 +7,18 @@ public class ManeuverNode : MonoBehaviour
     [Range(0.0f, 0.5f)]
     public float minimumDeltaVelocity;
 
+    public GameObject trajectoryObjectPrefab;
+    private GameObject trajectoryObject;
+    private TrajectoryPlotter trajectoryPlotter;
     private Ship ship;
     private Vector2 _deltaOrbitalVelocity;
     private float _trueAnomaly;
     private Vector2 orbitalDirection;
+    private float orbitalSpeed;
+    private Vector2 worldVelocity;
     private Vector2 orthogonalDirection;
     private int rank; //intended to specify whether maneuver is on current trajectory, rank 0, or a future trajectory 1+
     private Orbit orbit;
-    private TrajectoryPlotter trajectoryPlotter;
     public float hitRadius;
 
     private List<ManeuverNode> maneuverNodes;
@@ -39,10 +43,12 @@ public class ManeuverNode : MonoBehaviour
     public float TrueAnomaly
     {
         get { return _trueAnomaly; }
+        private set { _trueAnomaly = value; }
     }
     public Vector2 DeltaOrbitalVelocity
     {
         get { return _deltaOrbitalVelocity; }
+        private set { _deltaOrbitalVelocity = value; }
     }
     #endregion
     #region UNITY
@@ -50,15 +56,9 @@ public class ManeuverNode : MonoBehaviour
     {
         if (nodeSprite == null)
             throw new UnityException(string.Format("Expecting ManeuverNode to have a SpriterRenderer on a child object!"));
-
-        trajectoryPlotter = GetComponent<TrajectoryPlotter>();
-        if (trajectoryPlotter == null)
-            throw new UnityException(string.Format("Expecting ManeuverNode to have a TrajectoryPlotter!"));
-
+        
         if (tangentialVectorHandler == null || orthogonalVectorHandler == null)
             throw new UnityException(string.Format("Expecting ManeuverNode to have a ManeuverVectorHandler on two on child objects!"));
-
-        
 
         // Event listeners for velocity mag change
         tangentialVectorHandler.DeltaVelocityAdjustedEvent += AdjustVelocityTangentially;
@@ -81,30 +81,82 @@ public class ManeuverNode : MonoBehaviour
     #region GENERAL
     private void AdjustVelocityTangentially(float velMag)
     {
-        _deltaOrbitalVelocity += velMag * orbitalDirection;
+        DeltaOrbitalVelocity += velMag * orbitalDirection;
         UpdateOrbit();
     }
 
     private void AdjustVelocityOrthogonally(float velMag)
     {
-        _deltaOrbitalVelocity += velMag * orthogonalDirection;
+        DeltaOrbitalVelocity += velMag * orthogonalDirection;
         UpdateOrbit();
     }
     //Initialize(trueAnomaly, orbitalDirection, worldDirection, ship, ship.CurrentGravitySource);
-    public void Initialize(float _trueAnomaly, Vector2 _orbitalDirection, Vector2 worldDirection, Ship _ship)
+    public void Initialize(float _trueAnomaly, Ship _ship)
     {
         ship = _ship;
-        UpdateValues(_trueAnomaly, _orbitalDirection, worldDirection);
+        UpdateParameters(_trueAnomaly);
     }
 
-    public void UpdateValues(float _trueAnomaly, Vector2 _orbitalDirection, Vector2 worldDirection)
+    public void UpdateParameters(float trueAnomaly)
     {
-        this._trueAnomaly = _trueAnomaly;
-        orbitalDirection = _orbitalDirection;
+        TrueAnomaly = trueAnomaly;
+        orbitalDirection = CalculateOrbitalDirection(trueAnomaly);
         orthogonalDirection = orbitalDirection.RotateVector(-Mathf.PI / 2);
+
+        float orbitalRadius = OrbitalMechanics.OrbitalRadius(ship.Eccentricity, ship.SemimajorAxis, trueAnomaly);
+        orbitalSpeed = OrbitalMechanics.OrbitalSpeed(ship.CurrentGravitySource.Mass, orbitalRadius, ship.SemimajorAxis);
+
+        Vector2 orbitalPosition = OrbitalMechanics.OrbitalPosition(orbitalRadius, trueAnomaly, ship.ClockWiseOrbit);
+
+        // Direction and position in world coordinate space
+        Vector2 worldPosition = OrbitalPositionToWorld(orbitalPosition);
+        Vector2 worldDirection = orbitalDirection.RotateVector(ship.ArgumentOfPeriapsis);
+
+        Vector2 orbitalVelocity = orbitalSpeed * orbitalDirection;
+        worldVelocity = orbitalVelocity.RotateVector(ship.ArgumentOfPeriapsis);
+        UpdateTransform(worldPosition, worldDirection);
+        UpdateOrbit();
+    }
+
+    private void UpdateTransform(Vector2 worldPosition, Vector2 worldDirection)
+    {
+        Quaternion rotationQuaternion = Quaternion.FromToRotation(transform.up, worldDirection);
+        transform.position = worldPosition;
+        transform.rotation = rotationQuaternion * transform.rotation;
         tangentialVectorHandler.UpdateDirection(worldDirection);
         orthogonalVectorHandler.UpdateDirection(worldDirection.RotateVector(-Mathf.PI / 2));
-        UpdateOrbit();
+
+        DeltaOrbitalVelocity = rotationQuaternion * DeltaOrbitalVelocity;
+    }
+
+    private Vector2 WorldPositionFromTrueAnomaly(float trueAnomaly)
+    {
+        float orbitalRadius = OrbitalMechanics.OrbitalRadius(ship.Eccentricity, ship.SemimajorAxis, trueAnomaly);
+        Vector2 orbitalPosition = OrbitalMechanics.OrbitalPosition(orbitalRadius, trueAnomaly, ship.ClockWiseOrbit);
+        return OrbitalPositionToWorld(orbitalPosition);
+    }
+
+    private Vector2 CalculateOrbitalDirection(float trueAnomaly)
+    {
+        float flightPathAngle = OrbitalMechanics.FlightPathAngle(ship.Eccentricity, trueAnomaly);
+        return OrbitalMechanics.OrbitalDirection(trueAnomaly, flightPathAngle, ship.ClockWiseOrbit);
+
+    }
+
+    private Vector2 OrbitalPositionToWorld(Vector2 perifocalPosition)
+    {
+        Vector2 translation = ship.CurrentGravitySource != null
+            ? ship.CurrentGravitySource.Position
+            : Vector2.zero;
+        return perifocalPosition.RotateVector(ship.ArgumentOfPeriapsis) + translation;
+    }
+
+    private Vector2 OrbitalVelocityToWorld(Vector2 perifocalVelocity)
+    {
+        Vector2 velocity = ship.CurrentGravitySource != null
+                ? ship.CurrentGravitySource.Velocity
+                : Vector2.zero;
+        return perifocalVelocity.RotateVector(ship.ArgumentOfPeriapsis) + velocity;
     }
 
     public void ShowNode()
@@ -158,13 +210,30 @@ public class ManeuverNode : MonoBehaviour
 
     private void UpdateOrbit()
     {
+        
         if (DeltaOrbitalVelocity.magnitude < minimumDeltaVelocity)
         {
             return;
         }
+        
+        if (trajectoryObjectPrefab == null)
+        {
+            Debug.Log("No trajectory object prefab selected!");
+            return;
+        }
+        
+        if (trajectoryObject == null)
+        {
+            // Instantiate prefab if null
+            trajectoryObject = Instantiate(trajectoryObjectPrefab);
+            trajectoryPlotter = trajectoryObject.GetComponent<TrajectoryPlotter>();
+        }
+        trajectoryObject.transform.parent = ship.CurrentGravitySource.transform;
+        trajectoryObject.transform.position = trajectoryObject.transform.parent.position;
+
         // Specifically velocity in world coordinates!
-        Vector2 relVel = ship.OrbitalVelocityToWorld + DeltaOrbitalVelocity - ship.CurrentGravitySource.Velocity;
-        Vector2 relPos = ship.Position - ship.CurrentGravitySource.Position; // world pos - newSource.pos
+        Vector2 relVel = worldVelocity + DeltaOrbitalVelocity.RotateVector(ship.ArgumentOfPeriapsis) - ship.CurrentGravitySource.Velocity;
+        Vector2 relPos = (Vector2)transform.position - ship.CurrentGravitySource.Position; // world pos - newSource.pos
         orbit.CalculateOrbitalParametersFromStateVectors(relPos, relVel, ship.CurrentGravitySource.Mass);
         if (orbit.TrajectoryType == OrbitalMechanics.TrajectoryType.Ellipse)
         {
@@ -175,7 +244,6 @@ public class ManeuverNode : MonoBehaviour
             trajectoryPlotter.BuildHyperbolicTrajectory(orbit.SemimajorAxis, orbit.SemiminorAxis, orbit.Eccentricity, orbit.ArgumentOfPeriapsis);
         }
     }
-
     #endregion
 
     //private void OnDrawGizmos()
