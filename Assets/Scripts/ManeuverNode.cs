@@ -77,6 +77,17 @@ public class ManeuverNode : MonoBehaviour
         orthogonalVectorHandler.DeltaVelocityAdjustedEvent -= AdjustVelocityOrthogonally;
     }
 
+    private void OnDestroy()
+    {
+        // Event listeners for velocity mag change
+        tangentialVectorHandler.DeltaVelocityAdjustedEvent -= AdjustVelocityTangentially;
+        orthogonalVectorHandler.DeltaVelocityAdjustedEvent -= AdjustVelocityOrthogonally;
+
+        if (trajectoryObject != null)
+            Destroy(trajectoryObject);
+        Destroy(gameObject);
+    }
+
     #endregion
     #region GENERAL
     private void AdjustVelocityTangentially(float velMag)

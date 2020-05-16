@@ -258,6 +258,7 @@ public class ManeuverNodeHandler : MonoBehaviour
         Vector2 deltaVel = node.DeltaOrbitalVelocity.RotateVector(ship.ArgumentOfPeriapsis);
         ship.ExecuteInstantBurn(deltaVel);
         EmptyManeuvers();
+        Destroy(node);
     }
 
     #endregion GENERAL
