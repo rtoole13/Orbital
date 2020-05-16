@@ -166,6 +166,8 @@ public class ManeuverNode : MonoBehaviour
             maneuverNodes[i].ShowNode();
         }
         ShowSprites();
+        if (trajectoryObject != null)
+            trajectoryObject.SetActive(true);
     }
 
     public void HideNode()
@@ -176,6 +178,8 @@ public class ManeuverNode : MonoBehaviour
 
         }
         HideSprites();
+        if (trajectoryObject != null)
+            trajectoryObject.SetActive(false);
     }
 
     private void HideSprites()

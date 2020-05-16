@@ -7,6 +7,8 @@ using UnityEngine;
 public class TrajectoryHandler : MonoBehaviour
 {
     public GameObject trajectoryObjectPrefab;
+    public Gradient trajectoryGradient;
+
     private GameObject trajectoryObject;
     private TrajectoryPlotter trajectoryPlotter;
     private OrbitalBody orbitalBody;
@@ -29,6 +31,11 @@ public class TrajectoryHandler : MonoBehaviour
     {
         orbitalBody = GetComponent<OrbitalBody>();
         orbitalBody.OnOrbitCalculationEvent += UpdateTrajectory;
+
+        // Instantiate prefab if null
+        trajectoryObject = Instantiate(trajectoryObjectPrefab);
+        trajectoryPlotter = trajectoryObject.GetComponent<TrajectoryPlotter>();
+        trajectoryPlotter.SetGradient(trajectoryGradient);
     }
 
     private void OnDisable()
@@ -42,14 +49,7 @@ public class TrajectoryHandler : MonoBehaviour
     {
         if (orbitalBody.CurrentGravitySource == null)
             return;
-
-        if (trajectoryObject == null)
-        {
-            // Instantiate prefab if null
-            trajectoryObject = Instantiate(trajectoryObjectPrefab);
-            trajectoryPlotter = trajectoryObject.GetComponent<TrajectoryPlotter>();
-        }
-
+        
         trajectoryObject.transform.parent = orbitalBody.CurrentGravitySource.transform;
         trajectoryObject.transform.position = trajectoryObject.transform.parent.position;
         if (orbitalBody.Eccentricity >= 1f)

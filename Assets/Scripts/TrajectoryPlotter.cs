@@ -34,4 +34,9 @@ public class TrajectoryPlotter : LinePlotter
         lineRenderer.positionCount = segments;
         lineRenderer.SetPositions(points);
     }
+
+    public void SetGradient(Gradient gradient)
+    {
+        lineRenderer.colorGradient = gradient;
+    }
 }
