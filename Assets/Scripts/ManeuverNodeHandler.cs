@@ -16,7 +16,8 @@ public class ManeuverNodeHandler : MonoBehaviour
     private Ship ship;
     private List<ManeuverNode> plannedManeuvers;
     private ManeuverNode selectedNode;
-    private int vectorLayerMask; //FIXME: make an enum for editor.
+    private int nodeLayerMask;
+    private int vectorLayerMask;
     private ManeuverVectorHandler selectedManeuverVector;
 
     #region UNITY
@@ -34,6 +35,7 @@ public class ManeuverNodeHandler : MonoBehaviour
             throw new UnityException(string.Format("{0}'s ManeuverNodeHandler must have a prefab with a single ManeuverNode component on it selected!", name));
         }
 
+        nodeLayerMask = LayerMask.GetMask("ManeuverSelection");
         vectorLayerMask = LayerMask.GetMask("ManeuverVectorSelection");
         plannedManeuvers = new List<ManeuverNode>();
         ObjectSelector.OnObjectSelectionEvent += ObjectSelectionChanged;
@@ -96,7 +98,8 @@ public class ManeuverNodeHandler : MonoBehaviour
             float trueAnomaly = CalculateTrueAnomalyOfWorldPosition(mainCamera.ScreenToWorldPoint(Input.mousePosition));
             
             // Update node values, including position and rotation
-            selectedNode.UpdateParameters(trueAnomaly);
+            if (selectedNode != null)
+                selectedNode.UpdateParameters(trueAnomaly);
         }
     }
 
@@ -146,12 +149,14 @@ public class ManeuverNodeHandler : MonoBehaviour
 
     private ManeuverNode SelectManeuverNode(Vector2 mousePosition)
     {
-        for (int i = 0; i < plannedManeuvers.Count; i++)
+        //nodeLayerMask
+        RaycastHit2D[] rayHits = Physics2D.GetRayIntersectionAll(mainCamera.ScreenPointToRay(Input.mousePosition), 100f, nodeLayerMask);
+        for (int i = 0; i < rayHits.Length; i++)
         {
-            ManeuverNode thisNode = plannedManeuvers[i];
-            float distSq = Vector2.SqrMagnitude(mousePosition - (Vector2)plannedManeuvers[i].transform.position);
-            if (distSq < thisNode.HitRadiusSq)
-                return thisNode;
+            RaycastHit2D hit = rayHits[i];
+            ManeuverNode maneuverNode = hit.collider.GetComponent<ManeuverNode>();
+            if (maneuverNode != null)
+                return maneuverNode;
         }
         return CreateManeuverNode(mousePosition);
     }

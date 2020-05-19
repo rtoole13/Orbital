@@ -19,9 +19,9 @@ public class ManeuverNode : MonoBehaviour
     private Vector2 orthogonalDirection;
     private int rank; //intended to specify whether maneuver is on current trajectory, rank 0, or a future trajectory 1+
     private Orbit orbit;
-    public float hitRadius;
 
     private List<ManeuverNode> maneuverNodes;
+    private CircleCollider2D nodeCollider;
 
     [SerializeField]
     private SpriteRenderer nodeSprite;
@@ -38,14 +38,7 @@ public class ManeuverNode : MonoBehaviour
     [SerializeField]
     private ManeuverVectorHandler orthogonalInVectorHandler;
 
-    private float _hitRadiusSq;
-
     #region GETSET
-    public float HitRadiusSq
-    {
-        get { return _hitRadiusSq; }
-        private set { _hitRadiusSq = value; }
-    }
     public float TrueAnomaly
     {
         get { return _trueAnomaly; }
@@ -60,6 +53,10 @@ public class ManeuverNode : MonoBehaviour
     #region UNITY
     private void Awake()
     {
+        nodeCollider = GetComponent<CircleCollider2D>();
+        if (nodeCollider == null)
+            throw new UnityException(string.Format("Expecting ManeuverNode to have a Circle collider on it!"));
+
         if (nodeSprite == null)
             throw new UnityException(string.Format("Expecting ManeuverNode to have a SpriterRenderer on a child object!"));
         
@@ -73,8 +70,6 @@ public class ManeuverNode : MonoBehaviour
         orthogonalInVectorHandler.DeltaVelocityAdjustedEvent += AdjustVelocityOrthogonallyInward;
 
         orbit = new Orbit();
-
-        HitRadiusSq = hitRadius * hitRadius;
         maneuverNodes = new List<ManeuverNode>();
     }
 
@@ -293,7 +288,10 @@ public class ManeuverNode : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        if (nodeCollider == null)
+            return;
+
         Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(transform.position, hitRadius);
+        Gizmos.DrawWireSphere(transform.position, nodeCollider.radius);
     }
 }
