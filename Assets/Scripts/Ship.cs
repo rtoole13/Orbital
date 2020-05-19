@@ -114,7 +114,10 @@ public class Ship : GravityAffected, ICameraTrackable
     public void ExecuteInstantBurn(Vector2 deltaVelocity)
     {
         // Specifically velocity in world coordinates!
-        Vector2 relVel = OrbitalVelocityToWorld + deltaVelocity - CurrentGravitySource.Velocity;
+        Vector2 newVelocity = OrbitalVelocityToWorld + deltaVelocity;
+        SetDirection(newVelocity.normalized, true);
+
+        Vector2 relVel = newVelocity - CurrentGravitySource.Velocity;
         Vector2 relPos = Position - CurrentGravitySource.Position; // world pos - newSource.pos
         CalculateOrbitalParametersFromStateVectors(relPos, relVel);
     }
@@ -168,6 +171,14 @@ public class Ship : GravityAffected, ICameraTrackable
         }
         rotationRate = Mathf.Clamp(rotationRate, -rotationRateCap, rotationRateCap);
         transform.Rotate(Vector3.forward, rotationRate);
+    }
+
+    private void SetDirection(Vector2 direction, bool killRotation)
+    {
+        Quaternion rotationQuaternion = Quaternion.FromToRotation(transform.up, direction);
+        transform.rotation = rotationQuaternion * transform.rotation;
+        if (killRotation)
+            rotationRate = 0;
     }
 
     private void ApplyThrust()

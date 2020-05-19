@@ -27,10 +27,16 @@ public class ManeuverNode : MonoBehaviour
     private SpriteRenderer nodeSprite;
 
     [SerializeField]
-    private ManeuverVectorHandler tangentialVectorHandler;
+    private ManeuverVectorHandler tangentialForwardVectorHandler;
 
     [SerializeField]
-    private ManeuverVectorHandler orthogonalVectorHandler;
+    private ManeuverVectorHandler orthogonalOutVectorHandler;
+
+    [SerializeField]
+    private ManeuverVectorHandler tangentialBackwardVectorHandler;
+
+    [SerializeField]
+    private ManeuverVectorHandler orthogonalInVectorHandler;
 
     private float _hitRadiusSq;
 
@@ -57,12 +63,14 @@ public class ManeuverNode : MonoBehaviour
         if (nodeSprite == null)
             throw new UnityException(string.Format("Expecting ManeuverNode to have a SpriterRenderer on a child object!"));
         
-        if (tangentialVectorHandler == null || orthogonalVectorHandler == null)
-            throw new UnityException(string.Format("Expecting ManeuverNode to have a ManeuverVectorHandler on two on child objects!"));
+        if (tangentialForwardVectorHandler == null || tangentialBackwardVectorHandler == null || orthogonalOutVectorHandler == null || orthogonalInVectorHandler == null)
+            throw new UnityException(string.Format("Expecting ManeuverNode to have a ManeuverVectorHandler on each of four child objects!"));
 
         // Event listeners for velocity mag change
-        tangentialVectorHandler.DeltaVelocityAdjustedEvent += AdjustVelocityTangentially;
-        orthogonalVectorHandler.DeltaVelocityAdjustedEvent += AdjustVelocityOrthogonally;
+        tangentialForwardVectorHandler.DeltaVelocityAdjustedEvent += AdjustVelocityTangentiallyForward;
+        tangentialBackwardVectorHandler.DeltaVelocityAdjustedEvent += AdjustVelocityTangentiallyBackward;
+        orthogonalOutVectorHandler.DeltaVelocityAdjustedEvent += AdjustVelocityOrthogonallyOutward;
+        orthogonalInVectorHandler.DeltaVelocityAdjustedEvent += AdjustVelocityOrthogonallyInward;
 
         orbit = new Orbit();
 
@@ -73,15 +81,19 @@ public class ManeuverNode : MonoBehaviour
     private void OnDisable()
     {
         // Event listeners for velocity mag change
-        tangentialVectorHandler.DeltaVelocityAdjustedEvent -= AdjustVelocityTangentially;
-        orthogonalVectorHandler.DeltaVelocityAdjustedEvent -= AdjustVelocityOrthogonally;
+        tangentialForwardVectorHandler.DeltaVelocityAdjustedEvent -= AdjustVelocityTangentiallyForward;
+        tangentialBackwardVectorHandler.DeltaVelocityAdjustedEvent -= AdjustVelocityTangentiallyBackward;
+        orthogonalOutVectorHandler.DeltaVelocityAdjustedEvent -= AdjustVelocityOrthogonallyOutward;
+        orthogonalInVectorHandler.DeltaVelocityAdjustedEvent -= AdjustVelocityOrthogonallyInward;
     }
 
     private void OnDestroy()
     {
         // Event listeners for velocity mag change
-        tangentialVectorHandler.DeltaVelocityAdjustedEvent -= AdjustVelocityTangentially;
-        orthogonalVectorHandler.DeltaVelocityAdjustedEvent -= AdjustVelocityOrthogonally;
+        tangentialForwardVectorHandler.DeltaVelocityAdjustedEvent -= AdjustVelocityTangentiallyForward;
+        tangentialBackwardVectorHandler.DeltaVelocityAdjustedEvent -= AdjustVelocityTangentiallyBackward;
+        orthogonalOutVectorHandler.DeltaVelocityAdjustedEvent -= AdjustVelocityOrthogonallyOutward;
+        orthogonalInVectorHandler.DeltaVelocityAdjustedEvent -= AdjustVelocityOrthogonallyInward;
 
         if (trajectoryObject != null)
             Destroy(trajectoryObject);
@@ -90,18 +102,30 @@ public class ManeuverNode : MonoBehaviour
 
     #endregion
     #region GENERAL
-    private void AdjustVelocityTangentially(float velMag)
+    private void AdjustVelocityTangentiallyForward(float velMag)
     {
         DeltaOrbitalVelocity += velMag * orbitalDirection;
         UpdateOrbit();
     }
 
-    private void AdjustVelocityOrthogonally(float velMag)
+    private void AdjustVelocityTangentiallyBackward(float velMag)
+    {
+        DeltaOrbitalVelocity -= velMag * orbitalDirection;
+        UpdateOrbit();
+    }
+
+    private void AdjustVelocityOrthogonallyOutward(float velMag)
     {
         DeltaOrbitalVelocity += velMag * orthogonalDirection;
         UpdateOrbit();
     }
-    //Initialize(trueAnomaly, orbitalDirection, worldDirection, ship, ship.CurrentGravitySource);
+
+    private void AdjustVelocityOrthogonallyInward(float velMag)
+    {
+        DeltaOrbitalVelocity -= velMag * orthogonalDirection;
+        UpdateOrbit();
+    }
+
     public void Initialize(float _trueAnomaly, Ship _ship)
     {
         ship = _ship;
@@ -134,8 +158,10 @@ public class ManeuverNode : MonoBehaviour
         Quaternion rotationQuaternion = Quaternion.FromToRotation(transform.up, worldDirection);
         transform.position = worldPosition;
         transform.rotation = rotationQuaternion * transform.rotation;
-        tangentialVectorHandler.UpdateDirection(worldDirection);
-        orthogonalVectorHandler.UpdateDirection(worldDirection.RotateVector(-Mathf.PI / 2));
+        tangentialForwardVectorHandler.UpdateDirection(worldDirection);
+        tangentialBackwardVectorHandler.UpdateDirection(-worldDirection);
+        orthogonalOutVectorHandler.UpdateDirection(worldDirection.RotateVector(-Mathf.PI / 2));
+        orthogonalInVectorHandler.UpdateDirection(worldDirection.RotateVector(Mathf.PI / 2));
 
         DeltaOrbitalVelocity = rotationQuaternion * DeltaOrbitalVelocity;
     }
@@ -196,15 +222,19 @@ public class ManeuverNode : MonoBehaviour
     private void HideSprites()
     {
         nodeSprite.enabled = false;
-        tangentialVectorHandler.HideVector();
-        orthogonalVectorHandler.HideVector();
+        tangentialForwardVectorHandler.HideVector();
+        tangentialBackwardVectorHandler.HideVector();
+        orthogonalOutVectorHandler.HideVector();
+        orthogonalInVectorHandler.HideVector();
     }
 
     private void ShowSprites()
     {
         nodeSprite.enabled = true;
-        tangentialVectorHandler.ShowVector();
-        orthogonalVectorHandler.ShowVector();
+        tangentialForwardVectorHandler.ShowVector();
+        tangentialBackwardVectorHandler.ShowVector();
+        orthogonalOutVectorHandler.ShowVector();
+        orthogonalInVectorHandler.ShowVector();
     }
 
     public void ClearNodes()
@@ -261,9 +291,9 @@ public class ManeuverNode : MonoBehaviour
     }
     #endregion
 
-    //private void OnDrawGizmos()
-    //{
-    //    Gizmos.color = Color.green;
-    //    Gizmos.DrawWireSphere(transform.position, hitRadius);
-    //}
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(transform.position, hitRadius);
+    }
 }
