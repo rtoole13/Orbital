@@ -19,6 +19,7 @@ public class ManeuverNodeHandler : MonoBehaviour
     private int nodeLayerMask;
     private int vectorLayerMask;
     private ManeuverVectorHandler selectedManeuverVector;
+    private float lastTrueAnomalyCalculated;
 
     #region UNITY
     private void Awake()
@@ -39,6 +40,7 @@ public class ManeuverNodeHandler : MonoBehaviour
         vectorLayerMask = LayerMask.GetMask("ManeuverVectorSelection");
         plannedManeuvers = new List<ManeuverNode>();
         ObjectSelector.OnObjectSelectionEvent += ObjectSelectionChanged;
+        lastTrueAnomalyCalculated = ship.TrueAnomaly;
     }
 
     private void OnDisable()
@@ -67,17 +69,18 @@ public class ManeuverNodeHandler : MonoBehaviour
 
         if (!executeManeuvers)
             return;
-        
+
+        float currentTrueAnomaly = ship.TrueAnomaly;
         for (int i = 0; i < plannedManeuvers.Count; i++)
         {
             ManeuverNode thisNode = plannedManeuvers[i];
-            if (Mathf.Abs(thisNode.TrueAnomaly - ship.TrueAnomaly) <= trueAnomalyExecutionThreshold)
+            if (lastTrueAnomalyCalculated <= thisNode.TrueAnomaly && currentTrueAnomaly >= thisNode.TrueAnomaly)
             {
                 ExecuteManeuver(thisNode);
                 return;
             }
         }
-
+        lastTrueAnomalyCalculated = currentTrueAnomaly;
     }
 
     void HandleNodePosition()
@@ -261,7 +264,8 @@ public class ManeuverNodeHandler : MonoBehaviour
     private void ExecuteManeuver(ManeuverNode node)
     {
         Vector2 deltaVel = node.DeltaOrbitalVelocity.RotateVector(ship.ArgumentOfPeriapsis);
-        ship.ExecuteInstantBurn(deltaVel);
+        if (deltaVel.sqrMagnitude > 0f)
+            ship.ExecuteInstantBurn(deltaVel);
         EmptyManeuvers();
         Destroy(node);
     }
