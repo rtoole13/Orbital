@@ -124,6 +124,7 @@ public class ManeuverNode : MonoBehaviour
     public void Initialize(float _trueAnomaly, Ship _ship)
     {
         ship = _ship;
+        //transform.parent = ship.CurrentGravitySource.transform;
         UpdateParameters(_trueAnomaly);
     }
 

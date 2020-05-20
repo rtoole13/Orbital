@@ -12,7 +12,6 @@ public class TrajectoryHandler : MonoBehaviour
     private GameObject trajectoryObject;
     private TrajectoryPlotter trajectoryPlotter;
     private OrbitalBody orbitalBody;
-    private float eccentricityTolerance = 0.05f;
 
     #region GETSET
     public float SemimajorAxis
