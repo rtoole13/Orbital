@@ -124,7 +124,7 @@ public class ManeuverNode : MonoBehaviour
     public void Initialize(float _trueAnomaly, Ship _ship)
     {
         ship = _ship;
-        //transform.parent = ship.CurrentGravitySource.transform;
+        transform.parent = ship.CurrentGravitySource.transform;
         UpdateParameters(_trueAnomaly);
     }
 
@@ -287,12 +287,12 @@ public class ManeuverNode : MonoBehaviour
     }
     #endregion
 
-    private void OnDrawGizmos()
-    {
-        if (nodeCollider == null)
-            return;
+    //private void OnDrawGizmos()
+    //{
+    //    if (nodeCollider == null)
+    //        return;
 
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(transform.position, nodeCollider.radius);
-    }
+    //    Gizmos.color = Color.green;
+    //    Gizmos.DrawWireSphere(transform.position, nodeCollider.radius);
+    //}
 }

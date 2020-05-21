@@ -153,7 +153,6 @@ GameObject:
   m_Component:
   - component: {fileID: 6872017103272462137}
   - component: {fileID: 6872017103272462139}
-  - component: {fileID: 6872017103272462136}
   - component: {fileID: 6872017103272462143}
   - component: {fileID: 2021853959619343297}
   m_Layer: 0
@@ -172,7 +171,7 @@ Transform:
   m_GameObject: {fileID: 6872017103272462084}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 4.976371, y: 4.976371, z: 4.976371}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 6872017103405575571}
   - {fileID: 7574415096287479543}
@@ -201,22 +200,6 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!58 &6872017103272462136
-CircleCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6872017103272462084}
-  m_Enabled: 1
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
-  serializedVersion: 2
-  m_Radius: 0.5
 --- !u!114 &6872017103272462143
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -285,8 +268,9 @@ GameObject:
   m_Component:
   - component: {fileID: 6872017103405575571}
   - component: {fileID: 6872017103405575570}
+  - component: {fileID: 4150975900380754427}
   m_Layer: 0
-  m_Name: PlanetoidSprite
+  m_Name: Body
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -300,8 +284,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6872017103405575580}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.014, y: -0.01, z: 0}
-  m_LocalScale: {x: 0.142128, y: 0.142128, z: 0.142128}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 6872017103272462137}
   m_RootOrder: 0
@@ -355,6 +339,22 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!58 &4150975900380754427
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6872017103405575580}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  serializedVersion: 2
+  m_Radius: 3.55
 --- !u!1001 &8631041429514019469
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -366,6 +366,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: SelectionHitBox
+      objectReference: {fileID: 0}
+    - target: {fileID: 5382329722147663998, guid: ac5e2fce567296e45b8891412faa7f8a,
+        type: 3}
+      propertyPath: m_Radius
+      value: 3.55
       objectReference: {fileID: 0}
     - target: {fileID: 7555654782485862850, guid: ac5e2fce567296e45b8891412faa7f8a,
         type: 3}

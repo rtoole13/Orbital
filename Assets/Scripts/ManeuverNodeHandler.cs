@@ -40,12 +40,14 @@ public class ManeuverNodeHandler : MonoBehaviour
         vectorLayerMask = LayerMask.GetMask("ManeuverVectorSelection");
         plannedManeuvers = new List<ManeuverNode>();
         ObjectSelector.OnObjectSelectionEvent += ObjectSelectionChanged;
+        ship.GravitySourceChangedEvent += ShipGravitySourceChanged;
         lastTrueAnomalyCalculated = ship.TrueAnomaly;
     }
 
     private void OnDisable()
     {
         ObjectSelector.OnObjectSelectionEvent -= ObjectSelectionChanged;
+        ship.GravitySourceChangedEvent -= ShipGravitySourceChanged;
     }
     
     void Update()
@@ -197,8 +199,10 @@ public class ManeuverNodeHandler : MonoBehaviour
         return (angle + twoPi) % twoPi;
     }
 
-    
-
+    private void ShipGravitySourceChanged()
+    {
+        HideNodes();
+    }
    
     private void ObjectSelectionChanged(GameObject newlySelectedObject)
     {

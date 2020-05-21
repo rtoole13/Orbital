@@ -2,23 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(CircleCollider2D), typeof(Rigidbody2D))]
 public abstract class GravitySource : OrbitalBody
 {
     private float _radiusOfInfluence;
     private float _radiusOfInfluenceSq;
     private int _sourceRank = 0;
-    private CircleCollider2D bodyCollider;
 
     [SerializeField]
     private List<GravitySource> _orbitalBodies;    
+    
     #region GETSET
-
-    public float Radius
-    {
-        get { return bodyCollider.radius; }
-    }
-
     public float RadiusOfInfluence
     {
         get { return _radiusOfInfluence; }
@@ -50,12 +43,7 @@ public abstract class GravitySource : OrbitalBody
     protected override void Awake()
     {
         base.Awake();
-        // Get bodyCollider
-        bodyCollider = GetComponent<CircleCollider2D>();
-        if (bodyCollider.isTrigger)
-        {
-            throw new UnityException(string.Format("{0}'s circle collider must not be isTrigger!", gameObject.name));
-        }
+        
         UpdatingIteratively = false;
         if (CurrentGravitySource == null)
             return;
@@ -85,7 +73,7 @@ public abstract class GravitySource : OrbitalBody
 
     public Vector2 CalculateGravitationalForceAtPosition(Vector2 position, float mass) //DEPRECATED, remove in favor of OrbitalMechanics method
     {
-        Vector2 distance = (Vector2)bodyCollider.transform.position - position;
+        Vector2 distance = (Vector2)transform.position - position;
         float forceMagnitude = OrbitalMechanics.GRAVITATIONALCONSTANT * Mass * mass / Vector2.SqrMagnitude(distance);
         Vector2 force = forceMagnitude * distance.normalized;
         return force;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody2D))]
 public abstract class OrbitalBody : MonoBehaviour
 {
     public Vector2 startVelocity;

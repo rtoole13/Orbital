@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(Collider2D), typeof(Rigidbody2D))]
 public abstract class GravityAffected : OrbitalBody
 {
     protected bool nonGravitationalForcesAdded = false;
@@ -11,6 +10,9 @@ public abstract class GravityAffected : OrbitalBody
     private float sourceChangeInterval = .2f;
     private List<Vector2> nonGravitationalForces;
     private List<GravitySource> possibleGravitySources;
+
+    public delegate void GravitySourceChanged();
+    public GravitySourceChanged GravitySourceChangedEvent;
 
     #region UNITY
     protected override void Awake()
@@ -143,11 +145,9 @@ public abstract class GravityAffected : OrbitalBody
         Vector2 relPos = Position - newSource.Position; // world pos - newSource.pos
         CurrentGravitySource = newSource;
         CalculateOrbitalParametersFromStateVectors(relPos, relVel);
-        //Debug.LogFormat("SemimajorAxis: {0}", SemimajorAxis);
-        //Debug.LogFormat("SemiminorAxis: {0}", SemiminorAxis);
-        //Debug.LogFormat("EccentricityVector: {0}", EccentricityVector);
-        //Debug.LogFormat("Eccentricity: {0}", Eccentricity);
         recentlyChangedSource = true;
+
+        GravitySourceChangedEvent(); // invoke event
         IEnumerator recentSourceChangeCoroutine = ChangeSourceTimer();
         StartCoroutine(recentSourceChangeCoroutine);
     }
