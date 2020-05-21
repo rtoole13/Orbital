@@ -11,7 +11,8 @@ public class ManeuverNodeHandler : MonoBehaviour
 
     private Camera mainCamera;
     private bool isActive = false;
-    private bool executeManeuvers = false;
+    private bool executeManeuversBool = false;
+    private bool activelyDraggingNode = false;
     private float trueAnomalyExecutionThreshold = 0.01f;
     private Ship ship;
     private List<ManeuverNode> plannedManeuvers;
@@ -20,6 +21,7 @@ public class ManeuverNodeHandler : MonoBehaviour
     private int vectorLayerMask;
     private ManeuverVectorHandler selectedManeuverVector;
     private float lastTrueAnomalyCalculated;
+
 
     #region UNITY
     private void Awake()
@@ -64,19 +66,20 @@ public class ManeuverNodeHandler : MonoBehaviour
     #region GENERAL
     void HandleManeuverExecution()
     {
-        if (Input.GetKeyDown(KeyCode.M))
+        if (!activelyDraggingNode && Input.GetKeyDown(KeyCode.M)) 
         {
-            ToggleManeuverExecution();
+            SetManeuverNodeExecution(!executeManeuversBool);
         }
 
-        if (!executeManeuvers)
+        if (!executeManeuversBool)
             return;
+
 
         float currentTrueAnomaly = ship.TrueAnomaly;
         for (int i = 0; i < plannedManeuvers.Count; i++)
         {
             ManeuverNode thisNode = plannedManeuvers[i];
-            if (lastTrueAnomalyCalculated <= thisNode.TrueAnomaly && currentTrueAnomaly >= thisNode.TrueAnomaly)
+            if (AngleInRange(thisNode.TrueAnomaly, lastTrueAnomalyCalculated, currentTrueAnomaly))
             {
                 ExecuteManeuver(thisNode);
                 return;
@@ -85,17 +88,36 @@ public class ManeuverNodeHandler : MonoBehaviour
         lastTrueAnomalyCalculated = currentTrueAnomaly;
     }
 
+    bool AngleInRange(float val, float min, float max)
+    {
+        if (max < min && val <= max)
+        {
+            // wrapping from 2pi to 0
+            return true;
+        }
+        else if (val >= min && val <= max){
+            return true;
+        }
+        return false;
+    }
+
     void HandleNodePosition()
     {
         if (Input.GetMouseButtonUp(1))
         {
+            Debug.Log("wee");
             selectedNode = null;
+            activelyDraggingNode = false;
             return;
         }
 
         if (Input.GetMouseButtonDown(1))
         {
             selectedNode = SelectManeuverNode(mainCamera.ScreenToWorldPoint(Input.mousePosition));
+            activelyDraggingNode = true;
+            SetManeuverNodeExecution(false);
+            Debug.Log("set");
+
         }
 
         if (Input.GetMouseButton(1))
@@ -129,6 +151,7 @@ public class ManeuverNodeHandler : MonoBehaviour
             selectedManeuverVector.DragVector(mainCamera.ScreenToWorldPoint(Input.mousePosition));
         }
     }
+
     void DeselectManeuverNodeVector()
     {
         if (selectedManeuverVector == null)
@@ -183,8 +206,9 @@ public class ManeuverNodeHandler : MonoBehaviour
             GameObject newNodeObject = Instantiate(nodePrefab);
             newNode = newNodeObject.GetComponent<ManeuverNode>();
         }
+        lastTrueAnomalyCalculated = ship.TrueAnomaly;
         newNode.Initialize(trueAnomaly, ship);
-        newNode.ToggleManeuverExecution(executeManeuvers);
+        newNode.SetManeuverExecution(executeManeuversBool);
         plannedManeuvers.Add(newNode);
         return newNode;
     }
@@ -255,13 +279,13 @@ public class ManeuverNodeHandler : MonoBehaviour
         plannedManeuvers.Clear();
     }
 
-    private void ToggleManeuverExecution()
+    private void SetManeuverNodeExecution(bool val)
     {
-        executeManeuvers = !executeManeuvers;
+        executeManeuversBool = val;
         for (int i = 0; i < plannedManeuvers.Count; i++)
         {
             ManeuverNode thisNode = plannedManeuvers[i];
-            thisNode.ToggleManeuverExecution(executeManeuvers);
+            thisNode.SetManeuverExecution(executeManeuversBool);
         }
     }
 

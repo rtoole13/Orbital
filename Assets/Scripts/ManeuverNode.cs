@@ -242,7 +242,7 @@ public class ManeuverNode : MonoBehaviour
         maneuverNodes.Clear();
     }
 
-    public void ToggleManeuverExecution(bool executeManeuverMode)
+    public void SetManeuverExecution(bool executeManeuverMode)
     {
         nodeSprite.color = executeManeuverMode
             ? Color.red
