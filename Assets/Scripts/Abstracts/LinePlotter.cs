@@ -10,7 +10,10 @@ public abstract class LinePlotter : MonoBehaviour
     protected LineRenderer lineRenderer;
 
     [SerializeField]
-    private Vector2 lineWidthRange = new Vector2(0.5f, 5f);
+    private float minimumWidth = 0.25f;
+
+    [SerializeField]
+    private float maximumWidth = 1f;
     private float currentLineWidth;
 
     [Range(3, 64)]
@@ -28,7 +31,7 @@ public abstract class LinePlotter : MonoBehaviour
         CameraController.OrthographicSizeChangeEvent -= AdjustLineThickness;
     }
     #endregion UNITY
-    
+
     protected Vector3 RotateVertex(Vector3 vertex, float angle)
     {
         return new Vector3(vertex.x * Mathf.Cos(angle) - vertex.y * Mathf.Sin(angle),
@@ -42,7 +45,14 @@ public abstract class LinePlotter : MonoBehaviour
 
     private void AdjustLineThickness(float minOrthoSize, float maxOrthoSize, float targetOrthoSize)
     {
-        float newLineWidth = MathUtilities.RescaleFloat(targetOrthoSize, minOrthoSize, maxOrthoSize, lineWidthRange[0], lineWidthRange[1]);
+        float newLineWidth = MathUtilities.RescaleFloat(targetOrthoSize, minOrthoSize, maxOrthoSize, minimumWidth, maximumWidth);
         lineRenderer.startWidth = lineRenderer.endWidth = newLineWidth;
     }
+
+
+    public void SetDisplay(bool display)
+    {
+        lineRenderer.enabled = display;
+    }
+
 }

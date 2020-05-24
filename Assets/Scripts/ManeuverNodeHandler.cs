@@ -105,7 +105,6 @@ public class ManeuverNodeHandler : MonoBehaviour
     {
         if (Input.GetMouseButtonUp(1))
         {
-            Debug.Log("wee");
             selectedNode = null;
             activelyDraggingNode = false;
             return;
@@ -116,8 +115,6 @@ public class ManeuverNodeHandler : MonoBehaviour
             selectedNode = SelectManeuverNode(mainCamera.ScreenToWorldPoint(Input.mousePosition));
             activelyDraggingNode = true;
             SetManeuverNodeExecution(false);
-            Debug.Log("set");
-
         }
 
         if (Input.GetMouseButton(1))
