@@ -6,7 +6,7 @@ public class ScaleWithCamera : MonoBehaviour
 {
     [SerializeField]
     private Vector2 scaleRange = new Vector2(0.5f, 5f);
-    private float currentScale;
+
     #region UNITY
     private void Awake()
     {

@@ -1,33 +1,50 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 
 
-[ExecuteAlways]
+//[ExecuteAlways]
 public class CirclePlotter : LinePlotter
 {
-    private float radius;
-    #region GETSET
-    #endregion GETSET
+    #region CUSTOMEDITOR
+    [HideInInspector]
+    public bool useCustomRadius = false;
 
+    [HideInInspector]
+    public float customRadius = 0.5f;
+    #endregion CUSTOMEDITOR
+
+    private float radius;
     #region UNITY
     protected override void Awake()
     {
         base.Awake();
-        radius = transform.localScale.x / 2f;
-    }
-    protected override void Start()
-    {
-        DrawCircle();
+        if (useCustomRadius)
+        {
+            radius = customRadius;
+        }
+        else
+        {
+            radius = 0.5f; // FIXME only checking x scale. Should make a more general ellipse plotter perhaps.
+        }
     }
 
     //protected void Update()
     //{
+    //    if (useCustomRadius)
+    //    {
+    //        radius = customRadius;
+    //    }
+    //    else
+    //    {
+    //        radius = 0.5f;
+    //    }
     //    DrawCircle();
     //}
 
     #endregion UNITY
-
+    
     private void DrawCircle()
     {
         lineRenderer.useWorldSpace = false; // Important for having SOI follow object
@@ -38,11 +55,42 @@ public class CirclePlotter : LinePlotter
         for (int i = 0; i < segments; i++)
         {
             float angle = ((float)i / (float)segments) * 2 * Mathf.PI;
-            Vector3 vertex = new Vector3(Mathf.Sin(angle) * radius, Mathf.Cos(angle) * radius, zepth);
-            points[i] = transform.worldToLocalMatrix * vertex;
+            points[i] = new Vector3(Mathf.Sin(angle) * radius, Mathf.Cos(angle) * radius, zepth);
         }
         points[segments] = points[0];
         lineRenderer.positionCount = segments + 1;
         lineRenderer.SetPositions(points);
+    }
+
+    public void SetGradient(Gradient gradient)
+    {
+        lineRenderer.colorGradient = gradient;
+    }
+
+}
+
+[CustomEditor(typeof(CirclePlotter))]
+public class CirclePlotterEditor : Editor
+{
+    SerializedProperty useCustomRadius;
+    SerializedProperty customRadius;
+
+    private void OnEnable()
+    {
+        useCustomRadius = serializedObject.FindProperty("useCustomRadius");
+        customRadius = serializedObject.FindProperty("customRadius");
+    }
+
+    public override void OnInspectorGUI()
+    {
+        base.OnInspectorGUI();
+
+        serializedObject.Update();
+        EditorGUILayout.PropertyField(useCustomRadius, new GUIContent("Use Custom Radius"));
+        
+        if (useCustomRadius.boolValue)
+            EditorGUILayout.PropertyField(customRadius, new GUIContent("Custom Radius"));
+
+        serializedObject.ApplyModifiedProperties();
     }
 }

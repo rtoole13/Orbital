@@ -11,6 +11,7 @@ public class ManeuverVectorHandler : MonoBehaviour
     private Vector2 worldDirection = Vector2.up;
     private Vector2 selectionInitialPosition;
     private float dragDeltaVelFactor = 0.01f; // Used to dampen the user's drag input
+    private Color defaultColor;
     public delegate void deltaVelocityAdjusted(float deltaVelocityMag);
     public event deltaVelocityAdjusted DeltaVelocityAdjustedEvent;
 
@@ -28,6 +29,8 @@ public class ManeuverVectorHandler : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer == null)
             throw new UnityException(string.Format("Expecting {0} to have a SpriteRenderer!", gameObject.name));
+
+        defaultColor = spriteRenderer.color;
     }
     #endregion UNITY
     #region GENERAL
@@ -57,6 +60,14 @@ public class ManeuverVectorHandler : MonoBehaviour
     public void EndVectorSelect()
     {
         animator.SetBool("extended", false);
+    }
+
+    public void SetExecuting(bool executing, Color executionColor)
+    {
+        animator.SetBool("executing", executing);
+        spriteRenderer.color = executing
+            ? executionColor
+            : defaultColor;
     }
 
     public void DragVector(Vector2 mouseWorldPosition)

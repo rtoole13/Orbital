@@ -11,6 +11,8 @@ public class ManeuverNode : MonoBehaviour
     private GameObject trajectoryObject;
     private TrajectoryPlotter trajectoryPlotter;
     private Ship ship;
+    private Gradient nodeOutlineGradient;
+    private Color nodeOutlineBaseColor;
     private Vector2 _deltaOrbitalVelocity;
     private float _trueAnomaly;
     private Vector2 orbitalDirection;
@@ -25,6 +27,7 @@ public class ManeuverNode : MonoBehaviour
 
     [SerializeField]
     private SpriteRenderer nodeSprite;
+    private CirclePlotter nodeOutline;
 
     [SerializeField]
     private ManeuverVectorHandler tangentialForwardVectorHandler;
@@ -59,7 +62,11 @@ public class ManeuverNode : MonoBehaviour
 
         if (nodeSprite == null)
             throw new UnityException(string.Format("Expecting ManeuverNode to have a SpriterRenderer on a child object!"));
-        
+
+        nodeOutline = nodeSprite.GetComponent<CirclePlotter>();
+        if (nodeOutline == null)
+            throw new UnityException(string.Format("Expecting ManeuverNode to have a CirclePlotter on its child object w/ a SpriteRenderer!"));
+
         if (tangentialForwardVectorHandler == null || tangentialBackwardVectorHandler == null || orthogonalOutVectorHandler == null || orthogonalInVectorHandler == null)
             throw new UnityException(string.Format("Expecting ManeuverNode to have a ManeuverVectorHandler on each of four child objects!"));
 
@@ -121,10 +128,13 @@ public class ManeuverNode : MonoBehaviour
         UpdateOrbit();
     }
 
-    public void Initialize(float _trueAnomaly, Ship _ship)
+    public void Initialize(float _trueAnomaly, Ship _ship, Gradient _nodeOutlineGradient)
     {
         ship = _ship;
         transform.parent = ship.CurrentGravitySource.transform;
+        nodeOutlineGradient = _nodeOutlineGradient;
+        nodeOutlineBaseColor = nodeOutlineGradient.Evaluate(0);
+        nodeOutline.SetGradient(nodeOutlineGradient);
         UpdateParameters(_trueAnomaly);
     }
 
@@ -218,6 +228,7 @@ public class ManeuverNode : MonoBehaviour
     private void HideSprites()
     {
         nodeSprite.enabled = false;
+        nodeOutline.SetDisplay(false);
         tangentialForwardVectorHandler.HideVector();
         tangentialBackwardVectorHandler.HideVector();
         orthogonalOutVectorHandler.HideVector();
@@ -227,6 +238,7 @@ public class ManeuverNode : MonoBehaviour
     private void ShowSprites()
     {
         nodeSprite.enabled = true;
+        nodeOutline.SetDisplay(true);
         tangentialForwardVectorHandler.ShowVector();
         tangentialBackwardVectorHandler.ShowVector();
         orthogonalOutVectorHandler.ShowVector();
@@ -244,9 +256,10 @@ public class ManeuverNode : MonoBehaviour
 
     public void SetManeuverExecution(bool executeManeuverMode)
     {
-        nodeSprite.color = executeManeuverMode
-            ? Color.red
-            : Color.green;
+        tangentialBackwardVectorHandler.SetExecuting(executeManeuverMode, nodeOutlineBaseColor);
+        tangentialForwardVectorHandler.SetExecuting(executeManeuverMode, nodeOutlineBaseColor);
+        orthogonalOutVectorHandler.SetExecuting(executeManeuverMode, nodeOutlineBaseColor);
+        orthogonalInVectorHandler.SetExecuting(executeManeuverMode, nodeOutlineBaseColor);
     }
 
     private void UpdateOrbit()

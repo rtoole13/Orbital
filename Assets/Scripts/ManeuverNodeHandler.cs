@@ -9,11 +9,12 @@ public class ManeuverNodeHandler : MonoBehaviour
     [Range(1,5)]
     public int maneuverNodeMaxCount = 2;
 
+    public Gradient nodeOutlineGradient;
+
     private Camera mainCamera;
     private bool isActive = false;
     private bool executeManeuversBool = false;
     private bool activelyDraggingNode = false;
-    private float trueAnomalyExecutionThreshold = 0.01f;
     private Ship ship;
     private List<ManeuverNode> plannedManeuvers;
     private ManeuverNode selectedNode;
@@ -204,7 +205,7 @@ public class ManeuverNodeHandler : MonoBehaviour
             newNode = newNodeObject.GetComponent<ManeuverNode>();
         }
         lastTrueAnomalyCalculated = ship.TrueAnomaly;
-        newNode.Initialize(trueAnomaly, ship);
+        newNode.Initialize(trueAnomaly, ship, nodeOutlineGradient);
         newNode.SetManeuverExecution(executeManeuversBool);
         plannedManeuvers.Add(newNode);
         return newNode;
