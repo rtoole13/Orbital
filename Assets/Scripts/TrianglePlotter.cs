@@ -17,7 +17,7 @@ public class TrianglePlotter : LinePlotter
         halfHeight *= transform.localScale.y / 2f;
         width = halfHeight * baseToHeightRatio;
     }
-    protected void Start()
+    protected override void Start()
     {
         DrawTriangle();
     }

@@ -13,15 +13,20 @@ public class ScaleWithCamera : MonoBehaviour
         CameraController.OrthographicSizeChangeEvent += AdjustScale;
     }
 
+    private void Start()
+    {
+        AdjustScale();
+    }
+
     private void OnDisable()
     {
         CameraController.OrthographicSizeChangeEvent -= AdjustScale;
     }
     #endregion UNITY
 
-    private void AdjustScale(float minOrthoSize, float maxOrthoSize, float targetOrthoSize)
+    private void AdjustScale()
     {
-        float newScale = MathUtilities.RescaleFloat(targetOrthoSize, minOrthoSize, maxOrthoSize, scaleRange[0], scaleRange[1]);
+        float newScale = MathUtilities.RescaleFloat(CameraController.cameraSizeTarget, CameraController.cameraSizeMin, CameraController.cameraSizeMax, scaleRange[0], scaleRange[1]);
         transform.localScale = new Vector3(newScale, newScale, 1f);
     }
 }

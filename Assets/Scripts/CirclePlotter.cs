@@ -16,7 +16,7 @@ public class CirclePlotter : LinePlotter
         base.Awake();
         radius = transform.localScale.x / 2f;
     }
-    protected void Start()
+    protected override void Start()
     {
         DrawCircle();
     }

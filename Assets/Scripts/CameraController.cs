@@ -16,11 +16,13 @@ public class CameraController : MonoBehaviour
     [Range(0.01f, 1f)]
     private float zoomSmoothTime = 0.15f;
 
-    [SerializeField]
-    private float cameraSizeMin = 5f;
+    public static float cameraSizeMin = 5f;
+    public static float cameraSizeMax = 100f;
 
-    [SerializeField]
-    private float cameraSizeMax = 100f;
+    [HideInInspector]
+    public static float cameraSizeTarget;
+
+    private float defaultOrthographicSize;
 
     [SerializeField]
     private GameObject currentTarget; // Make this an interface, ICameraTrackable
@@ -33,28 +35,26 @@ public class CameraController : MonoBehaviour
     private float firstClickTime;
     private bool inDoubleClickRange = false;
     private Camera mainCamera;
-    private float targetOrthographicSize;
-    private float defaultOrthographicSize;
 
-    public delegate void OnOrthographicSizeChangeDelegate(float minOrthoSize, float maxOrthoSize, float currentOrthoSize);
+    public delegate void OnOrthographicSizeChangeDelegate();
     public static event OnOrthographicSizeChangeDelegate OrthographicSizeChangeEvent;
 
     private void Awake()
     {
         mainCamera = GetComponent<Camera>();
-        targetOrthographicSize = defaultOrthographicSize = mainCamera.orthographicSize;
+        cameraSizeTarget = defaultOrthographicSize = mainCamera.orthographicSize;
     }
 
     private void Start()
     {
-        OrthographicSizeChangeEvent(cameraSizeMin, cameraSizeMax, targetOrthographicSize); // Invoke delegate
+        OrthographicSizeChangeEvent(); // Invoke delegate
     }
     void Update()
     {
         HandleMouseInputs();
         Vector3 target = new Vector3(currentTarget.transform.position.x, currentTarget.transform.position.y, transform.position.z);
         mainCamera.transform.position = Vector3.SmoothDamp(mainCamera.transform.position, target, ref moveVelocity, moveSmoothTime);
-        mainCamera.orthographicSize = Mathf.SmoothDamp(mainCamera.orthographicSize, targetOrthographicSize, ref zoomVelocity, zoomSmoothTime);
+        mainCamera.orthographicSize = Mathf.SmoothDamp(mainCamera.orthographicSize, cameraSizeTarget, ref zoomVelocity, zoomSmoothTime);
     }
 
     private void HandleMouseInputs()
@@ -73,7 +73,7 @@ public class CameraController : MonoBehaviour
         if (Input.mouseScrollDelta.y == 0)
             return;
 
-        UpdateOrthographicSize(Mathf.Clamp(targetOrthographicSize - (float)Input.mouseScrollDelta.y * zoomMultiplier, cameraSizeMin, cameraSizeMax));
+        UpdateOrthographicSize(Mathf.Clamp(cameraSizeTarget - (float)Input.mouseScrollDelta.y * zoomMultiplier, cameraSizeMin, cameraSizeMax));
     }
 
     private void HandleLeftClick()
@@ -93,10 +93,10 @@ public class CameraController : MonoBehaviour
 
     private void UpdateOrthographicSize(float newOrthoSize)
     {
-        if (newOrthoSize == targetOrthographicSize)
+        if (newOrthoSize == cameraSizeTarget)
             return;
-        targetOrthographicSize = newOrthoSize;
-        OrthographicSizeChangeEvent(cameraSizeMin, cameraSizeMax, targetOrthographicSize); // Invoke delegate
+        cameraSizeTarget = newOrthoSize;
+        OrthographicSizeChangeEvent(); // Invoke delegate
     }
 
     private IEnumerator DoubleClickRange()

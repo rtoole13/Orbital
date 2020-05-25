@@ -26,6 +26,11 @@ public abstract class LinePlotter : MonoBehaviour
         CameraController.OrthographicSizeChangeEvent += AdjustLineThickness;
     }
 
+    protected virtual void Start()
+    {
+        AdjustLineThickness();
+    }
+
     protected virtual void OnDisable()
     {
         CameraController.OrthographicSizeChangeEvent -= AdjustLineThickness;
@@ -43,9 +48,10 @@ public abstract class LinePlotter : MonoBehaviour
         return new Vector3(vertex.x + distance.x, vertex.y + distance.y, zepth);
     }
 
-    private void AdjustLineThickness(float minOrthoSize, float maxOrthoSize, float targetOrthoSize)
+    private void AdjustLineThickness()
     {
-        float newLineWidth = MathUtilities.RescaleFloat(targetOrthoSize, minOrthoSize, maxOrthoSize, minimumWidth, maximumWidth);
+        
+        float newLineWidth = MathUtilities.RescaleFloat(CameraController.cameraSizeTarget, CameraController.cameraSizeMin, CameraController.cameraSizeMax, minimumWidth, maximumWidth);
         lineRenderer.startWidth = lineRenderer.endWidth = newLineWidth;
     }
 
