@@ -5044,7 +5044,7 @@ PrefabInstance:
       propertyPath: m_text
       value: 'P - Toggle pause
 
-        LAlt - Toggle SOI display
+        LAlt - Hold to show SOI
 
         Period - Increase time warp
 

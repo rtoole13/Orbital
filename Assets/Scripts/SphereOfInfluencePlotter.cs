@@ -5,7 +5,6 @@ using UnityEngine;
 public class SphereOfInfluencePlotter : LinePlotter
 {
     private GravitySource gravitySource;
-    private bool display = true;
     #region GETSET
     public float Radius
     {
@@ -21,9 +20,11 @@ public class SphereOfInfluencePlotter : LinePlotter
         GetComponentInParent<OrbitalBody>().OnOrbitCalculationEvent += DrawCircle; // Hack to listen to base class event
     }
 
-    private void Start()
+    protected override void Start()
     {
+        base.Start();
         DrawCircle();
+        SetDisplay(false);
     }
     protected override void OnDisable()
     {
@@ -35,16 +36,17 @@ public class SphereOfInfluencePlotter : LinePlotter
     // Update is called once per frame
     void Update()
     {
+        if (Input.GetKeyUp(KeyCode.LeftAlt))
+        {
+            SetDisplay(false);
+            return;
+        }
+
         if (Input.GetKeyDown(KeyCode.LeftAlt))
-            ToggleDisplay();
+            SetDisplay(true);
     }
     #endregion UNITY
-
-    private void ToggleDisplay()
-    {
-        display = !display;
-        lineRenderer.enabled = display;
-    }
+    
 
     private void DrawCircle()
     {

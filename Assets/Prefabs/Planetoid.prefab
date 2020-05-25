@@ -49,7 +49,7 @@ LineRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 7fc84aeea68dbd44a9a256ee18b0ebd5, type: 2}
+  - {fileID: 2100000, guid: 507f6256fe967a34e8788e87f9a8cc28, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -141,8 +141,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   zepth: 1.5
-  minimumWidth: 0.25
-  maximumWidth: 1
+  minimumWidth: 0.01
+  maximumWidth: 0.35
   segments: 36
 --- !u!1 &6872017103272462084
 GameObject:
