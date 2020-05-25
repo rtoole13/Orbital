@@ -7,7 +7,6 @@ using UnityEngine;
 public class CirclePlotter : LinePlotter
 {
     private float radius;
-    private bool display = true;
     #region GETSET
     #endregion GETSET
 
@@ -21,7 +20,12 @@ public class CirclePlotter : LinePlotter
     {
         DrawCircle();
     }
-    
+
+    //protected void Update()
+    //{
+    //    DrawCircle();
+    //}
+
     #endregion UNITY
 
     private void DrawCircle()
