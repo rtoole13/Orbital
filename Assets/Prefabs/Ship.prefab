@@ -295,7 +295,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e1586715ad53e94b9a392e00837a695, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scaleRange: {x: 0.5, y: 3}
+  scaleRange: {x: 0.5, y: 2}
 --- !u!1001 &6394073014297647842
 PrefabInstance:
   m_ObjectHideFlags: 0

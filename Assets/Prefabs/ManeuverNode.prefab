@@ -871,7 +871,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   zepth: -0.1
   minimumWidth: 0.1
-  maximumWidth: 1
+  maximumWidth: 0.5
   segments: 64
   useCustomRadius: 1
   customRadius: 1.2

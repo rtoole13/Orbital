@@ -142,5 +142,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   zepth: 3
   minimumWidth: 0.1
-  maximumWidth: 1
+  maximumWidth: 0.5
   segments: 64
