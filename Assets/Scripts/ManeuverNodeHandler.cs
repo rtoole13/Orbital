@@ -217,6 +217,10 @@ public class ManeuverNodeHandler : MonoBehaviour
         Vector2 perifocalPosition = ship.WorldPositionToPerifocalPosition(worldPosition);
         Vector2 periapse = new Vector2(1f, 0f);
         float angle = Vector2.SignedAngle(periapse, perifocalPosition) * Mathf.Deg2Rad;
+
+        if (ship.TrajectoryType == OrbitalMechanics.TrajectoryType.Hyperbola) // For hyperbolas, range +/- trueAnomOfAsymptote
+            return angle;
+
         float twoPi = 2f * Mathf.PI;
         return (angle + twoPi) % twoPi;
     }
