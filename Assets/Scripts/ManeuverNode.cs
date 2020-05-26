@@ -152,9 +152,6 @@ public class ManeuverNode : MonoBehaviour
         // Direction and position in world coordinate space
         Vector2 worldPosition = OrbitalPositionToWorld(orbitalPosition);
         Vector2 worldDirection = orbitalDirection.RotateVector(ship.ArgumentOfPeriapsis);
-
-        Vector2 orbitalVelocity = orbitalSpeed * orbitalDirection;
-        worldVelocity = orbitalVelocity.RotateVector(ship.ArgumentOfPeriapsis);
         UpdateTransform(worldPosition, worldDirection);
         UpdateOrbit();
     }
@@ -286,7 +283,8 @@ public class ManeuverNode : MonoBehaviour
         trajectoryObject.transform.position = trajectoryObject.transform.parent.position;
 
         // Specifically velocity in world coordinates!
-        Vector2 relVel = worldVelocity + DeltaOrbitalVelocity.RotateVector(ship.ArgumentOfPeriapsis) - ship.CurrentGravitySource.Velocity;
+        Vector2 newOrbitalVelocity = orbitalSpeed * orbitalDirection + DeltaOrbitalVelocity;
+        Vector2 relVel = newOrbitalVelocity.RotateVector(ship.ArgumentOfPeriapsis);
         Vector2 relPos = (Vector2)transform.position - ship.CurrentGravitySource.Position; // world pos - newSource.pos
         orbit.CalculateOrbitalParametersFromStateVectors(relPos, relVel, ship.CurrentGravitySource.Mass);
         if (orbit.TrajectoryType == OrbitalMechanics.TrajectoryType.Ellipse)
@@ -300,12 +298,12 @@ public class ManeuverNode : MonoBehaviour
     }
     #endregion
 
-    //private void OnDrawGizmos()
-    //{
-    //    if (nodeCollider == null)
-    //        return;
+    private void OnDrawGizmos()
+    {
+        if (nodeCollider == null)
+            return;
 
-    //    Gizmos.color = Color.green;
-    //    Gizmos.DrawWireSphere(transform.position, nodeCollider.radius);
-    //}
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(transform.position, nodeCollider.radius);
+    }
 }
