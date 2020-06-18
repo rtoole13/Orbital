@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mechanics = OrbitalMechanics;
 
 public abstract class GravitySource : OrbitalBody
 {
@@ -68,13 +69,13 @@ public abstract class GravitySource : OrbitalBody
         base.CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity);
         RadiusOfInfluence = CurrentGravitySource == null
             ? Mathf.Infinity
-            : OrbitalMechanics.RadiusOfInfluence(SemimajorAxis, Mass, CurrentGravitySource.Mass);
+            : Mechanics.Trajectory.RadiusOfInfluence(SemimajorAxis, Mass, CurrentGravitySource.Mass);
     }
 
     public Vector2 CalculateGravitationalForceAtPosition(Vector2 position, float mass) //DEPRECATED, remove in favor of OrbitalMechanics method
     {
         Vector2 distance = (Vector2)transform.position - position;
-        float forceMagnitude = OrbitalMechanics.GRAVITATIONALCONSTANT * Mass * mass / Vector2.SqrMagnitude(distance);
+        float forceMagnitude = Mechanics.Globals.GRAVITATIONALCONSTANT * Mass * mass / Vector2.SqrMagnitude(distance);
         Vector2 force = forceMagnitude * distance.normalized;
         return force;
 

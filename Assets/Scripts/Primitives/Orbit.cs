@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mechanics = OrbitalMechanics;
 
 public class Orbit
 {
@@ -16,8 +17,8 @@ public class Orbit
             _eccentricityVector = value;
             Eccentricity = _eccentricityVector.magnitude;
             TrajectoryType = (Eccentricity < 1f)
-                ? OrbitalMechanics.TrajectoryType.Ellipse
-                : OrbitalMechanics.TrajectoryType.Hyperbola;
+                ? Mechanics.Globals.TrajectoryType.Ellipse
+                : Mechanics.Globals.TrajectoryType.Hyperbola;
         }
     }
     public Vector2[] HyperbolicAsymptotes { get; private set; }
@@ -25,7 +26,7 @@ public class Orbit
     public float Period { get; private set; }
     public float SemimajorAxis { get; private set; }
     public float SemiminorAxis { get; private set; }
-    public OrbitalMechanics.TrajectoryType TrajectoryType { get; private set; }
+    public Mechanics.Globals.TrajectoryType TrajectoryType { get; private set; }
     public float TrueAnomalyOfAsymptote { get; private set; }
 
     #region CONSTRUCTORS
@@ -43,23 +44,23 @@ public class Orbit
     #endregion
     public void CalculateOrbitalParametersFromStateVectors(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity, float sourceMass)
     {
-        Vector3 specificRelativeAngularMomentum = OrbitalMechanics.SpecificRelativeAngularMomentum(sourceRelativePosition, sourceRelativeVelocity);
+        Vector3 specificRelativeAngularMomentum = Mechanics.Trajectory.SpecificRelativeAngularMomentum(sourceRelativePosition, sourceRelativeVelocity);
         ClockWiseOrbit = specificRelativeAngularMomentum.z < 0;
-        EccentricityVector = OrbitalMechanics.EccentricityVector(sourceRelativePosition, sourceRelativeVelocity, specificRelativeAngularMomentum, sourceMass);
-        SemimajorAxis = OrbitalMechanics.SemimajorAxis(sourceRelativePosition.magnitude, sourceRelativeVelocity.sqrMagnitude, sourceMass);
-        SemiminorAxis = OrbitalMechanics.SemiminorAxis(SemimajorAxis, Eccentricity);
-        ArgumentOfPeriapsis = OrbitalMechanics.ArgumentOfPeriapse(EccentricityVector, sourceRelativePosition);
+        EccentricityVector = Mechanics.Trajectory.EccentricityVector(sourceRelativePosition, sourceRelativeVelocity, specificRelativeAngularMomentum, sourceMass);
+        SemimajorAxis = Mechanics.Trajectory.SemimajorAxis(sourceRelativePosition.magnitude, sourceRelativeVelocity.sqrMagnitude, sourceMass);
+        SemiminorAxis = Mechanics.Trajectory.SemiminorAxis(SemimajorAxis, Eccentricity);
+        ArgumentOfPeriapsis = Mechanics.Trajectory.ArgumentOfPeriapse(EccentricityVector, sourceRelativePosition);
 
         // 
-        if (TrajectoryType == OrbitalMechanics.TrajectoryType.Ellipse)
+        if (TrajectoryType == Mechanics.Globals.TrajectoryType.Ellipse)
         {
-            Period = OrbitalMechanics.OrbitalPeriod(SemimajorAxis, sourceMass);
+            Period = Mechanics.Trajectory.OrbitalPeriod(SemimajorAxis, sourceMass);
         }
         else
         {
-            HyperbolicExcessSpeed = OrbitalMechanics.HyperbolicExcessVelocity(sourceMass, SemimajorAxis);
-            TrueAnomalyOfAsymptote = OrbitalMechanics.TrueAnomalyOfAsymptote(Eccentricity, ClockWiseOrbit);
-            HyperbolicAsymptotes = OrbitalMechanics.HyperbolicAsymptotes(TrueAnomalyOfAsymptote, ClockWiseOrbit);
+            HyperbolicExcessSpeed = Mechanics.HyperbolicTrajectory.ExcessVelocity(sourceMass, SemimajorAxis);
+            TrueAnomalyOfAsymptote = Mechanics.HyperbolicTrajectory.TrueAnomalyOfAsymptote(Eccentricity, ClockWiseOrbit);
+            HyperbolicAsymptotes = Mechanics.HyperbolicTrajectory.Asymptotes(TrueAnomalyOfAsymptote, ClockWiseOrbit);
             Period = Mathf.Infinity;
         }
         ValidOrbit = true;
