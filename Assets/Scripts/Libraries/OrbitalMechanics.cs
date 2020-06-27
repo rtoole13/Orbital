@@ -358,10 +358,6 @@ namespace OrbitalMechanics
                     if (deltaE * lastDeltaE <= 0)
                         break;
 
-                    if (eccentricity > 0.95)
-                    {
-                        Debug.Log(deltaE);
-                    }
                     E -= deltaE;
                     if (Mathf.Abs(deltaE) < 1e-6)
                         break;
@@ -369,6 +365,109 @@ namespace OrbitalMechanics
             }
             return E;
         }
+    }
+
+    public static class UniversalVariableMethod
+    {
+        public static float Xdot(float mainMass, float orbitalRadius)
+        {
+            return Body.StandardGravityParameter(mainMass) / orbitalRadius;
+        }
+        
+        public static float slopeTimeVsX(float mainMass, float orbitalRadius)
+        {
+            return orbitalRadius / Body.StandardGravityParameter(mainMass);
+        }
+
+        public static float OrbitalRadius(float semimajorAxis, float eccentricity, float x, float constantOfIntegration)
+        {
+            return semimajorAxis * (1f + eccentricity * (x + constantOfIntegration) / Mathf.Sqrt(semimajorAxis));
+        }
+
+        public static float StumpffC(float z)
+        {
+            // Implement z near 0 series expansion!!!
+            if (z > 0)
+            {
+                return (1f - Mathf.Cos(Mathf.Sqrt(z))) / z;
+            }
+            return (1f - MathUtilities.Cosh(Mathf.Sqrt(-z))) / z;
+            
+        }
+
+        public static float StumpffS(float z)
+        {
+            // Implement z near 0 series expansion!!!
+            if (z > 0)
+            {
+                return (Mathf.Sqrt(z) - Mathf.Sin(Mathf.Sqrt(z))) / Mathf.Pow(z, 3f / 2f);
+            }
+            float negZ = -z;
+            return (MathUtilities.Sinh(Mathf.Sqrt(negZ)) - Mathf.Sqrt(negZ)) / Mathf.Pow(negZ, 3f / 2f);
+        }
+
+
+        public static float UniversalVariable(float timeOfFlight, float mainMass, float semimajorAxis, float orbitalRadius, Vector2 orbitalPosition, Vector2 orbitalVelocity, int maxIterations)
+        {
+            // Heavily pulled from Fundamentals of Astrodynamics by Bate et. al.
+
+            float sqrtMu = Mathf.Sqrt(Body.StandardGravityParameter(mainMass));
+
+            // Newton's method
+            float x = Body.StandardGravityParameter(mainMass) * timeOfFlight / semimajorAxis;
+            float z = Mathf.Pow(x, 2) / semimajorAxis;
+            float c = StumpffC(z);
+            float s = StumpffS(z);
+            float rDotV = Vector2.Dot(orbitalPosition, orbitalVelocity);
+            float t = 0;
+            float dTdX = 0;
+
+            int currentIter = 0;
+            float deltaX = Mathf.Infinity;
+            while (true)
+            {
+                currentIter += 1;
+                if (currentIter > maxIterations)
+                    break;
+
+                // Xn+1 = Xn + (t - tn)/(dt/dX)|X=Xn
+                t = (rDotV / sqrtMu) * Mathf.Pow(x, 2) * c + (1f - (orbitalRadius / semimajorAxis)) * Mathf.Pow(x, 3) * s + orbitalRadius * x; // Note that this is actual mu * t
+                dTdX = Mathf.Pow(x, 2) * c + (rDotV / sqrtMu) * x * (1f - z * s) + orbitalRadius * (1f - z * c); // Note that this is actual mu * dTdX, mu cancels
+
+                deltaX = (timeOfFlight - t) / dTdX;
+                x += deltaX;
+                if (Mathf.Abs(deltaX) < 1e-6)
+                    break;
+            }
+            return x;
+        }
+
+        public static float VariableF(float semimajorAxis, float orbitalRadius, float x)
+        {
+            return 1f - (semimajorAxis / orbitalRadius) * (1f - Mathf.Cos(x / Mathf.Sqrt(semimajorAxis)));
+        }
+
+        // FORMULATED IN TERMS OF C
+        //public static float VariableF(float x, float orbitalRadius, float constantC)
+        //{
+        //    return 1f - (Mathf.Pow(x, 2) / orbitalRadius) * constantC;
+        //}
+
+        public static float VariableG(float timeOfFlight, float x, float mainMass, float constantS)
+        {
+            float sqrtMu = Mathf.Sqrt(Body.StandardGravityParameter(mainMass));
+            return timeOfFlight - (Mathf.Pow(x, 3) / sqrtMu) * constantS;
+        }
+
+        //public static float VariableFprime()
+        //{
+
+        //}
+
+        //public static float VariableGprime()
+        //{
+
+        //}
     }
 }
 

@@ -29,6 +29,7 @@ public abstract class OrbitalBody : MonoBehaviour
     private float _orbitalSpeed;
     private bool _clockWiseOrbit = false;
     private float _semimajorAxis;
+    private float _semimajorAxisReciprocal;
     private float _semiminorAxis;
     private float _specificOrbitalEnergy;
     private Vector3 _specificRelativeAngularMomentum;
@@ -208,6 +209,12 @@ public abstract class OrbitalBody : MonoBehaviour
         protected set { _semimajorAxis = value; }
     }
 
+    public float SemimajorAxisReciprocal
+    {
+        get { return _semimajorAxisReciprocal; }
+        protected set { _semimajorAxisReciprocal = value; }
+    }
+
     public float SemiminorAxis
     {
         get { return _semiminorAxis; }
@@ -331,6 +338,7 @@ public abstract class OrbitalBody : MonoBehaviour
         ClockWiseOrbit = SpecificRelativeAngularMomentum.z < 0;
         EccentricityVector = Mechanics.Trajectory.EccentricityVector(sourceRelativePosition, sourceRelativeVelocity, SpecificRelativeAngularMomentum, CurrentGravitySource.Mass);
         SemimajorAxis = Mechanics.Trajectory.SemimajorAxis(sourceRelativePosition.magnitude, sourceRelativeVelocity.sqrMagnitude, CurrentGravitySource.Mass);
+        SemimajorAxisReciprocal = 1f / SemimajorAxis;
         SemiminorAxis = Mechanics.Trajectory.SemiminorAxis(SemimajorAxis, Eccentricity);
         SpecificOrbitalEnergy = Mechanics.Trajectory.SpecificOrbitalEnergy(CurrentGravitySource.Mass, Mass, SemimajorAxis);
         ArgumentOfPeriapsis = Mechanics.Trajectory.ArgumentOfPeriapse(EccentricityVector, sourceRelativePosition);
