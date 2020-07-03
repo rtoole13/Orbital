@@ -197,7 +197,7 @@ public abstract class GravityAffected : OrbitalBody
     {
         base.OnDrawGizmos();
         Gizmos.color = Color.red;
-        Gizmos.DrawSphere((Vector3)universalPostion, 1f);
+        Gizmos.DrawSphere(universalPostion.RotateVector(ArgumentOfPeriapsis), 1f);
     }
 }
 
