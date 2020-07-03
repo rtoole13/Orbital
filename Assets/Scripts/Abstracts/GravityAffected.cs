@@ -14,6 +14,8 @@ public abstract class GravityAffected : OrbitalBody
     public delegate void GravitySourceChanged();
     public GravitySourceChanged GravitySourceChangedEvent;
 
+    private Vector2 universalPostion;
+    private float lastTime;
     #region UNITY
     protected override void Awake()
     {
@@ -44,6 +46,7 @@ public abstract class GravityAffected : OrbitalBody
     protected virtual void FixedUpdate()
     {
         UpdateCurrentGravitySource();
+        Debug.Log(Eccentricity);
         if (UpdatingIteratively)
         {
             if (!nonGravitationalForcesAdded)
@@ -62,7 +65,16 @@ public abstract class GravityAffected : OrbitalBody
                 UpdateIteratively();
                 return;
             }
+            lastTime = TimeSinceEpoch;
+            float x = OrbitalMechanics.UniversalVariableMethod.UniversalVariable(TimeSinceEpoch, OrbitalPeriod, CurrentGravitySource.Mass, SemimajorAxis, OrbitalRadius, OrbitalPosition, OrbitalVelocity, 5);
+            float f = OrbitalMechanics.UniversalVariableMethod.VariableF(SemimajorAxis, OrbitalRadius, x);
+            float S = OrbitalMechanics.UniversalVariableMethod.StumpffS(x, SemimajorAxis);
+            //float g = OrbitalMechanics.UniversalVariableMethod.VariableG(MathUtilities.Modulo(TimeSinceEpoch, OrbitalPeriod), x, CurrentGravitySource.Mass, S);
+            float g = OrbitalMechanics.UniversalVariableMethod.VariableG(Time.fixedDeltaTime, x, CurrentGravitySource.Mass, S);
+            universalPostion = OrbitalMechanics.UniversalVariableMethod.OrbitalPosition(f, g, OrbitalPosition, OrbitalVelocity);
             UpdateDeterministically();
+            //Debug.LogFormat("f: {0}, g: {1}", f, g);
+            //Debug.LogFormat("Universal: {0}, Classical: {1}", universalPostion, OrbitalPosition);
             //Debug.LogFormat("TrueAnomaly: {0}", TrueAnomaly);
         }
     }
@@ -179,6 +191,13 @@ public abstract class GravityAffected : OrbitalBody
         // Waits until interval expires, then sets bool back to false   
         yield return new WaitForSeconds(sourceChangeInterval);
         recentlyChangedSource = false;
+    }
+
+    protected override void OnDrawGizmos()
+    {
+        base.OnDrawGizmos();
+        Gizmos.color = Color.red;
+        Gizmos.DrawSphere((Vector3)universalPostion, 1f);
     }
 }
 

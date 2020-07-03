@@ -406,22 +406,29 @@ namespace OrbitalMechanics
             return (MathUtilities.Sinh(Mathf.Sqrt(negZ)) - Mathf.Sqrt(negZ)) / Mathf.Pow(negZ, 3f / 2f);
         }
 
+        public static float StumpffS(float x, float semimajorAxis)
+        {
+            float z = Mathf.Pow(x, 2) / semimajorAxis;
+            return StumpffS(z);
+        }
 
-        public static float UniversalVariable(float timeOfFlight, float mainMass, float semimajorAxis, float orbitalRadius, Vector2 orbitalPosition, Vector2 orbitalVelocity, int maxIterations)
+        public static float UniversalVariable(float timeOfFlight, float orbitalPeriod, float mainMass, float semimajorAxis, float orbitalRadius, Vector2 orbitalPosition, Vector2 orbitalVelocity, int maxIterations)
         {
             // Heavily pulled from Fundamentals of Astrodynamics by Bate et. al.
 
             float sqrtMu = Mathf.Sqrt(Body.StandardGravityParameter(mainMass));
 
             // Newton's method
-            float x = Body.StandardGravityParameter(mainMass) * timeOfFlight / semimajorAxis;
-            float z = Mathf.Pow(x, 2) / semimajorAxis;
-            float c = StumpffC(z);
-            float s = StumpffS(z);
+            //float reducedTime = MathUtilities.Modulo(timeOfFlight, orbitalPeriod);
+            float reducedTime = Time.fixedDeltaTime;
+            float x = Body.StandardGravityParameter(mainMass) * reducedTime / semimajorAxis;
+            float z, c, s;
             float rDotV = Vector2.Dot(orbitalPosition, orbitalVelocity);
+            float rDotVbyRootMu = rDotV / sqrtMu;
             float t = 0;
             float dTdX = 0;
-
+            c = 0;
+            s = 0;
             int currentIter = 0;
             float deltaX = Mathf.Infinity;
             while (true)
@@ -430,15 +437,19 @@ namespace OrbitalMechanics
                 if (currentIter > maxIterations)
                     break;
 
+                z = Mathf.Pow(x, 2) / semimajorAxis;
+                //Debug.LogFormat("x: {0}, reducedTime: {1},  iter: {2}", z, reducedTime, currentIter);
+                c = StumpffC(z);
+                s = StumpffS(z);
                 // Xn+1 = Xn + (t - tn)/(dt/dX)|X=Xn
-                t = (rDotV / sqrtMu) * Mathf.Pow(x, 2) * c + (1f - (orbitalRadius / semimajorAxis)) * Mathf.Pow(x, 3) * s + orbitalRadius * x; // Note that this is actual mu * t
-                dTdX = Mathf.Pow(x, 2) * c + (rDotV / sqrtMu) * x * (1f - z * s) + orbitalRadius * (1f - z * c); // Note that this is actual mu * dTdX, mu cancels
-
-                deltaX = (timeOfFlight - t) / dTdX;
+                t = rDotVbyRootMu * Mathf.Pow(x, 2) * c + (1f - (orbitalRadius / semimajorAxis)) * Mathf.Pow(x, 3) * s + orbitalRadius * x; // Note that this is actual mu * t
+                dTdX = Mathf.Pow(x, 2) * c + rDotVbyRootMu * x * (1f - z * s) + orbitalRadius * (1f - z * c); // Note that this is actual mu * dTdX, mu cancels
+                deltaX = (reducedTime - t) / dTdX;
                 x += deltaX;
                 if (Mathf.Abs(deltaX) < 1e-6)
                     break;
             }
+            Debug.LogFormat("c: {0}, s: {1}, iter: {2}", c, s, currentIter);
             return x;
         }
 
@@ -459,6 +470,15 @@ namespace OrbitalMechanics
             return timeOfFlight - (Mathf.Pow(x, 3) / sqrtMu) * constantS;
         }
 
+        public static Vector2 OrbitalPosition(float f, float g, Vector2 initialPosition, Vector2 initialVelocity)
+        {
+            return f * initialPosition + g * initialVelocity;
+        }
+
+        //public static Vector2 OrbitalPosition(float timeOfFlight, float orbitalPeriod, float mainMass, float semimajorAxis, float orbitalRadius, Vector2 orbitalPosition, Vector2 orbitalVelocity, int maxIterations)
+        //{
+
+        //}
         //public static float VariableFprime()
         //{
 
