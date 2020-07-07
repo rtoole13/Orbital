@@ -560,7 +560,7 @@ PrefabInstance:
     - target: {fileID: 2934157134936708650, guid: baa71db809956d0478f6e4579f60bc3c,
         type: 3}
       propertyPath: startVelocity.x
-      value: -10
+      value: -5
       objectReference: {fileID: 0}
     - target: {fileID: 2934157134936708652, guid: baa71db809956d0478f6e4579f60bc3c,
         type: 3}
@@ -570,7 +570,7 @@ PrefabInstance:
     - target: {fileID: 2934157134936708652, guid: baa71db809956d0478f6e4579f60bc3c,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 10
+      value: 17
       objectReference: {fileID: 0}
     - target: {fileID: 2934157134936708652, guid: baa71db809956d0478f6e4579f60bc3c,
         type: 3}
