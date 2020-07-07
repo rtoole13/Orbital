@@ -46,7 +46,6 @@ public abstract class GravityAffected : OrbitalBody
     protected virtual void FixedUpdate()
     {
         UpdateCurrentGravitySource();
-        Debug.Log(Eccentricity);
         if (UpdatingIteratively)
         {
             if (!nonGravitationalForcesAdded)
@@ -75,7 +74,6 @@ public abstract class GravityAffected : OrbitalBody
             UpdateDeterministically();
             //Debug.LogFormat("f: {0}, g: {1}", f, g);
             //Debug.LogFormat("Universal: {0}, Classical: {1}", universalPostion, OrbitalPosition);
-            //Debug.LogFormat("TrueAnomaly: {0}", TrueAnomaly);
         }
     }
 

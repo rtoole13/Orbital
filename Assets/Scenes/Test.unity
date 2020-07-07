@@ -2070,7 +2070,7 @@ PrefabInstance:
     - target: {fileID: 6872017103272462084, guid: a06f41984aa48c141a393888b79b7bc6,
         type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6872017103272462137, guid: a06f41984aa48c141a393888b79b7bc6,
         type: 3}
@@ -3359,7 +3359,7 @@ PrefabInstance:
     - target: {fileID: 6872017103272462143, guid: a06f41984aa48c141a393888b79b7bc6,
         type: 3}
       propertyPath: _orbitalBodies.Array.size
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6872017103272462143, guid: a06f41984aa48c141a393888b79b7bc6,
         type: 3}

@@ -340,7 +340,7 @@ public abstract class OrbitalBody : MonoBehaviour
         SemimajorAxis = Mechanics.Trajectory.SemimajorAxis(sourceRelativePosition.magnitude, sourceRelativeVelocity.sqrMagnitude, CurrentGravitySource.Mass);
         SemimajorAxisReciprocal = 1f / SemimajorAxis;
         SemiminorAxis = Mechanics.Trajectory.SemiminorAxis(SemimajorAxis, Eccentricity);
-        SpecificOrbitalEnergy = Mechanics.Trajectory.SpecificOrbitalEnergy(CurrentGravitySource.Mass, Mass, SemimajorAxis);
+        SpecificOrbitalEnergy = Mechanics.Trajectory.SpecificOrbitalEnergy(CurrentGravitySource.Mass, SemimajorAxis);
         ArgumentOfPeriapsis = Mechanics.Trajectory.ArgumentOfPeriapse(EccentricityVector, sourceRelativePosition);
 
         // Epoch parameters

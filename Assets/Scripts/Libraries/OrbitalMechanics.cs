@@ -26,9 +26,9 @@ namespace OrbitalMechanics
 
     public static class Trajectory
     {
-        public static float SpecificOrbitalEnergy(float mainMass, float orbitalMass, float semimajorAxis)
+        public static float SpecificOrbitalEnergy(float mainMass, float semimajorAxis)
         {
-            return -1f * Body.StandardGravityParameter(mainMass + orbitalMass) / (2f * semimajorAxis);
+            return -1f * Body.StandardGravityParameter(mainMass) / (2f * semimajorAxis);
         }
 
         public static Vector2 GravitationalForceAtPosition(this GravitySource gravitySource, Vector2 position, float mass)
@@ -345,18 +345,13 @@ namespace OrbitalMechanics
             else
             {
                 // Ellipse
-
-                float lastDeltaE = 0f;
                 float deltaE = 0f;
                 while (true)
                 {
                     currentIter += 1;
                     if (currentIter > maxIterations)
                         break;
-                    lastDeltaE = deltaE;
                     deltaE = (E - eccentricity * Mathf.Sin(E) - meanAnomaly) / (1f - eccentricity * Mathf.Cos(E));
-                    if (deltaE * lastDeltaE <= 0)
-                        break;
 
                     E -= deltaE;
                     if (Mathf.Abs(deltaE) < 1e-6)
@@ -386,7 +381,12 @@ namespace OrbitalMechanics
 
         public static float StumpffC(float z)
         {
-            // Implement z near 0 series expansion!!!
+            if (Mathf.Abs(z) < 1e-3)
+            {
+                // C = 1/2! - z/4! + z^2/6! - ...
+                return 0.5f - z / 24f;
+            }
+
             if (z > 0)
             {
                 return (1f - Mathf.Cos(Mathf.Sqrt(z))) / z;
@@ -397,7 +397,12 @@ namespace OrbitalMechanics
 
         public static float StumpffS(float z)
         {
-            // Implement z near 0 series expansion!!!
+            if (Mathf.Abs(z) < 1e-3)
+            {
+                // S = 1/3! - z/5! + z^2/7! - ...
+                return (1f / 6f) - z / 120f;
+            }
+
             if (z > 0)
             {
                 return (Mathf.Sqrt(z) - Mathf.Sin(Mathf.Sqrt(z))) / Mathf.Pow(z, 3f / 2f);
@@ -427,6 +432,7 @@ namespace OrbitalMechanics
             float rDotVbyRootMu = rDotV / sqrtMu;
             float t = 0;
             float dTdX = 0;
+            z = 0;
             c = 0;
             s = 0;
             int currentIter = 0;
@@ -449,7 +455,7 @@ namespace OrbitalMechanics
                 if (Mathf.Abs(deltaX) < 1e-6)
                     break;
             }
-            Debug.LogFormat("c: {0}, s: {1}, iter: {2}", c, s, currentIter);
+            Debug.LogFormat("z: {0}, c: {1}, s: {2}, iter: {3}", z, c, s, currentIter);
             return x;
         }
 
