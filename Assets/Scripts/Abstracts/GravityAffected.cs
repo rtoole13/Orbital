@@ -72,7 +72,7 @@ public abstract class GravityAffected : OrbitalBody
             float g = OrbitalMechanics.UniversalVariableMethod.VariableG(Time.fixedDeltaTime, x, CurrentGravitySource.Mass, S);
             universalPostion = OrbitalMechanics.UniversalVariableMethod.OrbitalPosition(f, g, OrbitalPosition, OrbitalVelocity);
             UpdateDeterministically();
-            //Debug.LogFormat("f: {0}, g: {1}", f, g);
+            Debug.LogFormat("f: {0}, g: {1}", f, g);
             //Debug.LogFormat("Universal: {0}, Classical: {1}", universalPostion, OrbitalPosition);
         }
     }

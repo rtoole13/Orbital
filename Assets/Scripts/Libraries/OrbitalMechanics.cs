@@ -455,12 +455,15 @@ namespace OrbitalMechanics
                 if (Mathf.Abs(deltaX) < 1e-6)
                     break;
             }
-            Debug.LogFormat("z: {0}, c: {1}, s: {2}, iter: {3}", z, c, s, currentIter);
+            //Debug.LogFormat("z: {0}, c: {1}, s: {2}, iter: {3}", z, c, s, currentIter);
+            //Debug.LogFormat("x: {0}, iter: {1}", x, currentIter);
             return x;
         }
 
         public static float VariableF(float semimajorAxis, float orbitalRadius, float x)
         {
+            if (semimajorAxis < 0)
+                semimajorAxis *= -1f;
             return 1f - (semimajorAxis / orbitalRadius) * (1f - Mathf.Cos(x / Mathf.Sqrt(semimajorAxis)));
         }
 
