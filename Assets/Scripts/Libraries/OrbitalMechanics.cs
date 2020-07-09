@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -484,19 +484,22 @@ namespace OrbitalMechanics
             return f * initialPosition + g * initialVelocity;
         }
 
-        //public static Vector2 OrbitalPosition(float timeOfFlight, float orbitalPeriod, float mainMass, float semimajorAxis, float orbitalRadius, Vector2 orbitalPosition, Vector2 orbitalVelocity, int maxIterations)
-        //{
+        public static Vector2 OrbitalVelocity(float fPrime, float gPrime, Vector2 initialPosition, Vector2 initialVelocity)
+        {
+            //IMPORTANT NOTE: Must be calculated after orbital position is determined, as calculation of fPrime depends on the updated position
+            return fPrime * initialPosition + gPrime * initialVelocity;
+        }
 
-        //}
-        //public static float VariableFprime()
-        //{
+        public static float VariableFprime(float mainMass, float initialOrbitalRadius, float orbitalRadius, float x, float z, float stumpffS)
+        {
+            float sqrtMu = Mathf.Sqrt(Body.StandardGravityParameter(mainMass));
+            return (sqrtMu / (initialOrbitalRadius * orbitalRadius)) * x * (z * stumpffS - 1f);
+        }
 
-        //}
-
-        //public static float VariableGprime()
-        //{
-
-        //}
+        public static float VariableGprime(float x, float orbitalRadius, float stumpffC)
+        {
+            return 1f - (Mathf.Pow(x, 2) * stumpffC / orbitalRadius);
+        }
     }
 }
 
