@@ -460,18 +460,19 @@ namespace OrbitalMechanics
             return x;
         }
 
-        public static float VariableF(float semimajorAxis, float orbitalRadius, float x)
-        {
-            if (semimajorAxis < 0)
-                semimajorAxis *= -1f;
-            return 1f - (semimajorAxis / orbitalRadius) * (1f - Mathf.Cos(x / Mathf.Sqrt(semimajorAxis)));
-        }
+        // FORMULATED IN TERMS OF STATE VARS
+        //public static float VariableF(float semimajorAxis, float orbitalRadius, float x)
+        //{
+        //    if (semimajorAxis < 0)
+        //        semimajorAxis *= -1f;
+        //    return 1f - (semimajorAxis / orbitalRadius) * (1f - Mathf.Cos(x / Mathf.Sqrt(semimajorAxis)));
+        //}
 
         // FORMULATED IN TERMS OF C
-        //public static float VariableF(float x, float orbitalRadius, float constantC)
-        //{
-        //    return 1f - (Mathf.Pow(x, 2) / orbitalRadius) * constantC;
-        //}
+        public static float VariableF(float x, float orbitalRadius, float constantC)
+        {
+            return 1f - (Mathf.Pow(x, 2) / orbitalRadius) * constantC;
+        }
 
         public static float VariableG(float timeOfFlight, float x, float mainMass, float constantS)
         {
@@ -486,7 +487,7 @@ namespace OrbitalMechanics
 
         public static Vector2 OrbitalVelocity(float fPrime, float gPrime, Vector2 initialPosition, Vector2 initialVelocity)
         {
-            //IMPORTANT NOTE: Must be calculated after orbital position is determined, as calculation of fPrime depends on the updated position
+            //IMPORTANT NOTE: Must be calculated after orbital position is determined, as calculation of fPrime and gPrime depend on the updated position
             return fPrime * initialPosition + gPrime * initialVelocity;
         }
 

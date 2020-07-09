@@ -66,14 +66,23 @@ public abstract class GravityAffected : OrbitalBody
             }
             lastTime = TimeSinceEpoch;
             float x = OrbitalMechanics.UniversalVariableMethod.UniversalVariable(TimeSinceEpoch, OrbitalPeriod, CurrentGravitySource.Mass, SemimajorAxis, OrbitalRadius, OrbitalPosition, OrbitalVelocity, 5);
-            float f = OrbitalMechanics.UniversalVariableMethod.VariableF(SemimajorAxis, OrbitalRadius, x);
+            float z = Mathf.Pow(x, 2) / SemimajorAxis;
             float S = OrbitalMechanics.UniversalVariableMethod.StumpffS(x, SemimajorAxis);
-            //float g = OrbitalMechanics.UniversalVariableMethod.VariableG(MathUtilities.Modulo(TimeSinceEpoch, OrbitalPeriod), x, CurrentGravitySource.Mass, S);
+            float C = OrbitalMechanics.UniversalVariableMethod.StumpffC(z);
+
+            float f = OrbitalMechanics.UniversalVariableMethod.VariableF(x, OrbitalRadius, C);
             float g = OrbitalMechanics.UniversalVariableMethod.VariableG(Time.fixedDeltaTime, x, CurrentGravitySource.Mass, S);
             universalPostion = OrbitalMechanics.UniversalVariableMethod.OrbitalPosition(f, g, OrbitalPosition, OrbitalVelocity);
+
+            float fPrime = OrbitalMechanics.UniversalVariableMethod.VariableFprime(CurrentGravitySource.Mass, OrbitalRadius, universalPostion.magnitude, x, z, S);
+            float gPrime = OrbitalMechanics.UniversalVariableMethod.VariableGprime(x, universalPostion.magnitude, C);
+            Vector2 universalVelocity = OrbitalMechanics.UniversalVariableMethod.OrbitalVelocity(fPrime, gPrime, OrbitalPosition, OrbitalVelocity);
+
             UpdateDeterministically();
-            Debug.LogFormat("f: {0}, g: {1}", f, g);
-            //Debug.LogFormat("Universal: {0}, Classical: {1}", universalPostion, OrbitalPosition);
+            //Debug.LogFormat("f: {0}, g: {1}", f, g);
+            //Debug.LogFormat("uP: {0}, cP: {1}, uV: {2}, cV: {3}", universalPostion, OrbitalPosition, universalVelocity, OrbitalVelocity);
+            //Debug.LogFormat("uP: ({0}, {1}), cP: ({2}, {3})", universalPostion.x, universalPostion.y, OrbitalPosition.x, OrbitalPosition.y);
+            Debug.LogFormat("uV: ({0}, {1}), cV: ({2}, {3})", universalVelocity.x, universalVelocity.y, OrbitalVelocity.x, OrbitalVelocity.y);
         }
     }
 
