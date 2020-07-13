@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -18,9 +18,8 @@ namespace OrbitalMechanics
         public enum TrajectoryType
         {
             Ellipse = 0,
-            Hyperbola = 1
-            //Circle = 2,
-            //Parabola = 3,
+            Hyperbola = 1,
+            Parabola = 2,
         }
     }
 
@@ -73,37 +72,6 @@ namespace OrbitalMechanics
                 nu = 2 * Mathf.PI - nu;
             }
             return nu;
-        }
-
-        public static float TrueAnomaly(float eccentricity, float eccentricAnomaly, Vector3 specificRelativeAngularMomentum)
-        {
-            if (eccentricity == 0f)
-                return eccentricAnomaly;
-
-            // Angle b/w relative position vector and eccentricityVectory
-            float sinNu = Mathf.Sqrt(1f - Mathf.Pow(eccentricity, 2)) * Mathf.Sin(eccentricAnomaly);
-            float cosNu = Mathf.Cos(eccentricAnomaly) - eccentricity;
-            float nu = Mathf.Atan2(sinNu, cosNu);
-
-            // Move [-pi, pi] range to [0, 2pi]
-            float twoPi = 2f * Mathf.PI;
-            nu = (nu + twoPi) % twoPi;
-            return nu;
-        }
-
-        public static float EccentricAnomalyAtEpoch(Vector3 relativePosition, Vector3 relativeVelocity, float bodyMass, Vector3 eccentricityVector)
-        {
-            float trueAnomaly = TrueAnomaly(relativePosition, relativeVelocity, eccentricityVector);
-            float eccentricity = eccentricityVector.magnitude;
-            float E = Mathf.Atan2(Mathf.Sqrt(1 - Mathf.Pow(eccentricity, 2)) * Mathf.Sin(trueAnomaly), eccentricity + Mathf.Cos(trueAnomaly));
-
-            return MathUtilities.Modulo(E, 2f * Mathf.PI);
-        }
-
-        public static float EccentricAnomalyAtEpoch(float trueAnomaly, float eccentricity)
-        {
-            float E = Mathf.Atan2(Mathf.Sqrt(1 - Mathf.Pow(eccentricity, 2)) * Mathf.Sin(trueAnomaly), eccentricity + Mathf.Cos(trueAnomaly));
-            return MathUtilities.Modulo(E, 2f * Mathf.PI);
         }
 
         public static Vector3 SpecificRelativeAngularMomentum(Vector3 relativePosition, Vector3 relativeVelocity)
@@ -173,12 +141,6 @@ namespace OrbitalMechanics
             return semimajorAxis * Mathf.Sqrt(1 - Mathf.Pow(eccentricity, 2)); ;
         }
 
-        public static float OrbitalPeriod(float meanMotion)
-        {
-            //FIXME: Meaningless for Hyperbolic orbit.
-            return 2 * Mathf.PI / meanMotion;
-        }
-
         public static float OrbitalPeriod(float semimajorAxis, float mainMass)
         {
             return 2 * Mathf.PI * Mathf.Sqrt(Mathf.Pow(semimajorAxis, 3) / Body.StandardGravityParameter(mainMass));
@@ -198,46 +160,6 @@ namespace OrbitalMechanics
                 ? -Mathf.Sin(trueAnomaly)
                 : Mathf.Sin(trueAnomaly);
             return orbitalRadius * new Vector2(Mathf.Cos(trueAnomaly), sin);
-        }
-
-        public static float EccentricAnomalyAtEpoch(float orbitalDistance, float eccentricity, float semimajorAxis)
-        {
-            if (semimajorAxis < 0) // Hyperbolic
-            {
-                float semilatusRectum = SemilatusRectum(semimajorAxis, eccentricity);
-                float coshE = (1f / eccentricity) * (1f - orbitalDistance / semilatusRectum) + (orbitalDistance * eccentricity) / semilatusRectum;
-                return Mathf.Log(coshE + Mathf.Sqrt(Mathf.Pow(coshE, 2) - 1f));
-            }
-            return Mathf.Acos(Mathf.Clamp((-1f / eccentricity) * ((orbitalDistance / semimajorAxis) - 1f), -1f, 1f));
-        }
-
-        public static float MeanAnomalyAtEpoch(float eccentricAnomaly, float eccentricity)
-        {
-            if (eccentricity >= 1)
-            {
-                return eccentricity * MathUtilities.Sinh(eccentricAnomaly) - eccentricAnomaly;
-            }
-            return eccentricAnomaly - eccentricity * Mathf.Sin(eccentricAnomaly);
-        }
-
-        public static float MeanAnomalyAtEpoch(float orbitalDistance, float eccentricity, float semimajorAxis)
-        {
-            float eccentricAnomaly = EccentricAnomalyAtEpoch(orbitalDistance, eccentricity, semimajorAxis);
-            return eccentricAnomaly - eccentricity * Mathf.Sin(eccentricAnomaly);
-        }
-
-        public static float MeanMotion(float bodyMass, float semimajorAxis)
-        {
-            float absSemimajorAxis;
-            if (semimajorAxis < 0)
-            {
-                absSemimajorAxis = -1f * semimajorAxis;
-            }
-            else
-            {
-                absSemimajorAxis = semimajorAxis;
-            }
-            return Mathf.Sqrt(Body.StandardGravityParameter(bodyMass) / Mathf.Pow(absSemimajorAxis, 3));
         }
 
         public static float SemilatusRectum(float semimajorAxis, float eccentricity)
@@ -300,8 +222,50 @@ namespace OrbitalMechanics
         }
     }
 
+    public static class ParabolicTrajectory
+    {
+        //STUFF
+    }
+
     public static class KeplerMethod
     {
+        public static float TrueAnomaly(float eccentricity, float eccentricAnomaly, Vector3 specificRelativeAngularMomentum)
+        {
+            if (eccentricity == 0f)
+                return eccentricAnomaly;
+
+            // Angle b/w relative position vector and eccentricityVectory
+            float sinNu = Mathf.Sqrt(1f - Mathf.Pow(eccentricity, 2)) * Mathf.Sin(eccentricAnomaly);
+            float cosNu = Mathf.Cos(eccentricAnomaly) - eccentricity;
+            float nu = Mathf.Atan2(sinNu, cosNu);
+
+            // Move [-pi, pi] range to [0, 2pi]
+            float twoPi = 2f * Mathf.PI;
+            nu = (nu + twoPi) % twoPi;
+            return nu;
+        }
+
+        public static float EccentricAnomalyAtEpoch(Vector3 relativePosition, Vector3 relativeVelocity, float bodyMass, Vector3 eccentricityVector)
+        {
+            float trueAnomaly = Trajectory.TrueAnomaly(relativePosition, relativeVelocity, eccentricityVector);
+            float eccentricity = eccentricityVector.magnitude;
+            float E = Mathf.Atan2(Mathf.Sqrt(1 - Mathf.Pow(eccentricity, 2)) * Mathf.Sin(trueAnomaly), eccentricity + Mathf.Cos(trueAnomaly));
+
+            return MathUtilities.Modulo(E, 2f * Mathf.PI);
+        }
+
+        public static float EccentricAnomalyAtEpoch(float trueAnomaly, float eccentricity)
+        {
+            float E = Mathf.Atan2(Mathf.Sqrt(1 - Mathf.Pow(eccentricity, 2)) * Mathf.Sin(trueAnomaly), eccentricity + Mathf.Cos(trueAnomaly));
+            return MathUtilities.Modulo(E, 2f * Mathf.PI);
+        }
+
+        public static float OrbitalPeriod(float meanMotion)
+        {
+            //FIXME: Meaningless for Hyperbolic orbit.
+            return 2 * Mathf.PI / meanMotion;
+        }
+
         public static float MeanAnomaly(float meanAnomalyAtEpoch, float meanMotion, float timeSinceEpoch, bool modulate)
         {
             // Updated mean anomaly, assuming mean anomaly at epoch has been calculated!
@@ -315,8 +279,22 @@ namespace OrbitalMechanics
         public static float MeanAnomaly(float meanAnomalyAtEpoch, float bodyMass, float semimajorAxis, float timeSinceEpoch)
         {
             // Updated mean anomaly, assuming mean anomaly at epoch has been calculated!
-            float M = meanAnomalyAtEpoch + Trajectory.MeanMotion(bodyMass, semimajorAxis) * timeSinceEpoch;
+            float M = meanAnomalyAtEpoch + MeanMotion(bodyMass, semimajorAxis) * timeSinceEpoch;
             return MathUtilities.Modulo(M, 2 * Mathf.PI);
+        }
+
+        public static float MeanMotion(float bodyMass, float semimajorAxis)
+        {
+            float absSemimajorAxis;
+            if (semimajorAxis < 0)
+            {
+                absSemimajorAxis = -1f * semimajorAxis;
+            }
+            else
+            {
+                absSemimajorAxis = semimajorAxis;
+            }
+            return Mathf.Sqrt(Body.StandardGravityParameter(bodyMass) / Mathf.Pow(absSemimajorAxis, 3));
         }
 
         public static float EccentricAnomaly(float meanAnomaly, float eccentricity, int maxIterations)
@@ -359,6 +337,32 @@ namespace OrbitalMechanics
                 }
             }
             return E;
+        }
+
+        public static float EccentricAnomalyAtEpoch(float orbitalDistance, float eccentricity, float semimajorAxis)
+        {
+            if (semimajorAxis < 0) // Hyperbolic
+            {
+                float semilatusRectum = Trajectory.SemilatusRectum(semimajorAxis, eccentricity);
+                float coshE = (1f / eccentricity) * (1f - orbitalDistance / semilatusRectum) + (orbitalDistance * eccentricity) / semilatusRectum;
+                return Mathf.Log(coshE + Mathf.Sqrt(Mathf.Pow(coshE, 2) - 1f));
+            }
+            return Mathf.Acos(Mathf.Clamp((-1f / eccentricity) * ((orbitalDistance / semimajorAxis) - 1f), -1f, 1f));
+        }
+
+        public static float MeanAnomalyAtEpoch(float eccentricAnomaly, float eccentricity)
+        {
+            if (eccentricity >= 1)
+            {
+                return eccentricity * MathUtilities.Sinh(eccentricAnomaly) - eccentricAnomaly;
+            }
+            return eccentricAnomaly - eccentricity * Mathf.Sin(eccentricAnomaly);
+        }
+
+        public static float MeanAnomalyAtEpoch(float orbitalDistance, float eccentricity, float semimajorAxis)
+        {
+            float eccentricAnomaly = EccentricAnomalyAtEpoch(orbitalDistance, eccentricity, semimajorAxis);
+            return eccentricAnomaly - eccentricity * Mathf.Sin(eccentricAnomaly);
         }
     }
 
@@ -417,24 +421,30 @@ namespace OrbitalMechanics
             return StumpffS(z);
         }
 
-        public static float UniversalVariable(float timeOfFlight, float orbitalPeriod, float mainMass, float semimajorAxis, float orbitalRadius, Vector2 orbitalPosition, Vector2 orbitalVelocity, int maxIterations)
+        public static void Stuff(out int wee, out int other)
+        {
+            wee = 5;
+            other = 34;
+        }
+
+        public static float UniversalVariable(float timeOfFlight, float mainMass, float semimajorAxis, float orbitalRadius, Vector2 orbitalPosition, Vector2 orbitalVelocity)
         {
             // Heavily pulled from Fundamentals of Astrodynamics by Bate et. al.
 
+            // Constants
+            int maxIterations = 6;
             float sqrtMu = Mathf.Sqrt(Body.StandardGravityParameter(mainMass));
-
-            // Newton's method
-            //float reducedTime = MathUtilities.Modulo(timeOfFlight, orbitalPeriod);
-            float reducedTime = Time.fixedDeltaTime;
-            float x = Body.StandardGravityParameter(mainMass) * reducedTime / semimajorAxis;
-            float z, c, s;
             float rDotV = Vector2.Dot(orbitalPosition, orbitalVelocity);
             float rDotVbyRootMu = rDotV / sqrtMu;
+
+            // Initialize
+            float x = Body.StandardGravityParameter(mainMass) * timeOfFlight / semimajorAxis;
+            float z = 0;
+            float c = 0;
+            float s = 0;
             float t = 0;
             float dTdX = 0;
-            z = 0;
-            c = 0;
-            s = 0;
+
             int currentIter = 0;
             float deltaX = Mathf.Infinity;
             while (true)
@@ -444,13 +454,12 @@ namespace OrbitalMechanics
                     break;
 
                 z = Mathf.Pow(x, 2) / semimajorAxis;
-                //Debug.LogFormat("x: {0}, reducedTime: {1},  iter: {2}", z, reducedTime, currentIter);
                 c = StumpffC(z);
                 s = StumpffS(z);
                 // Xn+1 = Xn + (t - tn)/(dt/dX)|X=Xn
-                t = rDotVbyRootMu * Mathf.Pow(x, 2) * c + (1f - (orbitalRadius / semimajorAxis)) * Mathf.Pow(x, 3) * s + orbitalRadius * x; // Note that this is actual mu * t
-                dTdX = Mathf.Pow(x, 2) * c + rDotVbyRootMu * x * (1f - z * s) + orbitalRadius * (1f - z * c); // Note that this is actual mu * dTdX, mu cancels
-                deltaX = (reducedTime - t) / dTdX;
+                t = rDotVbyRootMu * Mathf.Pow(x, 2) * c + (1f - (orbitalRadius / semimajorAxis)) * Mathf.Pow(x, 3) * s + orbitalRadius * x; // Note that this is actually mu * t
+                dTdX = Mathf.Pow(x, 2) * c + rDotVbyRootMu * x * (1f - z * s) + orbitalRadius * (1f - z * c); // Note that this is actually mu * dTdX, mu cancels
+                deltaX = (timeOfFlight - t) / dTdX;
                 x += deltaX;
                 if (Mathf.Abs(deltaX) < 1e-6)
                     break;
@@ -474,10 +483,10 @@ namespace OrbitalMechanics
             return 1f - (Mathf.Pow(x, 2) / orbitalRadius) * constantC;
         }
 
-        public static float VariableG(float timeOfFlight, float x, float mainMass, float constantS)
+        public static float VariableG(float timeOfFlight, float x, float mainMass, float stumpffS)
         {
             float sqrtMu = Mathf.Sqrt(Body.StandardGravityParameter(mainMass));
-            return timeOfFlight - (Mathf.Pow(x, 3) / sqrtMu) * constantS;
+            return timeOfFlight - (Mathf.Pow(x, 3) / sqrtMu) * stumpffS;
         }
 
         public static Vector2 OrbitalPosition(float f, float g, Vector2 initialPosition, Vector2 initialVelocity)
