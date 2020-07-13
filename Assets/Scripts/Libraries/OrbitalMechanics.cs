@@ -21,6 +21,11 @@ namespace OrbitalMechanics
             Hyperbola = 1,
             Parabola = 2,
         }
+        //public enum UpdateMethods
+        //{
+        //    Kepler = 0,
+        //    UniversalVariable = 1,
+        //}
     }
 
     public static class Trajectory
@@ -427,7 +432,7 @@ namespace OrbitalMechanics
             other = 34;
         }
 
-        public static float UniversalVariable(float timeOfFlight, float mainMass, float semimajorAxis, float orbitalRadius, Vector2 orbitalPosition, Vector2 orbitalVelocity)
+        public static void UniversalVariable(ref float x, float timeOfFlight, float mainMass, float semimajorAxis, float orbitalRadius, Vector2 orbitalPosition, Vector2 orbitalVelocity)
         {
             // Heavily pulled from Fundamentals of Astrodynamics by Bate et. al.
 
@@ -438,7 +443,7 @@ namespace OrbitalMechanics
             float rDotVbyRootMu = rDotV / sqrtMu;
 
             // Initialize
-            float x = Body.StandardGravityParameter(mainMass) * timeOfFlight / semimajorAxis;
+            //float x = Body.StandardGravityParameter(mainMass) * timeOfFlight / semimajorAxis;
             float z = 0;
             float c = 0;
             float s = 0;
@@ -465,8 +470,8 @@ namespace OrbitalMechanics
                     break;
             }
             //Debug.LogFormat("z: {0}, c: {1}, s: {2}, iter: {3}", z, c, s, currentIter);
-            //Debug.LogFormat("x: {0}, iter: {1}", x, currentIter);
-            return x;
+            Debug.LogFormat("x: {0}, iter: {1}", x, currentIter);
+            //return x;
         }
 
         // FORMULATED IN TERMS OF STATE VARS
