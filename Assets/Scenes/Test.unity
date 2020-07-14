@@ -3641,6 +3641,36 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3848189163687812700, guid: 375478fa4f0786c408dccb304e5822ca,
+        type: 3}
+      propertyPath: timeMultipliers.Array.size
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3848189163687812700, guid: 375478fa4f0786c408dccb304e5822ca,
+        type: 3}
+      propertyPath: timeMultipliers.Array.data[0]
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3848189163687812700, guid: 375478fa4f0786c408dccb304e5822ca,
+        type: 3}
+      propertyPath: timeMultipliers.Array.data[1]
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3848189163687812700, guid: 375478fa4f0786c408dccb304e5822ca,
+        type: 3}
+      propertyPath: timeMultipliers.Array.data[2]
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3848189163687812700, guid: 375478fa4f0786c408dccb304e5822ca,
+        type: 3}
+      propertyPath: timeMultipliers.Array.data[3]
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 3848189163687812700, guid: 375478fa4f0786c408dccb304e5822ca,
+        type: 3}
+      propertyPath: timeMultipliers.Array.data[4]
+      value: 50
+      objectReference: {fileID: 0}
     - target: {fileID: 4989048423815081369, guid: 375478fa4f0786c408dccb304e5822ca,
         type: 3}
       propertyPath: pauseUI

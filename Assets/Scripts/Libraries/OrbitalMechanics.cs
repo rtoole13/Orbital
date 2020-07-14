@@ -426,12 +426,6 @@ namespace OrbitalMechanics
             return StumpffS(z);
         }
 
-        public static void Stuff(out int wee, out int other)
-        {
-            wee = 5;
-            other = 34;
-        }
-
         public static void UniversalVariable(ref float x, float timeOfFlight, float mainMass, float semimajorAxis, float orbitalRadius, Vector2 orbitalPosition, Vector2 orbitalVelocity)
         {
             // Heavily pulled from Fundamentals of Astrodynamics by Bate et. al.
@@ -441,15 +435,10 @@ namespace OrbitalMechanics
             float sqrtMu = Mathf.Sqrt(Body.StandardGravityParameter(mainMass));
             float rDotV = Vector2.Dot(orbitalPosition, orbitalVelocity);
             float rDotVbyRootMu = rDotV / sqrtMu;
-
+            float z, c, s;
             // Initialize
-            //float x = Body.StandardGravityParameter(mainMass) * timeOfFlight / semimajorAxis;
-            float z = 0;
-            float c = 0;
-            float s = 0;
             float t = 0;
             float dTdX = 0;
-
             int currentIter = 0;
             float deltaX = Mathf.Infinity;
             while (true)
@@ -470,8 +459,7 @@ namespace OrbitalMechanics
                     break;
             }
             //Debug.LogFormat("z: {0}, c: {1}, s: {2}, iter: {3}", z, c, s, currentIter);
-            Debug.LogFormat("x: {0}, iter: {1}", x, currentIter);
-            //return x;
+            //Debug.LogFormat("x: {0}, iter: {1}", x, currentIter);
         }
 
         // FORMULATED IN TERMS OF STATE VARS

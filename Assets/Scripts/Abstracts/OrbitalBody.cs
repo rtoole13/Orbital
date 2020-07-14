@@ -37,10 +37,20 @@ public abstract class OrbitalBody : MonoBehaviour
     private float _timeSinceEpoch;
     private float _trueAnomaly;
     private Mechanics.Globals.TrajectoryType _trajectoryType;
+    private bool _updatingIteratively = true;
     protected Rigidbody2D body;
-    protected bool _updatingIteratively = true;
 
     private Vector2 lastPosition;
+
+    //UVM
+    private float x;
+    private float z;
+    private float C;
+    private float S;
+    private float f;
+    private float g;
+    private float fPrime;
+    private float gPrime;
     private float hyperbolicVelocityDiffThreshold = 0.02f; // If abs(position-this-frame - position-last-frame)/dt > this, vel is close enough to hyperbolic excess vel, update that way
     private float hyperbolicExcessVelocityApproxThreshold = 1.5f; // If calculated velocity - hyperbolic excess vel < this, check above
     private bool nearHyperbolicAsymptote = false;
