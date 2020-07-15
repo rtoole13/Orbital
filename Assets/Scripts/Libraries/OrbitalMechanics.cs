@@ -91,6 +91,7 @@ namespace OrbitalMechanics
 
         public static float OrbitalSpeed(float mainMass, float orbitalRadius, float semimajorAxis)
         {
+            // Vis-viva equation, "living force"
             return Mathf.Sqrt(Globals.GRAVITATIONALCONSTANT * mainMass * ((2f / orbitalRadius) - (1f / semimajorAxis)));
         }
 
@@ -102,6 +103,14 @@ namespace OrbitalMechanics
                 : Mathf.Sin(psi);
 
             return new Vector2(Mathf.Cos(psi), sin);
+        }
+
+        public static float FlightPathAngle(float specificRelativeAngularMomentum, Vector2 orbitalPosition, Vector2 orbitalVelocity)
+        {
+            float radius = orbitalPosition.magnitude;
+            float speed = orbitalVelocity.magnitude;
+
+            return Mathf.Acos(specificRelativeAngularMomentum / (radius * speed)) * Mathf.Sign(Vector2.Dot(orbitalPosition, orbitalVelocity));
         }
 
         public static float FlightPathAngle(float eccentricity, float trueAnomaly)
@@ -234,7 +243,7 @@ namespace OrbitalMechanics
 
     public static class KeplerMethod
     {
-        public static float TrueAnomaly(float eccentricity, float eccentricAnomaly, Vector3 specificRelativeAngularMomentum)
+        public static float TrueAnomaly(float eccentricity, float eccentricAnomaly)
         {
             if (eccentricity == 0f)
                 return eccentricAnomaly;

@@ -25,9 +25,10 @@ public class UniversalVariableSolver : Solver
         g = 1f;
     }
     
-    public void UpdateStateVariables(float timeOfFlight, float mainMass, float semimajorAxis, float orbitalRadius, Vector2 orbitalPosition, Vector2 orbitalVelocity)
+    public void UpdateStateVariables(float timeOfFlight, float mainMass, float semimajorAxis, Vector2 orbitalPosition, Vector2 orbitalVelocity, Vector3 eccentricityVector, Vector3 specificRelativeAngularMomentum)
     {
-        // Update the universal variable x, and the 
+        float orbitalRadius = orbitalPosition.magnitude;
+        // Update the universal variable x
         OrbitalMechanics.UniversalVariableMethod.UniversalVariable(ref x, timeOfFlight, mainMass, semimajorAxis, orbitalRadius, orbitalPosition, orbitalVelocity);
 
         // Update z, c, and s based off of latest x
@@ -45,5 +46,17 @@ public class UniversalVariableSolver : Solver
         fPrime = OrbitalMechanics.UniversalVariableMethod.VariableFprime(mainMass, orbitalRadius, CalculatedRadius, x, z, stumpffS);
         gPrime = OrbitalMechanics.UniversalVariableMethod.VariableGprime(x, CalculatedRadius, stumpffC);
         CalculatedVelocity = OrbitalMechanics.UniversalVariableMethod.OrbitalVelocity(fPrime, gPrime, orbitalPosition, orbitalVelocity);
+        CalculatedSpeed = CalculatedVelocity.magnitude;
+
+        // Update true anomaly and flight path angle
+        TrueAnomaly = OrbitalMechanics.Trajectory.TrueAnomaly(CalculatedPosition, CalculatedVelocity, eccentricityVector);
+        FlightPathAngle = OrbitalMechanics.Trajectory.FlightPathAngle(specificRelativeAngularMomentum.magnitude, CalculatedPosition, CalculatedVelocity);
+        
+        // NOTE: many unchanging or known variables for a stable orbit being passed
+        // semimajorAxis (unchanging)
+        // specificRelativeAngularMomentum (unchanging)
+        // orbitalRadius (known)
+        // orbitalPosition (LastPosition)
+        // orbitalVelocity (known)
     }
 }

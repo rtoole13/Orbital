@@ -374,7 +374,7 @@ public abstract class OrbitalBody : MonoBehaviour
     {
         OrbitalPeriod = Mechanics.KeplerMethod.OrbitalPeriod(MeanMotion);
         EccentricAnomaly = Mechanics.KeplerMethod.EccentricAnomalyAtEpoch(sourceRelativePosition, sourceRelativeVelocity, CurrentGravitySource.Mass, EccentricityVector);
-        TrueAnomaly = Mechanics.KeplerMethod.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
+        TrueAnomaly = Mechanics.KeplerMethod.TrueAnomaly(Eccentricity, EccentricAnomaly);
         MeanAnomalyAtEpoch = Mechanics.KeplerMethod.MeanAnomalyAtEpoch(EccentricAnomaly, Eccentricity);
         MeanAnomaly = MeanAnomalyAtEpoch;
         OrbitalRadius = Mechanics.Trajectory.OrbitalRadius(Eccentricity, SemimajorAxis, TrueAnomaly);
@@ -431,7 +431,7 @@ public abstract class OrbitalBody : MonoBehaviour
         TimeSinceEpoch = (TimeSinceEpoch + Time.fixedDeltaTime) % OrbitalPeriod;
         MeanAnomaly = Mechanics.KeplerMethod.MeanAnomaly(MeanAnomalyAtEpoch, MeanMotion, TimeSinceEpoch, true);
         EccentricAnomaly = Mechanics.KeplerMethod.EccentricAnomaly(MeanAnomaly, Eccentricity, 6);
-        TrueAnomaly = Mechanics.KeplerMethod.TrueAnomaly(Eccentricity, EccentricAnomaly, SpecificRelativeAngularMomentum);
+        TrueAnomaly = Mechanics.KeplerMethod.TrueAnomaly(Eccentricity, EccentricAnomaly);
         FlightPathAngle = Mechanics.Trajectory.FlightPathAngle(Eccentricity, TrueAnomaly);
         OrbitalRadius = Mechanics.Trajectory.OrbitalRadius(Eccentricity, SemimajorAxis, TrueAnomaly);
         lastPosition = OrbitalPosition;
