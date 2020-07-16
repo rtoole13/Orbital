@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class KeplerSolver : Solver
 {
+    // Kepler variables
     private float eccentricAnomaly;
     private float meanAnomaly;
     private float meanAnomalyAtEpoch;
@@ -11,7 +12,16 @@ public class KeplerSolver : Solver
     private float orbitalPeriod;
     private int maxNewtonianMethodIterations = 6;
 
+
     private float _flightPathAngle;
+
+    // Hyperbolic parameters
+    private bool nearHyperbolicAsymptote;
+    private float hyperbolicExcessSpeed;
+    private float trueAnomalyOfAsymptote;
+    private Vector2[] hyperbolicAsymptotes;
+    
+
     public KeplerSolver(float _eccentricAnomaly = 0f)
     {
         eccentricAnomaly = _eccentricAnomaly;
@@ -20,11 +30,59 @@ public class KeplerSolver : Solver
         meanMotion = 0f;
     }
 
-    public void UpdateStateVariables(OrbitalMechanics.Globals.TrajectoryType trajectoryType, float timeOfFlight, float eccentricity, float semimajorAxis, bool clockWiseOrbit, float mainMass)
+    public override void InitializeSolver(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity, float sourceMass)
+    {
+        // Initialize orbital parameters
+        base.InitializeSolver(sourceRelativePosition, sourceRelativeVelocity, sourceMass);
+
+        // Initialize Kepler elements
+        meanMotion = OrbitalMechanics.KeplerMethod.MeanMotion(sourceMass, semimajorAxis);
+        if (trajectoryType == OrbitalMechanics.Globals.TrajectoryType.Ellipse)
+        {
+            orbitalPeriod = OrbitalMechanics.KeplerMethod.OrbitalPeriod(meanMotion);
+            InitializeEllipticalParameters(sourceRelativePosition, sourceRelativeVelocity);
+
+        }
+        else if (trajectoryType == OrbitalMechanics.Globals.TrajectoryType.Hyperbola)
+        {
+            orbitalPeriod = Mathf.Infinity;
+            InitializeHyperbolicParameters(sourceRelativePosition, sourceRelativeVelocity);
+        }
+        else
+        {
+            orbitalPeriod = Mathf.Infinity;
+            InitializeParabolicParameters();
+        }
+        meanAnomalyAtEpoch = OrbitalMechanics.KeplerMethod.MeanAnomalyAtEpoch(eccentricAnomaly, eccentricity);
+        meanAnomaly = meanAnomalyAtEpoch;
+    }
+
+    private void InitializeEllipticalParameters(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)
+    {
+        eccentricAnomaly = OrbitalMechanics.KeplerMethod.EccentricAnomalyAtEpoch(sourceRelativePosition, sourceRelativeVelocity, sourceMass, EccentricityVector);
+        TrueAnomaly = OrbitalMechanics.KeplerMethod.TrueAnomaly(eccentricity, eccentricAnomaly);
+    }
+
+    private void InitializeHyperbolicParameters(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)
+    {
+        nearHyperbolicAsymptote = false;
+        hyperbolicExcessSpeed = OrbitalMechanics.HyperbolicTrajectory.ExcessVelocity(sourceMass, semimajorAxis);
+        trueAnomalyOfAsymptote = OrbitalMechanics.HyperbolicTrajectory.TrueAnomalyOfAsymptote(eccentricity, clockWiseOrbit);
+        hyperbolicAsymptotes = OrbitalMechanics.HyperbolicTrajectory.Asymptotes(trueAnomalyOfAsymptote, clockWiseOrbit);
+        TrueAnomaly = OrbitalMechanics.HyperbolicTrajectory.TrueAnomaly(sourceRelativePosition, sourceRelativeVelocity, semimajorAxis, eccentricity);
+        eccentricAnomaly = OrbitalMechanics.HyperbolicTrajectory.HyperbolicAnomalyAtEpoch(TrueAnomaly, eccentricity);
+    }
+
+    private void InitializeParabolicParameters()
+    {
+        throw new System.NotImplementedException("Kepler parabolic solver not implemented!");
+    }
+
+    public void UpdateStateVariables(float timeOfFlight)
     {
         if (trajectoryType == OrbitalMechanics.Globals.TrajectoryType.Ellipse)
         {
-            UpdateStateVariablesElliptically(timeOfFlight, eccentricity, semimajorAxis, clockWiseOrbit, mainMass);
+            UpdateStateVariablesElliptically(timeOfFlight);
         }
         else if (trajectoryType == OrbitalMechanics.Globals.TrajectoryType.Hyperbola)
         {
@@ -36,7 +94,7 @@ public class KeplerSolver : Solver
         }
     }
 
-    public void UpdateStateVariablesElliptically(float timeOfFlight, float eccentricity, float semimajorAxis, bool clockWiseOrbit, float mainMass)
+    private void UpdateStateVariablesElliptically(float timeOfFlight)
     {
         // Update eccentricAnomaly
         timeOfFlight %= orbitalPeriod;
@@ -51,17 +109,17 @@ public class KeplerSolver : Solver
         CalculatedPosition = OrbitalMechanics.Trajectory.OrbitalPosition(CalculatedRadius, TrueAnomaly, clockWiseOrbit);
 
         // Update Velocity by vis-viva
-        CalculatedSpeed = OrbitalMechanics.Trajectory.OrbitalSpeed(mainMass, CalculatedRadius, semimajorAxis);
+        CalculatedSpeed = OrbitalMechanics.Trajectory.OrbitalSpeed(sourceMass, CalculatedRadius, semimajorAxis);
         FlightPathAngle = OrbitalMechanics.Trajectory.FlightPathAngle(eccentricity, TrueAnomaly);
         CalculatedVelocity = CalculatedSpeed * OrbitalMechanics.Trajectory.OrbitalDirection(TrueAnomaly, FlightPathAngle, clockWiseOrbit);
     }
 
-    public void UpdateStateVariablesHyperbolically()
+    private void UpdateStateVariablesHyperbolically()
     {
         throw new System.NotImplementedException("Kepler hyperbolic solver not implemented!");
     }
 
-    public void UpdateStateVariablesParabolically()
+    private void UpdateStateVariablesParabolically()
     {
         throw new System.NotImplementedException("Kepler parabolic solver not implemented!");
     }

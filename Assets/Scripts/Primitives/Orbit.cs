@@ -7,8 +7,8 @@ public class Orbit
 {
     private Vector3 _eccentricityVector;
 
-    public bool ValidOrbit { get; private set; }
     public float ArgumentOfPeriapsis { get; private set; }
+    public bool ValidOrbit { get; private set; }
     public bool ClockWiseOrbit { get; private set; }
     public float Eccentricity { get; private set; }
     public Vector3 EccentricityVector {
