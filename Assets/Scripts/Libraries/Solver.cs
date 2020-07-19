@@ -117,4 +117,14 @@ public abstract class Solver
         semimajorAxisReciprocal = 1f / semimajorAxis;
     }
 
+    public virtual void InitializeSolver(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity, float _sourceMass, Vector3 _specificRelativeAngularMomentum, Vector3 eccentricityVector, float _semimajorAxis)
+    {
+        sourceMass = _sourceMass;
+        specificRelativeAngularMomentum = _specificRelativeAngularMomentum;
+        clockWiseOrbit = specificRelativeAngularMomentum.z < 0;
+        EccentricityVector = eccentricityVector;
+        semimajorAxis = _semimajorAxis;
+        semimajorAxisReciprocal = 1f / semimajorAxis;
+    }
+
 }
