@@ -33,7 +33,6 @@ public abstract class Solver
         get { return _calculatedPosition; }
         protected set 
         {
-            _lastPosition = value;
             _calculatedPosition = value;
         }
     }
@@ -43,7 +42,6 @@ public abstract class Solver
         get { return _calculatedRadius; }
         protected set 
         {
-            _lastRadius = _calculatedRadius;
             _calculatedRadius = value; 
         }
     }
@@ -53,7 +51,6 @@ public abstract class Solver
         get { return _calculatedSpeed; }
         protected set 
         {
-            _lastSpeed = _calculatedSpeed;
             _calculatedSpeed = value; 
         }
     }
@@ -63,7 +60,6 @@ public abstract class Solver
         get { return _calculatedVelocity; }
         protected set 
         {
-            _lastVelocity = _calculatedVelocity;
             _calculatedVelocity = value; 
         }
     }
@@ -74,10 +70,26 @@ public abstract class Solver
         protected set { _flightPathAngle = value; }
     }
 
-    public Vector2 LastPosition { get { return _lastPosition; } }
-    public float LastRadius { get { return _lastRadius; } }
-    public float LastSpeed { get { return _lastSpeed; } }
-    public Vector2 LastVelocity { get { return _lastVelocity; } }
+    public Vector2 LastPosition 
+    { 
+        get { return _lastPosition; }
+        protected set { _lastPosition = value; }
+    }
+    public float LastRadius 
+    { 
+        get { return _lastRadius; }
+        protected set { _lastRadius = value; }
+    }
+    public float LastSpeed 
+    { 
+        get { return _lastSpeed; }
+        protected set { _lastSpeed = value; }
+    }
+    public Vector2 LastVelocity 
+    { 
+        get { return _lastVelocity; }
+        protected set { _lastVelocity = value; }
+    }
     public float TrueAnomaly
     {
         get { return _trueAnomaly; }

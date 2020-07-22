@@ -36,6 +36,7 @@ public abstract class OrbitalBody : MonoBehaviour
     private bool _updatingIteratively = true;
     protected Rigidbody2D body;
     protected KeplerSolver trajectorySolver;
+    protected UniversalVariableSolver uvmSolver;
 
     public delegate void OnOrbitCalculation();
     public event OnOrbitCalculation OnOrbitCalculationEvent;
@@ -292,6 +293,8 @@ public abstract class OrbitalBody : MonoBehaviour
         body = GetComponent<Rigidbody2D>();
         body.velocity = startVelocity;
         trajectorySolver = new KeplerSolver();
+        //trajectorySolver = new UniversalVariableSolver();
+        uvmSolver = new UniversalVariableSolver();
     }
 
     protected virtual void Start()
@@ -315,7 +318,8 @@ public abstract class OrbitalBody : MonoBehaviour
 
         // Initialize Solver
         trajectorySolver.InitializeSolver(sourceRelativePosition, sourceRelativeVelocity, CurrentGravitySource.Mass, SpecificRelativeAngularMomentum, EccentricityVector, SemimajorAxis);
-        
+        uvmSolver.InitializeSolver(sourceRelativePosition, sourceRelativeVelocity, CurrentGravitySource.Mass, SpecificRelativeAngularMomentum, EccentricityVector, SemimajorAxis);
+
         // Epoch parameters
         TimeSinceEpoch = 0f;
 
@@ -334,7 +338,8 @@ public abstract class OrbitalBody : MonoBehaviour
 
         TimeSinceEpoch += Time.fixedDeltaTime;
         trajectorySolver.UpdateStateVariables(TimeSinceEpoch);
-
+        uvmSolver.UpdateStateVariables(Time.fixedDeltaTime);
+        Debug.LogFormat("kepler: {0}, uvm: {1}", trajectorySolver.CalculatedPosition, uvmSolver.CalculatedPosition);
         UpdateStateVectorsBySolver();
     }
 
@@ -347,7 +352,7 @@ public abstract class OrbitalBody : MonoBehaviour
         OrbitalVelocity = trajectorySolver.CalculatedVelocity;
         FlightPathAngle = trajectorySolver.FlightPathAngle;
         TrueAnomaly = trajectorySolver.TrueAnomaly;
-
+        
         // Transform from perifocal to world position
         transform.position = OrbitalPositionToWorld;
     }

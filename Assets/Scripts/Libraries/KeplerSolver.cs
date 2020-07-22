@@ -46,7 +46,6 @@ public class KeplerSolver : Solver
 
         // Initialize Kepler elements
         InitializeKeplerElements(sourceRelativePosition, sourceRelativeVelocity);
-        Debug.Log(EccentricityVector);
     }
 
     private void InitializeKeplerElements(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)
@@ -123,6 +122,11 @@ public class KeplerSolver : Solver
 
     public void UpdateStateVariables(float timeOfFlight)
     {
+        LastPosition = CalculatedPosition;
+        LastRadius = CalculatedRadius;
+        LastSpeed = CalculatedSpeed;
+        LastVelocity = CalculatedVelocity;
+
         if (trajectoryType == OrbitalMechanics.Globals.TrajectoryType.Ellipse)
         {
             UpdateStateVariablesElliptically(timeOfFlight);
