@@ -319,7 +319,7 @@ public abstract class OrbitalBody : MonoBehaviour
         // Initialize Solver
         trajectorySolver.InitializeSolver(sourceRelativePosition, sourceRelativeVelocity, CurrentGravitySource.Mass, SpecificRelativeAngularMomentum, EccentricityVector, SemimajorAxis);
         uvmSolver.InitializeSolver(sourceRelativePosition, sourceRelativeVelocity, CurrentGravitySource.Mass, SpecificRelativeAngularMomentum, EccentricityVector, SemimajorAxis);
-
+        
         // Epoch parameters
         TimeSinceEpoch = 0f;
 
@@ -338,8 +338,8 @@ public abstract class OrbitalBody : MonoBehaviour
 
         TimeSinceEpoch += Time.fixedDeltaTime;
         trajectorySolver.UpdateStateVariables(TimeSinceEpoch);
-        uvmSolver.UpdateStateVariables(Time.fixedDeltaTime);
-        Debug.LogFormat("kepler: {0}, uvm: {1}", trajectorySolver.CalculatedPosition, uvmSolver.CalculatedPosition);
+        uvmSolver.UpdateStateVariables(TimeSinceEpoch);
+        //Debug.LogFormat("kepler: {0}, uvm: {1}", trajectorySolver.CalculatedPosition, uvmSolver.CalculatedPosition);
         UpdateStateVectorsBySolver();
     }
 
@@ -375,6 +375,8 @@ public abstract class OrbitalBody : MonoBehaviour
         //Gizmos.color = Color.red;
         //Vector2 dir = Mechanics.Trajectory.OrbitalDirection(TrueAnomaly, FlightPathAngle, ClockWiseOrbit);
         //Gizmos.DrawRay(Position, 5f * dir.RotateVector(ArgumentOfPeriapsis));
+        Gizmos.color = Color.red;
+        Gizmos.DrawSphere(uvmSolver.CalculatedPosition.RotateVector(ArgumentOfPeriapsis), 1f);
 
         if (TrajectoryType == Mechanics.Globals.TrajectoryType.Hyperbola)
         {

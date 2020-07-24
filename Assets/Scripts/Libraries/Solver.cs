@@ -10,10 +10,10 @@ public abstract class Solver
     private float _calculatedSpeed;
     private Vector2 _calculatedVelocity;
     private float _flightPathAngle;
-    private Vector2 _lastPosition;
-    private float _lastRadius;
-    private float _lastSpeed;
-    private Vector2 _lastVelocity;
+    //private Vector2 _lastPosition;
+    //private float _lastRadius;
+    //private float _lastSpeed;
+    //private Vector2 _lastVelocity;
     private float _trueAnomaly;
 
     // Orbital Parameters
@@ -70,26 +70,26 @@ public abstract class Solver
         protected set { _flightPathAngle = value; }
     }
 
-    public Vector2 LastPosition 
-    { 
-        get { return _lastPosition; }
-        protected set { _lastPosition = value; }
-    }
-    public float LastRadius 
-    { 
-        get { return _lastRadius; }
-        protected set { _lastRadius = value; }
-    }
-    public float LastSpeed 
-    { 
-        get { return _lastSpeed; }
-        protected set { _lastSpeed = value; }
-    }
-    public Vector2 LastVelocity 
-    { 
-        get { return _lastVelocity; }
-        protected set { _lastVelocity = value; }
-    }
+    //public Vector2 LastPosition 
+    //{ 
+    //    get { return _lastPosition; }
+    //    protected set { _lastPosition = value; }
+    //}
+    //public float LastRadius 
+    //{ 
+    //    get { return _lastRadius; }
+    //    protected set { _lastRadius = value; }
+    //}
+    //public float LastSpeed 
+    //{ 
+    //    get { return _lastSpeed; }
+    //    protected set { _lastSpeed = value; }
+    //}
+    //public Vector2 LastVelocity 
+    //{ 
+    //    get { return _lastVelocity; }
+    //    protected set { _lastVelocity = value; }
+    //}
     public float TrueAnomaly
     {
         get { return _trueAnomaly; }
@@ -139,4 +139,11 @@ public abstract class Solver
         semimajorAxisReciprocal = 1f / semimajorAxis;
     }
 
+    //protected virtual void SetLastStateVariables(float radius, float speed, Vector2 position, Vector2 velocity)
+    //{
+    //    LastRadius = radius;
+    //    LastSpeed = speed;
+    //    LastPosition = position;
+    //    LastVelocity = velocity;
+    //}
 }

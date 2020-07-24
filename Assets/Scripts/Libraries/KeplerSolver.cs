@@ -122,10 +122,10 @@ public class KeplerSolver : Solver
 
     public void UpdateStateVariables(float timeOfFlight)
     {
-        LastPosition = CalculatedPosition;
-        LastRadius = CalculatedRadius;
-        LastSpeed = CalculatedSpeed;
-        LastVelocity = CalculatedVelocity;
+        //LastPosition = CalculatedPosition;
+        //LastRadius = CalculatedRadius;
+        //LastSpeed = CalculatedSpeed;
+        //LastVelocity = CalculatedVelocity;
 
         if (trajectoryType == OrbitalMechanics.Globals.TrajectoryType.Ellipse)
         {
