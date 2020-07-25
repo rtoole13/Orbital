@@ -14,8 +14,6 @@ public abstract class GravityAffected : OrbitalBody
     public delegate void GravitySourceChanged();
     public GravitySourceChanged GravitySourceChangedEvent;
 
-    private Vector2 universalPostion;
-    private float x;
     #region UNITY
     protected override void Awake()
     {
@@ -35,7 +33,6 @@ public abstract class GravityAffected : OrbitalBody
         CurrentGravitySource = system.PrimarySource.GetGravitySourceAtPosition(Position, false);
         Vector3 sourceRelativePosition = (Vector3)Position - (Vector3)CurrentGravitySource.transform.position;
         Vector3 sourceRelativeVelocity = (Vector3)body.velocity - (Vector3)CurrentGravitySource.startVelocity;
-        x = 0f;
         CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity);
     }
 
@@ -65,25 +62,7 @@ public abstract class GravityAffected : OrbitalBody
                 UpdateIteratively();
                 return;
             }
-            //OrbitalMechanics.UniversalVariableMethod.UniversalVariable(ref x, Time.fixedDeltaTime, CurrentGravitySource.Mass, SemimajorAxis, OrbitalRadius, OrbitalPosition, OrbitalVelocity);
-            //float z = Mathf.Pow(x, 2) / SemimajorAxis;
-            //float S = OrbitalMechanics.UniversalVariableMethod.StumpffS(x, SemimajorAxis);
-            //float C = OrbitalMechanics.UniversalVariableMethod.StumpffC(z);
-
-            //float f = OrbitalMechanics.UniversalVariableMethod.VariableF(x, OrbitalRadius, C);
-            //float g = OrbitalMechanics.UniversalVariableMethod.VariableG(Time.fixedDeltaTime, x, CurrentGravitySource.Mass, S);
-            //universalPostion = OrbitalMechanics.UniversalVariableMethod.OrbitalPosition(f, g, OrbitalPosition, OrbitalVelocity);
-
-            //float fPrime = OrbitalMechanics.UniversalVariableMethod.VariableFprime(CurrentGravitySource.Mass, OrbitalRadius, universalPostion.magnitude, x, z, S);
-            //float gPrime = OrbitalMechanics.UniversalVariableMethod.VariableGprime(x, universalPostion.magnitude, C);
-            //Vector2 universalVelocity = OrbitalMechanics.UniversalVariableMethod.OrbitalVelocity(fPrime, gPrime, OrbitalPosition, OrbitalVelocity);
-
             UpdateDeterministically();
-            //Debug.LogFormat("gravA x: {0}", x);
-            //Debug.LogFormat("f: {0}, g: {1}", f, g);
-            //Debug.LogFormat("uP: {0}, cP: {1}, uV: {2}, cV: {3}", universalPostion, OrbitalPosition, universalVelocity, OrbitalVelocity);
-            //Debug.LogFormat("uP: ({0}, {1}), cP: ({2}, {3})", universalPostion.x, universalPostion.y, OrbitalPosition.x, OrbitalPosition.y);
-            //Debug.LogFormat("uV: ({0}, {1}), cV: ({2}, {3})", universalVelocity.x, universalVelocity.y, OrbitalVelocity.x, OrbitalVelocity.y);
         }
     }
 

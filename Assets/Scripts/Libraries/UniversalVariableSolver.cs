@@ -57,23 +57,39 @@ public class UniversalVariableSolver : Solver
         TrueAnomaly = OrbitalMechanics.Trajectory.TrueAnomaly(CalculatedPosition, CalculatedVelocity, EccentricityVector);
         FlightPathAngle = OrbitalMechanics.Trajectory.FlightPathAngle(specificRelativeAngularMomentum.magnitude, CalculatedPosition, CalculatedVelocity);
 
-        // Initial guess at x
+        
         if (trajectoryType == OrbitalMechanics.Globals.TrajectoryType.Ellipse)
         {
-            OrbitalMechanics.UniversalVariableMethod.EllipticalGuessX(sourceMass, semimajorAxis, 0f);
+            InitializeEllipticalParameters();
         }
         else
         {
             //Hyperbolic or parabolic(?)
-            OrbitalMechanics.UniversalVariableMethod.HyperbolicGuessX(sourceMass, semimajorAxis, 0, CalculatedPosition, CalculatedVelocity);
+            InitializeHyperbolicParameters();
         }
+    }
+
+    public void InitializeEllipticalParameters()
+    {
+        // Initial guess at x
+        x = OrbitalMechanics.UniversalVariableMethod.EllipticalGuessX(sourceMass, semimajorAxis, 0f);
+        HyperbolicExcessSpeed = Mathf.Infinity;
+        TrueAnomalyOfAsymptote = Mathf.Infinity;
+        HyperbolicAsymptotes= new Vector2[2];
+
+    }
+
+    public void InitializeHyperbolicParameters()
+    {
+        // Initial guess at x
+        x = OrbitalMechanics.UniversalVariableMethod.HyperbolicGuessX(sourceMass, semimajorAxis, 0, CalculatedPosition, CalculatedVelocity);
+        HyperbolicExcessSpeed = OrbitalMechanics.HyperbolicTrajectory.ExcessVelocity(sourceMass, semimajorAxis);
+        TrueAnomalyOfAsymptote = OrbitalMechanics.HyperbolicTrajectory.TrueAnomalyOfAsymptote(eccentricity, clockWiseOrbit);
+        HyperbolicAsymptotes = OrbitalMechanics.HyperbolicTrajectory.Asymptotes(TrueAnomalyOfAsymptote, clockWiseOrbit);
     }
 
     public void UpdateStateVariables(float timeOfFlight)
     {
-        // Track last calculated position, velocity
-        //SetLastStateVariables(CalculatedRadius, CalculatedSpeed, CalculatedPosition, CalculatedVelocity);
-
         // Update the universal variable x
         OrbitalMechanics.UniversalVariableMethod.UniversalVariable(ref x, timeOfFlight, sourceMass, semimajorAxis, epochRadius, epochPosition, epochVelocity);
         
@@ -88,7 +104,7 @@ public class UniversalVariableSolver : Solver
         CalculatedPosition = OrbitalMechanics.UniversalVariableMethod.OrbitalPosition(f, g, epochPosition, epochVelocity);
         CalculatedRadius = CalculatedPosition.magnitude;
         //Debug.LogFormat("f: {0}, g: {1}", f, g);
-        
+
         // Get fPrime, gPrime, and update calculated velocity
         fPrime = OrbitalMechanics.UniversalVariableMethod.VariableFprime(sourceMass, epochRadius, CalculatedRadius, x, z, stumpffS);
         gPrime = OrbitalMechanics.UniversalVariableMethod.VariableGprime(x, CalculatedRadius, stumpffC);
@@ -98,7 +114,7 @@ public class UniversalVariableSolver : Solver
         CalculatedSpeed = CalculatedVelocity.magnitude;
 
         // Update true anomaly and flight path angle
-        TrueAnomaly = OrbitalMechanics.Trajectory.TrueAnomaly(CalculatedPosition, CalculatedVelocity, EccentricityVector);
+        TrueAnomaly = OrbitalMechanics.Trajectory.TrueAnomaly(CalculatedPosition, CalculatedVelocity, Vector2.right);
         FlightPathAngle = OrbitalMechanics.Trajectory.FlightPathAngle(specificRelativeAngularMomentum.magnitude, CalculatedPosition, CalculatedVelocity);
     }
 }

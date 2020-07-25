@@ -44,19 +44,17 @@ public abstract class GravitySource : OrbitalBody
     protected override void Awake()
     {
         base.Awake();
-        
+    }
+
+    protected override void Start()
+    {
+        base.Start();
         UpdatingIteratively = false;
         if (CurrentGravitySource == null)
             return;
         Vector3 sourceRelativePosition = (Vector3)Position - (Vector3)CurrentGravitySource.transform.position;
         Vector3 sourceRelativeVelocity = (Vector3)body.velocity - (Vector3)CurrentGravitySource.startVelocity;
         CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity);
-    }
-
-    protected override void Start()
-    {
-        
-        base.Start();
     }
 
     protected virtual void Update(){}
@@ -66,10 +64,12 @@ public abstract class GravitySource : OrbitalBody
 
     protected override void CalculateOrbitalParametersFromStateVectors(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)
     {
-        base.CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity);
+        // Event fired in CalculateOrbitalParameters needs to be called after RadiusOfInfluence set, for the sake of SOI plotting.. So awkwardly calculating semimajor axis again
+        float semimajorAxis = Mechanics.Trajectory.SemimajorAxis(sourceRelativePosition.magnitude, sourceRelativeVelocity.sqrMagnitude, CurrentGravitySource.Mass);
         RadiusOfInfluence = CurrentGravitySource == null
             ? Mathf.Infinity
-            : Mechanics.Trajectory.RadiusOfInfluence(SemimajorAxis, Mass, CurrentGravitySource.Mass);
+            : Mechanics.Trajectory.RadiusOfInfluence(semimajorAxis, Mass, CurrentGravitySource.Mass);
+        base.CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity);        
     }
 
     public Vector2 CalculateGravitationalForceAtPosition(Vector2 position, float mass) //DEPRECATED, remove in favor of OrbitalMechanics method

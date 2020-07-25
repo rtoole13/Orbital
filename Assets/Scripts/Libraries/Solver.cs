@@ -16,7 +16,7 @@ public abstract class Solver
     //private Vector2 _lastVelocity;
     private float _trueAnomaly;
 
-    // Orbital Parameters
+    // General Orbital Parameters
     protected float sourceMass;
     protected Vector3 specificRelativeAngularMomentum;
     protected bool clockWiseOrbit;
@@ -26,6 +26,10 @@ public abstract class Solver
     protected float semimajorAxisReciprocal;
     protected OrbitalMechanics.Globals.TrajectoryType trajectoryType;
 
+    // Hyperbolic Orbital Parameters
+    protected float _hyperbolicExcessSpeed;
+    protected float _trueAnomalyOfAsymptote;
+    protected Vector2[] _hyperbolicAsymptotes;
 
     #region GETSET
     public Vector2 CalculatedPosition
@@ -70,26 +74,24 @@ public abstract class Solver
         protected set { _flightPathAngle = value; }
     }
 
-    //public Vector2 LastPosition 
-    //{ 
-    //    get { return _lastPosition; }
-    //    protected set { _lastPosition = value; }
-    //}
-    //public float LastRadius 
-    //{ 
-    //    get { return _lastRadius; }
-    //    protected set { _lastRadius = value; }
-    //}
-    //public float LastSpeed 
-    //{ 
-    //    get { return _lastSpeed; }
-    //    protected set { _lastSpeed = value; }
-    //}
-    //public Vector2 LastVelocity 
-    //{ 
-    //    get { return _lastVelocity; }
-    //    protected set { _lastVelocity = value; }
-    //}
+    public float HyperbolicExcessSpeed
+    {
+        get { return _hyperbolicExcessSpeed; }
+        protected set { _hyperbolicExcessSpeed = value; }
+    }
+
+    public float TrueAnomalyOfAsymptote
+    {
+        get { return _trueAnomalyOfAsymptote; }
+        protected set { _trueAnomalyOfAsymptote = value; }
+    }
+
+    public Vector2[] HyperbolicAsymptotes
+    {
+        get { return _hyperbolicAsymptotes; }
+        protected set { _hyperbolicAsymptotes = value; }
+    }
+    
     public float TrueAnomaly
     {
         get { return _trueAnomaly; }
