@@ -394,18 +394,23 @@ namespace OrbitalMechanics
 
         public static float EllipticalGuessX(float sourceMass, float semimajorAxis, float timeOfFlight)
         {
+            if (timeOfFlight == 0)
+                return 0f;
+
             return Mathf.Sqrt(Body.StandardGravityParameter(sourceMass)) * timeOfFlight / semimajorAxis;
         }
 
         public static float HyperbolicGuessX(float sourceMass, float semimajorAxis, float timeOfFlight, Vector2 initialPosition, Vector2 initialVelocity)
         {
-            // May need some work.. as it stands, not considering timeOfFlight to be negative at all.
-            // Also, semimajorAxis is never negative, though that *should* already be accounted for here
+            if (timeOfFlight == 0)
+                return 0f;
+
+            float approachingPeriapsisSign = Mathf.Sign(Vector2.Dot(initialPosition, initialVelocity));
             float mu = Body.StandardGravityParameter(sourceMass);
             float sqrtMu = Mathf.Sqrt(mu);
-            float secondDenomTerm = Mathf.Sign(timeOfFlight) * sqrtMu * Mathf.Sqrt(semimajorAxis) * (1f - (initialPosition.magnitude / semimajorAxis));
+            float secondDenomTerm = approachingPeriapsisSign * sqrtMu * Mathf.Sqrt(-semimajorAxis) * (1f - (initialPosition.magnitude / semimajorAxis));
             float logDenom = semimajorAxis * (Vector2.Dot(initialPosition, initialVelocity) + secondDenomTerm);
-            return Mathf.Sign(timeOfFlight) * Mathf.Sqrt(semimajorAxis) * Mathf.Log(2f * Body.StandardGravityParameter(sourceMass) * timeOfFlight / logDenom);
+            return approachingPeriapsisSign * Mathf.Sqrt(-semimajorAxis) * Mathf.Log(-2f * Body.StandardGravityParameter(sourceMass) * timeOfFlight / logDenom);
         }
 
         public static float OrbitalRadius(float semimajorAxis, float eccentricity, float x, float constantOfIntegration)

@@ -13,9 +13,6 @@ public abstract class OrbitalBody : MonoBehaviour
     private Vector3 _eccentricityVector;
     private float _flightPathAngle;
     private GravitySource _gravitySource;
-    private Vector2[] _hyperbolicAsymptotes;
-    private float _hyperbolicExcessVelocity;
-    private float _trueAnomalyOfAsymptote;
     [SerializeField]
     private float _mass = 1.0f;
     private float _orbitalPeriod;
@@ -35,8 +32,8 @@ public abstract class OrbitalBody : MonoBehaviour
     private Mechanics.Globals.TrajectoryType _trajectoryType;
     private bool _updatingIteratively = true;
     protected Rigidbody2D body;
-    protected KeplerSolver trajectorySolver;
-    protected UniversalVariableSolver uvmSolver;
+    //protected KeplerSolver trajectorySolver;
+    protected UniversalVariableSolver trajectorySolver;
 
     public delegate void OnOrbitCalculation();
     public event OnOrbitCalculation OnOrbitCalculationEvent;
@@ -88,24 +85,7 @@ public abstract class OrbitalBody : MonoBehaviour
         get { return _flightPathAngle; }
         private set { _flightPathAngle = value; }
     }
-
-    public Vector2[] HyperbolicAsymptotes
-    {
-        get { return _hyperbolicAsymptotes; }
-        private set { _hyperbolicAsymptotes = value; }
-    }
-    public float HyperbolicExcessSpeed
-    {
-        get { return _hyperbolicExcessVelocity; }
-        private set { _hyperbolicExcessVelocity = value; }
-    }
-
-    public float TrueAnomalyOfAsymptote
-    {
-        get { return _trueAnomalyOfAsymptote; }
-        private set { _trueAnomalyOfAsymptote = value; }
-    }
-
+    
     public float SourceDistance
     {
         get
@@ -292,13 +272,13 @@ public abstract class OrbitalBody : MonoBehaviour
     {
         body = GetComponent<Rigidbody2D>();
         body.velocity = startVelocity;
-        trajectorySolver = new KeplerSolver();
-        //trajectorySolver = new UniversalVariableSolver();
-        uvmSolver = new UniversalVariableSolver();
+        //trajectorySolver = new KeplerSolver();
+        
     }
 
     protected virtual void Start()
     {
+        trajectorySolver = new UniversalVariableSolver();
     }
 
     #endregion UNITY
@@ -318,7 +298,6 @@ public abstract class OrbitalBody : MonoBehaviour
 
         // Initialize Solver
         trajectorySolver.InitializeSolver(sourceRelativePosition, sourceRelativeVelocity, CurrentGravitySource.Mass, SpecificRelativeAngularMomentum, EccentricityVector, SemimajorAxis);
-        uvmSolver.InitializeSolver(sourceRelativePosition, sourceRelativeVelocity, CurrentGravitySource.Mass, SpecificRelativeAngularMomentum, EccentricityVector, SemimajorAxis);
         
         // Epoch parameters
         TimeSinceEpoch = 0f;
@@ -338,7 +317,6 @@ public abstract class OrbitalBody : MonoBehaviour
 
         TimeSinceEpoch += Time.fixedDeltaTime;
         trajectorySolver.UpdateStateVariables(TimeSinceEpoch);
-        uvmSolver.UpdateStateVariables(TimeSinceEpoch);
         //Debug.LogFormat("kepler: {0}, uvm: {1}", trajectorySolver.CalculatedPosition, uvmSolver.CalculatedPosition);
         UpdateStateVectorsBySolver();
     }
@@ -375,14 +353,14 @@ public abstract class OrbitalBody : MonoBehaviour
         //Gizmos.color = Color.red;
         //Vector2 dir = Mechanics.Trajectory.OrbitalDirection(TrueAnomaly, FlightPathAngle, ClockWiseOrbit);
         //Gizmos.DrawRay(Position, 5f * dir.RotateVector(ArgumentOfPeriapsis));
-        Gizmos.color = Color.red;
-        Gizmos.DrawSphere(uvmSolver.CalculatedPosition.RotateVector(ArgumentOfPeriapsis), 1f);
+        //Gizmos.color = Color.red;
+        //Gizmos.DrawSphere(uvmSolver.CalculatedPosition.RotateVector(ArgumentOfPeriapsis), 1f);
 
         if (TrajectoryType == Mechanics.Globals.TrajectoryType.Hyperbola)
         {
             Gizmos.color = Color.green;
-            Gizmos.DrawRay(CurrentGravitySource.Position - SemimajorAxis * (Vector2)EccentricityVector, 1000f * HyperbolicAsymptotes[0].RotateVector(ArgumentOfPeriapsis));
-            Gizmos.DrawRay(CurrentGravitySource.Position - SemimajorAxis * (Vector2)EccentricityVector, 1000f * HyperbolicAsymptotes[1].RotateVector(ArgumentOfPeriapsis));
+            Gizmos.DrawRay(CurrentGravitySource.Position - SemimajorAxis * (Vector2)EccentricityVector, 1000f * trajectorySolver.HyperbolicAsymptotes[0].RotateVector(ArgumentOfPeriapsis));
+            Gizmos.DrawRay(CurrentGravitySource.Position - SemimajorAxis * (Vector2)EccentricityVector, 1000f * trajectorySolver.HyperbolicAsymptotes[1].RotateVector(ArgumentOfPeriapsis));
         }
     }
 }

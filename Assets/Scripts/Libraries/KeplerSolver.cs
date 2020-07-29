@@ -17,9 +17,6 @@ public class KeplerSolver : Solver
 
     // Hyperbolic parameters
     private bool nearHyperbolicAsymptote;
-    private float hyperbolicExcessSpeed;
-    private float trueAnomalyOfAsymptote;
-    private Vector2[] hyperbolicAsymptotes;
     
 
     public KeplerSolver(float _eccentricAnomaly = 0f)
@@ -90,9 +87,9 @@ public class KeplerSolver : Solver
     private void InitializeHyperbolicParameters(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)
     {
         nearHyperbolicAsymptote = false;
-        hyperbolicExcessSpeed = OrbitalMechanics.HyperbolicTrajectory.ExcessVelocity(sourceMass, semimajorAxis);
-        trueAnomalyOfAsymptote = OrbitalMechanics.HyperbolicTrajectory.TrueAnomalyOfAsymptote(eccentricity, clockWiseOrbit);
-        hyperbolicAsymptotes = OrbitalMechanics.HyperbolicTrajectory.Asymptotes(trueAnomalyOfAsymptote, clockWiseOrbit);
+        HyperbolicExcessSpeed = OrbitalMechanics.HyperbolicTrajectory.ExcessVelocity(sourceMass, semimajorAxis);
+        TrueAnomalyOfAsymptote = OrbitalMechanics.HyperbolicTrajectory.TrueAnomalyOfAsymptote(eccentricity, clockWiseOrbit);
+        HyperbolicAsymptotes = OrbitalMechanics.HyperbolicTrajectory.Asymptotes(TrueAnomalyOfAsymptote, clockWiseOrbit);
         TrueAnomaly = OrbitalMechanics.HyperbolicTrajectory.TrueAnomaly(sourceRelativePosition, sourceRelativeVelocity, semimajorAxis, eccentricity);
         eccentricAnomaly = OrbitalMechanics.HyperbolicTrajectory.HyperbolicAnomalyAtEpoch(TrueAnomaly, eccentricity);
         meanAnomalyAtEpoch = OrbitalMechanics.KeplerMethod.MeanAnomalyAtEpoch(eccentricAnomaly, eccentricity);
@@ -207,8 +204,8 @@ public class KeplerSolver : Solver
     private void UpdateHyperbolicallyNearAsymptote()
     {
         Vector2 nearestAsymptote = TrueAnomaly < 0
-            ? -hyperbolicAsymptotes[0]
-            : hyperbolicAsymptotes[1];
+            ? -HyperbolicAsymptotes[0]
+            : HyperbolicAsymptotes[1];
         Vector3 estimatedRelativeVelocity = CalculatedSpeed * nearestAsymptote;
         CalculatedSpeed = OrbitalMechanics.Trajectory.OrbitalSpeed(sourceMass, CalculatedRadius, semimajorAxis);
         TrueAnomaly = OrbitalMechanics.HyperbolicTrajectory.TrueAnomaly(CalculatedPosition, estimatedRelativeVelocity, semimajorAxis, eccentricity);
