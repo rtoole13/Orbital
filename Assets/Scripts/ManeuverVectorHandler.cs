@@ -5,23 +5,35 @@ using UnityEngine;
 [RequireComponent(typeof(Animator)), RequireComponent(typeof(SpriteRenderer))]
 public class ManeuverVectorHandler : MonoBehaviour
 {
+    private ManeuverNode _parentNode;
     private Collider2D clickCollider;
     private Animator animator;
     private SpriteRenderer spriteRenderer;
     private Vector2 worldDirection = Vector2.up;
-    private Vector2 selectionInitialPosition;
+    private Vector2 initialRelativePosition;
     private float dragDeltaVelFactor = 0.01f; // Used to dampen the user's drag input
     private Color defaultColor;
     public delegate void deltaVelocityAdjusted(float deltaVelocityMag);
     public event deltaVelocityAdjusted DeltaVelocityAdjustedEvent;
 
+    #region GETSET
+    public ManeuverNode ParentNode
+    {
+        get { return _parentNode; }
+        private set { _parentNode = value; }
+    }
+    #endregion
     #region UNITY
     private void Awake()
     {
         clickCollider = GetComponent<Collider2D>();
         if (clickCollider == null || !clickCollider.isTrigger)
             throw new UnityException(string.Format("Expecting a Collider2D (isTrigger) of some sort on {0}'s ManeuverVectorHandler", gameObject.name));
-        
+
+        _parentNode = GetComponentInParent<ManeuverNode>();
+        if (_parentNode == null)
+            throw new UnityException(string.Format("Expecting a ManeuverNode on {0}'s ManeuverVectorHandler's parent", gameObject.name));
+
         animator = GetComponent<Animator>();
         if (animator == null)
             throw new UnityException(string.Format("Expecting {0} to have an Animator!", gameObject.name));
@@ -51,10 +63,10 @@ public class ManeuverVectorHandler : MonoBehaviour
         worldDirection = newWorldDirection;
     }
 
-    public void InitializeVectorSelect(Vector2 initialPosition)
+    public void InitializeVectorSelect(Vector2 initialWorldPosition)
     {
         animator.SetBool("extended", true);
-        selectionInitialPosition = initialPosition;
+        initialRelativePosition = initialWorldPosition - (Vector2)ParentNode.transform.position;
     }
 
     public void EndVectorSelect()
@@ -72,7 +84,10 @@ public class ManeuverVectorHandler : MonoBehaviour
 
     public void DragVector(Vector2 mouseWorldPosition)
     {
-        Vector2 dragVector = mouseWorldPosition - selectionInitialPosition;
+        // Update initial position based off of parentNode's transform updating.
+        Vector2 basePosition = (Vector2)ParentNode.transform.position + initialRelativePosition;
+
+        Vector2 dragVector = mouseWorldPosition - basePosition;
         if (Vector2.Dot(dragVector, worldDirection) <= 0) // If dragging in wrong direction, ignore
             return;
 
