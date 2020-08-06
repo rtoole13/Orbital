@@ -75,4 +75,48 @@ public static class MathUtilities
     }
 
     #endregion
+
+    #region OTHER
+    public static Vector2 GetClosestPoint(float semimajorA, float semiminorA, float semimajorB, float semiminorB)
+    {
+        Vector2 point;
+        if (semimajorA >= 0 && semimajorB >= 0)
+        {
+            // ellipse v ellipse
+            point = ClosestPointEllipseToEllipse(semimajorA, semiminorA, semimajorB, semiminorB);
+        }
+        else if (semimajorA >= 0 && semimajorB < 0)
+        {
+            //ellipse v hyperbola
+            point = ClosestPointEllipseToHyperbola(semimajorA, semiminorB, semimajorB, semiminorB);
+        }
+        else if ((semimajorA < 0 && semimajorB >= 0))
+        {
+            //hyperbola v ellipse
+            point = ClosestPointEllipseToHyperbola(semimajorB, semiminorB, semimajorA, semiminorA);
+        }
+        else
+        {
+            //hyperbola v hyperbola
+            point = ClosestPointHyperbolaToHyperbola(semimajorA, semiminorA, semimajorB, semiminorB);
+
+        }
+        return point;
+    }
+
+    public static Vector2 ClosestPointEllipseToEllipse(float semimajorA, float semiminorA, float semimajorB, float semiminorB)
+    {
+        throw new System.NotImplementedException("Not yet implemented");
+    }
+
+    public static Vector2 ClosestPointEllipseToHyperbola(float ellipseA, float ellipseB, float hyperbolaA, float hyperbolaB)
+    {
+        throw new System.NotImplementedException("Not yet implemented");
+    }
+
+    public static Vector2 ClosestPointHyperbolaToHyperbola(float hyperbolaA, float hyperbolaB, float hyperbolaC, float hyperbolaD)
+    {
+        throw new System.NotImplementedException("Not yet implemented");
+    }
+    #endregion
 }

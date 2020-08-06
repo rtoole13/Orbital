@@ -12,6 +12,7 @@ public class UniversalVariableSolver : Solver
     private float g;
     private float fPrime;
     private float gPrime;
+    private float orbitalPeriod;
     private Vector2 epochPosition;
     private float epochRadius;
     private Vector2 epochVelocity;
@@ -31,6 +32,10 @@ public class UniversalVariableSolver : Solver
     {
         // Initialize orbital parameters
         base.InitializeSolver(sourceRelativePosition, sourceRelativeVelocity, _sourceMass, _specificRelativeAngularMomentum, eccentricityVector, _semimajorAxis);
+
+        orbitalPeriod = (trajectoryType == OrbitalMechanics.Globals.TrajectoryType.Ellipse)
+            ? OrbitalMechanics.Trajectory.OrbitalPeriod(semimajorAxis, sourceMass)
+            : Mathf.Infinity;
 
         // Initialize calculated variables
         InitializeVariables(sourceRelativePosition, sourceRelativeVelocity);
@@ -90,6 +95,13 @@ public class UniversalVariableSolver : Solver
 
     public void UpdateStateVariables(float timeOfFlight)
     {
+        // Track last calculated position, velocity
+        //SetLastStateVariables(CalculatedRadius, CalculatedSpeed, CalculatedPosition, CalculatedVelocity);
+
+        // Wrap time of flight by period if possible
+        if (trajectoryType == OrbitalMechanics.Globals.TrajectoryType.Ellipse)
+            timeOfFlight %= orbitalPeriod;
+
         // Update the universal variable x
         OrbitalMechanics.UniversalVariableMethod.UniversalVariable(ref x, timeOfFlight, sourceMass, semimajorAxis, epochRadius, epochPosition, epochVelocity);
         
