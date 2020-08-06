@@ -26,7 +26,7 @@ public class TrajectoryPlotter : LinePlotter
         Vector3[] points = new Vector3[segments + 1];
         for (int i = 0; i < segments; i++)
         {
-            float angle = ((float)i / (float)segments) * 2f  - 1f;
+            float angle = (((float)i / (float)segments) * 2f - 1f) * Mathf.PI;
             Vector3 vertex = new Vector3(semimajorAxis * MathUtilities.Cosh(angle), semiminorAxis * MathUtilities.Sinh(angle), 1f);
             vertex = TranslateVector(vertex, new Vector3(-semimajorAxis * eccentricity, 0, 0));
             points[i] = transform.worldToLocalMatrix * RotateVertex(vertex, argumentOfPeriapse);

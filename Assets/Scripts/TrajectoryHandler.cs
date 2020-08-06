@@ -60,4 +60,17 @@ public class TrajectoryHandler : MonoBehaviour
             trajectoryPlotter.BuildEllipticalTrajectory(SemimajorAxis, SemiminorAxis, orbitalBody.Eccentricity, orbitalBody.ArgumentOfPeriapsis);
         }
     }
+
+    private void OnDrawGizmos()
+    {
+        if (orbitalBody == null)
+            return;
+
+        GravityAffected gravityAffected = GetComponent<GravityAffected>();
+        if (gravityAffected == null)
+            return;
+        
+        float deltaArgPeriapse = orbitalBody.ArgumentOfPeriapsis - 0.904223f;
+        Debug.Log(deltaArgPeriapse);
+    }
 }
