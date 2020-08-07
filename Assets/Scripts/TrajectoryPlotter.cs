@@ -39,4 +39,23 @@ public class TrajectoryPlotter : LinePlotter
     {
         lineRenderer.colorGradient = gradient;
     }
+
+    public Vector3[] GetVertices(bool inWorldCoordinates)
+    {
+        Vector3[] vertices = new Vector3[lineRenderer.positionCount];
+        lineRenderer.GetPositions(vertices);
+        if (inWorldCoordinates)
+        {
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                vertices[i] = transform.localToWorldMatrix * vertices[i];
+            }
+        }
+        return vertices;
+    }
+
+    public int GetVertexCount()
+    {
+        return lineRenderer.positionCount;
+    }
 }

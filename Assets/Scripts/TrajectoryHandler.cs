@@ -13,6 +13,9 @@ public class TrajectoryHandler : MonoBehaviour
     private TrajectoryPlotter trajectoryPlotter;
     private OrbitalBody orbitalBody;
 
+    [SerializeField]
+    private TrajectoryHandler debugTrajectoryTarget;
+
     #region GETSET
     public float SemimajorAxis
     {
@@ -61,16 +64,33 @@ public class TrajectoryHandler : MonoBehaviour
         }
     }
 
+    public Vector3[] GetVertices(bool inWorldCoordinates)
+    {
+        return trajectoryPlotter.GetVertices(inWorldCoordinates);
+    }
+
+    public List<Vector2> GetClosestPointOfIntersection(TrajectoryHandler otherTrajectoryHandler)
+    {
+        List<Vector2> intersections = MathUtilities.GetClosestPointsBetweenPolygons(GetVertices(true), otherTrajectoryHandler.GetVertices(true));
+        return intersections;
+    }
+
     private void OnDrawGizmos()
     {
-        if (orbitalBody == null)
+        if (trajectoryPlotter == null)
             return;
 
-        GravityAffected gravityAffected = GetComponent<GravityAffected>();
-        if (gravityAffected == null)
+        if (trajectoryPlotter.GetVertexCount() == 0)
             return;
-        
-        float deltaArgPeriapse = orbitalBody.ArgumentOfPeriapsis - 0.904223f;
-        Debug.Log(deltaArgPeriapse);
+
+        if (debugTrajectoryTarget == null)
+            return;
+
+        List<Vector2> intersections = GetClosestPointOfIntersection(debugTrajectoryTarget);
+        Gizmos.color = Color.green;
+        for (int i = 0; i < intersections.Count; i++)
+        {
+            Gizmos.DrawSphere(intersections[i], 1f);
+        }
     }
 }
