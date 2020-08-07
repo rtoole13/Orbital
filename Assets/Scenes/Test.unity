@@ -418,7 +418,7 @@ MonoBehaviour:
   zoomMultiplier: 4
   moveSmoothTime: 0
   zoomSmoothTime: 0.5
-  currentTarget: {fileID: 551739711}
+  currentTarget: {fileID: 597215856}
   doubleClickSelectInterval: 1
 --- !u!20 &519420031
 Camera:
@@ -471,18 +471,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -35, z: -10}
+  m_LocalPosition: {x: 0, y: 0, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &551739711 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2934157134936708625, guid: baa71db809956d0478f6e4579f60bc3c,
-    type: 3}
-  m_PrefabInstance: {fileID: 558213826}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &558213826
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -560,12 +554,12 @@ PrefabInstance:
     - target: {fileID: 2934157134936708650, guid: baa71db809956d0478f6e4579f60bc3c,
         type: 3}
       propertyPath: startVelocity.x
-      value: 3
+      value: -12.3
       objectReference: {fileID: 0}
     - target: {fileID: 2934157134936708650, guid: baa71db809956d0478f6e4579f60bc3c,
         type: 3}
       propertyPath: startVelocity.y
-      value: 0
+      value: -2
       objectReference: {fileID: 0}
     - target: {fileID: 2934157134936708652, guid: baa71db809956d0478f6e4579f60bc3c,
         type: 3}
@@ -575,7 +569,7 @@ PrefabInstance:
     - target: {fileID: 2934157134936708652, guid: baa71db809956d0478f6e4579f60bc3c,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -35
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2934157134936708652, guid: baa71db809956d0478f6e4579f60bc3c,
         type: 3}
@@ -662,6 +656,11 @@ PrefabInstance:
       propertyPath: trajectoryGradient.key1.b
       value: 0.6
       objectReference: {fileID: 0}
+    - target: {fileID: 4586599050146891276, guid: baa71db809956d0478f6e4579f60bc3c,
+        type: 3}
+      propertyPath: debugTrajectoryTarget
+      value: 
+      objectReference: {fileID: 1712928058}
     - target: {fileID: 7413947131424551383, guid: baa71db809956d0478f6e4579f60bc3c,
         type: 3}
       propertyPath: m_Color.r
@@ -786,6 +785,12 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &597215856 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6872017103272462084, guid: a06f41984aa48c141a393888b79b7bc6,
+    type: 3}
+  m_PrefabInstance: {fileID: 6872017102472841883}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &631876933
 GameObject:
   m_ObjectHideFlags: 0
@@ -853,6 +858,18 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 8482823430224754417}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1712928058 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2021853959619343297, guid: a06f41984aa48c141a393888b79b7bc6,
+    type: 3}
+  m_PrefabInstance: {fileID: 2001291941}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: baec92fbf603ae346b55a14a420e664f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1899127987
 GameObject:
   m_ObjectHideFlags: 0
@@ -1050,7 +1067,7 @@ MonoBehaviour:
     type: 3}
   m_PrefabInstance: {fileID: 6872017102472841883}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 597215856}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 697b46c062f14374cb8bd08c44d5cc61, type: 3}
@@ -3271,6 +3288,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Planet
+      objectReference: {fileID: 0}
+    - target: {fileID: 6872017103272462084, guid: a06f41984aa48c141a393888b79b7bc6,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6872017103272462137, guid: a06f41984aa48c141a393888b79b7bc6,
         type: 3}

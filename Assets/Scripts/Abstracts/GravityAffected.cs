@@ -183,8 +183,34 @@ public abstract class GravityAffected : OrbitalBody
     protected override void OnDrawGizmos()
     {
         base.OnDrawGizmos();
-        Gizmos.color = Color.red;
-        //Gizmos.DrawSphere(universalPostion.RotateVector(ArgumentOfPeriapsis), 1f);
+
+
+        //Vector3 originA = Vector3.zero;
+        //float radiusA = 5f;
+        //Vector3 originB = new Vector3(6.4f, 5.8f, 0f);
+        //float radiusB = 2.8f;
+
+        //Vector3[] circleA = MathUtilities.TestCircle(originA, radiusA, 32);
+        //Vector3[] circleB = MathUtilities.TestCircle(originB, radiusB, 32);
+        
+        //GizmosDrawPolygon(circleA, Color.red);
+        //GizmosDrawPolygon(circleB, Color.blue);
+
+        //Gizmos.color = Color.green;
+        //List<Vector2> intersections = MathUtilities.GetClosestPointsBetweenPolygons(circleA, circleB);
+        //for (int i = 0; i < intersections.Count; i++)
+        //{
+        //    Gizmos.DrawSphere(intersections[i], 0.5f);
+        //}
     }
+
+    //private void GizmosDrawPolygon(Vector3[] vertices, Color color)
+    //{
+    //    Gizmos.color = color;
+    //    for (int i = 0; i < vertices.Length - 1; i++)
+    //    {
+    //        Gizmos.DrawLine(vertices[i], vertices[i + 1]);
+    //    }
+    //}
 }
 
