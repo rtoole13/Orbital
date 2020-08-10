@@ -28,9 +28,12 @@ public abstract class OrbitalBody : MonoBehaviour
     private Vector3 _specificRelativeAngularMomentum;
     private float _specificRelativeAngularMomentumMagnitude;
     private float _timeSinceEpoch;
+    private TrajectoryHandler _trajectoryHandler;
     private float _trueAnomaly;
     private Mechanics.Globals.TrajectoryType _trajectoryType;
     private bool _updatingIteratively = true;
+    
+
     protected Rigidbody2D body;
     //protected KeplerSolver trajectorySolver;
     protected UniversalVariableSolver trajectorySolver;
@@ -265,6 +268,12 @@ public abstract class OrbitalBody : MonoBehaviour
             return dir.RotateVector(ArgumentOfPeriapsis);
         }
     }
+
+    public TrajectoryHandler TrajectoryHandler {
+        get { return _trajectoryHandler; }
+        private set { _trajectoryHandler = value; }
+    }
+
     #endregion GETSET
 
     #region UNITY
@@ -272,8 +281,8 @@ public abstract class OrbitalBody : MonoBehaviour
     {
         body = GetComponent<Rigidbody2D>();
         body.velocity = startVelocity;
-        //trajectorySolver = new KeplerSolver();
-        
+
+        TrajectoryHandler = GetComponent<TrajectoryHandler>();
     }
 
     protected virtual void Start()

@@ -31,6 +31,12 @@ public static class MathUtilities
     {
         return number - (modulus * Mathf.Floor(number / modulus));
     }
+
+    public static int IntModulo(int number, int modulus)
+    {
+        return number - (modulus * (number / modulus));
+    }
+
     public static float RescaleFloat(float x, float currentMin, float currentMax, float newMin, float newMax)
     {
         float currentRange = currentMax - currentMin;
