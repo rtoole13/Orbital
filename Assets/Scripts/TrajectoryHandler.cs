@@ -9,16 +9,16 @@ public class TrajectoryHandler : MonoBehaviour
     public GameObject trajectoryObjectPrefab;
     public Gradient trajectoryGradient;
 
+    public GameObject intersectionObjectPrefab;
+
     private GameObject trajectoryObject;
     private TrajectoryPlotter trajectoryPlotter;
     private OrbitalBody orbitalBody;
 
-    [SerializeField]
-    private TrajectoryHandler debugTrajectoryTarget;
-
     private List<SourceIntersections> sourceIntersections;
     private List<Color> sourceIntersectionColors;
     private int sourceIntersectionColorCount;
+    private List<GameObject> sourceIntersectionObjectSpriteObjects;
 
     #region GETSET
     public float SemimajorAxis
@@ -52,6 +52,7 @@ public class TrajectoryHandler : MonoBehaviour
         sourceIntersectionColors.Add(Color.green);
         sourceIntersectionColors.Add(Color.blue);
         sourceIntersectionColorCount = sourceIntersectionColors.Count;
+        sourceIntersectionObjectSpriteObjects = new List<GameObject>();
     }
 
     private void OnDisable()
@@ -78,29 +79,45 @@ public class TrajectoryHandler : MonoBehaviour
         }
 
         // Plot nearest intersections
-        PlotNearestSourceIntersectionss();
+        PlotNearestSourceIntersections();
     }
 
-    private void PlotNearestSourceIntersectionss()
+    private void ResetNearestSourceIntersections()
+    {
+        sourceIntersections.Clear();
+        for (int i = 0; i < sourceIntersectionObjectSpriteObjects.Count; i++)
+        {
+            Destroy(sourceIntersectionObjectSpriteObjects[i]);
+        }
+        sourceIntersectionObjectSpriteObjects.Clear();
+    }
+
+    private void PlotNearestSourceIntersections()
     {
         if (!(orbitalBody is GravityAffected))
             return;
 
+        // Clear previous source intersections
+        ResetNearestSourceIntersections();
+
         // Update sources considered candidates for intersection
-        GetNearbySourceIntersectionss();
+        GetNearbySourceIntersections();
 
         for (int i = 0; i < sourceIntersections.Count; i++)
         {
             Color intersectionColor = sourceIntersectionColors[MathUtilities.IntModulo(i, sourceIntersectionColorCount)];
             SourceIntersections thisSourceIntersections = sourceIntersections[i];
-            for (int j = 0; j < thisSourceIntersections.WorldPositions.Count; j++)
+            for (int j = 0; j < thisSourceIntersections.SegmentIntersections.Count; j++)
             {
-                Debug.Log(thisSourceIntersections.WorldPositions[j]);
+                GameObject intersectionObject = Instantiate(intersectionObjectPrefab, thisSourceIntersections.SegmentIntersections[j].ClosestPoint, Quaternion.identity);
+                SpriteRenderer spriteRenderer = intersectionObject.GetComponentInChildren<SpriteRenderer>();
+                spriteRenderer.color = sourceIntersectionColors[i];
+                sourceIntersectionObjectSpriteObjects.Add(intersectionObject);
             }
         }
     }
 
-    private void GetNearbySourceIntersectionss()
+    private void GetNearbySourceIntersections()
     {
         sourceIntersections.Clear();
         List<GravitySource> sourcesInSystem = orbitalBody.CurrentGravitySource.OrbitalBodies;
@@ -110,20 +127,21 @@ public class TrajectoryHandler : MonoBehaviour
             TrajectoryHandler trajectoryHandler = source.TrajectoryHandler;
             if (trajectoryHandler == null)
                 continue;
-            List<Vector2> sourceSourceIntersectionss = GetClosestPointOfSourceIntersections(trajectoryHandler);
-            if (SourceHasNearbySourceIntersections(sourceSourceIntersectionss, source))
+            List<SegmentIntersection> sourceSegmentIntersections = GetClosestPointOfSourceIntersections(trajectoryHandler);
+            Debug.LogFormat("segment int count: {0}", sourceSegmentIntersections.Count);
+            if (SourceHasNearbySourceIntersections(sourceSegmentIntersections, source))
             {
-                sourceIntersections.Add(new SourceIntersections(sourceSourceIntersectionss, source));
+                sourceIntersections.Add(new SourceIntersections(sourceSegmentIntersections, source));
             }
         }
     }
 
-    private bool SourceHasNearbySourceIntersections(List<Vector2> nearestSourceIntersectionss, GravitySource source)
+    private bool SourceHasNearbySourceIntersections(List<SegmentIntersection> nearestSourceIntersections, GravitySource source)
     {
-        for (int j = 0; j < nearestSourceIntersectionss.Count; j++)
+        for (int j = 0; j < nearestSourceIntersections.Count; j++)
         {
-            float distSq = (nearestSourceIntersectionss[j] - source.Position).sqrMagnitude;
-            if (distSq < source.RadiusOfInfluenceSq)
+            Debug.LogFormat("segment dist: {0}, source ROI: {1}", nearestSourceIntersections[j].MinDistSq, source.RadiusOfInfluenceSq);
+            if (nearestSourceIntersections[j].MinDistSq < source.RadiusOfInfluenceSq)
                 return true;
         }
         return false;
@@ -134,21 +152,21 @@ public class TrajectoryHandler : MonoBehaviour
         return trajectoryPlotter.GetVertices(inWorldCoordinates);
     }
 
-    private List<Vector2> GetClosestPointOfSourceIntersections(TrajectoryHandler otherTrajectoryHandler)
+    private List<SegmentIntersection> GetClosestPointOfSourceIntersections(TrajectoryHandler otherTrajectoryHandler)
     {
-        List<Vector2> intersections = MathUtilities.GetClosestPointsBetweenPolygons(GetVertices(true), otherTrajectoryHandler.GetVertices(true));
+        List<SegmentIntersection> intersections = MathUtilities.GetClosestPointsBetweenPolygons(GetVertices(true), otherTrajectoryHandler.GetVertices(true));
         return intersections;
     }
 
     public struct SourceIntersections
     {
         // Really more of a "possible intersection" sort of deal..
-        public SourceIntersections(List<Vector2> worldPositions, GravitySource source)
+        public SourceIntersections(List<SegmentIntersection> segmentIntersections, GravitySource source)
         {
-            WorldPositions = worldPositions;
+            SegmentIntersections = segmentIntersections;
             Source = source;
         }
-        public List<Vector2> WorldPositions { get; }
+        public List<SegmentIntersection> SegmentIntersections { get; }
         public GravitySource Source { get; }
 
     }

@@ -661,6 +661,12 @@ PrefabInstance:
       propertyPath: debugTrajectoryTarget
       value: 
       objectReference: {fileID: 1712928058}
+    - target: {fileID: 4586599050146891276, guid: baa71db809956d0478f6e4579f60bc3c,
+        type: 3}
+      propertyPath: intersectionObjectPrefab
+      value: 
+      objectReference: {fileID: 1862555240802640936, guid: 756b2f4f71652ad4d8c382e544af9eec,
+        type: 3}
     - target: {fileID: 7413947131424551383, guid: baa71db809956d0478f6e4579f60bc3c,
         type: 3}
       propertyPath: m_Color.r

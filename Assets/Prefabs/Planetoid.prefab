@@ -259,6 +259,8 @@ MonoBehaviour:
     m_Mode: 1
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
+  intersectionObjectPrefab: {fileID: 1862555240802640936, guid: 756b2f4f71652ad4d8c382e544af9eec,
+    type: 3}
 --- !u!1 &6872017103405575580
 GameObject:
   m_ObjectHideFlags: 0

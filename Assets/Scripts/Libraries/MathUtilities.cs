@@ -141,10 +141,10 @@ public static class MathUtilities
         return new SegmentIntersection(onSegment, intersectionPoint, minDist, closestPoint);
     }
 
-    public static List<Vector2> GetPolygonIntersections(Vector3[] polygonVerticesA, Vector3[] polygonVerticesB)
+    public static List<SegmentIntersection> GetPolygonIntersections(Vector3[] polygonVerticesA, Vector3[] polygonVerticesB)
     {
         // Should add some validation here
-        List<Vector2> intersections = new List<Vector2>();
+        List<SegmentIntersection> intersections = new List<SegmentIntersection>();
         for (int i = 0; i < polygonVerticesA.Length - 1; i++)
         {
             for (int j = 0; j < polygonVerticesB.Length - 1; j++)
@@ -153,18 +153,19 @@ public static class MathUtilities
                 if (!intersection.OnSegment)
                     continue;
 
-                intersections.Add(intersection.Point);
+                intersections.Add(intersection);
             }
         }
         return intersections;
     }
 
-    public static List<Vector2> GetClosestPointsBetweenPolygons(Vector3[] polygonVerticesA, Vector3[] polygonVerticesB)
+    public static List<SegmentIntersection> GetClosestPointsBetweenPolygons(Vector3[] polygonVerticesA, Vector3[] polygonVerticesB)
     {
         // Returns a list of intersections as Vector2s. Or, in the case of no intersection the vertex in polygonVerticesA closest to polygonB
-        List<Vector2> intersections = new List<Vector2>();
+        List<SegmentIntersection> intersections = new List<SegmentIntersection>();
         float minDist = Mathf.Infinity;
-        Vector2 closestPoint = polygonVerticesA[0];
+        Debug.LogFormat("countA: {0}, countB: {1}", polygonVerticesA.Length, polygonVerticesB.Length);
+        SegmentIntersection closestIntersection = new SegmentIntersection(false, polygonVerticesA[0], Mathf.Infinity, polygonVerticesA[0]);
         for (int i = 0; i < polygonVerticesA.Length - 1; i++)
         {
             for (int j = 0; j < polygonVerticesB.Length - 1; j++)
@@ -178,17 +179,18 @@ public static class MathUtilities
                     if (intersection.MinDist < minDist) 
                     {
                         minDist = intersection.MinDist;
-                        closestPoint = intersection.ClosestPoint;
+                        closestIntersection = intersection;
                     }
                     continue;
                 }
 
-                intersections.Add(intersection.Point);
+                intersections.Add(intersection);
             }
         }
         if (intersections.Count == 0)
-            intersections.Add(closestPoint); // No intersections. Take vertex in A closest to B
+            intersections.Add(closestIntersection); // No intersections. Take vertex in A closest to B
 
+        Debug.Log(intersections[0].MinDist);
         return intersections;
 
     }
@@ -258,10 +260,12 @@ public struct SegmentIntersection
         OnSegment = onSegment;
         Point = point;
         MinDist = minDist;
+        MinDistSq = minDist * minDist;
         ClosestPoint = closestPoint;
     }
     public bool OnSegment { get; }
     public Vector2 Point { get; }
     public float MinDist { get; }
+    public float MinDistSq { get; }
     public Vector2 ClosestPoint { get; }
 }
