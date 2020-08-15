@@ -263,9 +263,7 @@ namespace OrbitalMechanics
         {
             float trueAnomaly = Trajectory.TrueAnomaly(relativePosition, relativeVelocity, eccentricityVector);
             float eccentricity = eccentricityVector.magnitude;
-            float E = Mathf.Atan2(Mathf.Sqrt(1 - Mathf.Pow(eccentricity, 2)) * Mathf.Sin(trueAnomaly), eccentricity + Mathf.Cos(trueAnomaly));
-
-            return MathUtilities.Modulo(E, 2f * Mathf.PI);
+            return EccentricAnomalyAtEpoch(trueAnomaly, eccentricity);
         }
 
         public static float EccentricAnomalyAtEpoch(float trueAnomaly, float eccentricity)
@@ -385,6 +383,12 @@ namespace OrbitalMechanics
         public static float Xdot(float mainMass, float orbitalRadius)
         {
             return Body.StandardGravityParameter(mainMass) / orbitalRadius;
+        }
+        
+        public static float ZfromDeltaE(float eccentricAnomalyA, float eccentricAnomalyB)
+        {
+            // Something of hybrid Kepler/UVM method..
+            return Mathf.Pow(eccentricAnomalyB - eccentricAnomalyA, 2);
         }
         
         public static float slopeTimeVsX(float mainMass, float orbitalRadius)
