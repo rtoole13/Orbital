@@ -537,6 +537,52 @@ namespace OrbitalMechanics
         {
             return 1f - (Mathf.Pow(x, 2) * stumpffC / orbitalRadius);
         }
+
+        public static float CalculateTimeOfFlight(Vector2 relativePositionA, Vector2 relativePositionB, Vector2 direction, Vector3 eccentricityVector, float sourceMass)
+        {
+            // Assuming positionA and positionB are valid positions on the orbital path.. Calculate time of flight between two positions
+            float trueAnomalyA, trueAnomalyB, eccentricAnomalyA, eccentricAnomalyB;
+            float eccentricity = eccentricityVector.magnitude;
+            Debug.LogFormat("rel vel: {0}", direction);
+            trueAnomalyA = Trajectory.TrueAnomaly(relativePositionA, direction, eccentricityVector);
+            trueAnomalyB = Trajectory.TrueAnomaly(relativePositionB, direction, eccentricityVector); // FIXME direction is wrong here. This is where "short way"/"long way" comes in
+            Debug.LogFormat("nuA: {0}, nuB: {1}", trueAnomalyA * Mathf.Rad2Deg, trueAnomalyB * Mathf.Rad2Deg);
+            eccentricAnomalyA = KeplerMethod.EccentricAnomalyAtEpoch(trueAnomalyA, eccentricity);
+            eccentricAnomalyB = KeplerMethod.EccentricAnomalyAtEpoch(trueAnomalyB, eccentricity);
+
+            float radiusA, radiusB;
+            radiusA = relativePositionA.magnitude;
+            radiusB = relativePositionB.magnitude;
+
+            float A, z, C, S, y, x;
+            A = CalculateA(radiusA, radiusB, trueAnomalyA, trueAnomalyB);
+            z = ZfromDeltaE(eccentricAnomalyA, eccentricAnomalyB);
+            C = StumpffC(z);
+            S = StumpffS(z);
+            y = CalculateY(radiusA, radiusB, z, S, C, A);
+            x = CalculateX(y, C);
+
+            float rootMuT = Mathf.Pow(x, 3) * S + A * Mathf.Sqrt(y);
+            return rootMuT / Mathf.Sqrt(Body.StandardGravityParameter(sourceMass));
+        }
+
+        private static float CalculateA(float radialPositionA, float radialPositionB, float trueAnomalyA, float trueAnomalyB)
+        {
+            float deltaTrueAnomaly;
+            deltaTrueAnomaly = trueAnomalyB - trueAnomalyA;
+            return Mathf.Sqrt(radialPositionA * radialPositionB) * Mathf.Sin(deltaTrueAnomaly) / Mathf.Sqrt(1f - Mathf.Cos(deltaTrueAnomaly)); // FIXME blows up at deltaAnom of 0 and 2PI
+        }
+
+        private static float CalculateY(float radialPositionA, float radialPositionB, float z, float S, float C, float A)
+        {
+            float secondTerm = A * (1f - z * S) / Mathf.Sqrt(C);
+            return radialPositionA + radialPositionB - secondTerm;
+        }
+
+        private static float CalculateX(float y, float C)
+        {
+            return Mathf.Sqrt(y / C);
+        }
     }
 }
 

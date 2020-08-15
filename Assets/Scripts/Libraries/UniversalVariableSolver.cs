@@ -57,8 +57,9 @@ public class UniversalVariableSolver : Solver
         CalculatedSpeed = sourceRelativeVelocity.magnitude;
         CalculatedVelocity = calculatedVelocity.RotateVector(-argumentOfPeriapsis);
         epochVelocity = CalculatedVelocity;
-        
+
         // Initialize true anomaly and FPA
+        Debug.LogFormat("UVM pos: {0}", CalculatedPosition);
         TrueAnomaly = OrbitalMechanics.Trajectory.TrueAnomaly(CalculatedPosition, CalculatedVelocity, EccentricityVector);
         FlightPathAngle = OrbitalMechanics.Trajectory.FlightPathAngle(specificRelativeAngularMomentum.magnitude, CalculatedPosition, CalculatedVelocity);
 
@@ -128,48 +129,5 @@ public class UniversalVariableSolver : Solver
         // Update true anomaly and flight path angle
         TrueAnomaly = OrbitalMechanics.Trajectory.TrueAnomaly(CalculatedPosition, CalculatedVelocity, Vector2.right);
         FlightPathAngle = OrbitalMechanics.Trajectory.FlightPathAngle(specificRelativeAngularMomentum.magnitude, CalculatedPosition, CalculatedVelocity);
-    }
-
-    public float CalculateTimeOfFlight(Vector2 relativePositionA, Vector2 relativePositionB, Vector2 direction)
-    {
-        // Assuming positionA and positionB are valid positions on the orbital path.. Calculate time of flight between two positions
-        float trueAnomalyA, trueAnomalyB, eccentricAnomalyA, eccentricAnomalyB;
-        float eccentricity = EccentricityVector.magnitude;
-        trueAnomalyA = OrbitalMechanics.Trajectory.TrueAnomaly(relativePositionA, direction, EccentricityVector);
-        trueAnomalyB = OrbitalMechanics.Trajectory.TrueAnomaly(relativePositionB, direction, EccentricityVector); // FIXME direction is wrong here. This is where "short way"/"long way" comes in
-        eccentricAnomalyA = OrbitalMechanics.KeplerMethod.EccentricAnomalyAtEpoch(trueAnomalyA, eccentricity);
-        eccentricAnomalyB = OrbitalMechanics.KeplerMethod.EccentricAnomalyAtEpoch(trueAnomalyB, eccentricity);
-
-        float radiusA, radiusB;
-        radiusA = relativePositionA.magnitude;
-        radiusB = relativePositionB.magnitude;
-        float A, z, C, S, y;
-        A = CalculateA(radiusA, radiusB, trueAnomalyA, trueAnomalyB);
-        z = OrbitalMechanics.UniversalVariableMethod.ZfromDeltaE(eccentricAnomalyA, eccentricAnomalyB);
-        C = OrbitalMechanics.UniversalVariableMethod.StumpffC(z);
-        S = OrbitalMechanics.UniversalVariableMethod.StumpffS(z);
-        y = CalculateY(radiusA, radiusB, z, S, C, A);
-        x = CalculateX(y, C);
-
-        float rootMuT = Mathf.Pow(x, 3) * S + A * Mathf.Sqrt(y);
-        return rootMuT / Mathf.Sqrt(OrbitalMechanics.Body.StandardGravityParameter(sourceMass));
-    }
-
-    private float CalculateA(float radialPositionA, float radialPositionB, float trueAnomalyA, float trueAnomalyB)
-    {
-        float deltaTrueAnomaly;
-        deltaTrueAnomaly = trueAnomalyB - trueAnomalyA;
-        return Mathf.Sqrt(radialPositionA * radialPositionB) * Mathf.Sin(deltaTrueAnomaly) / Mathf.Sqrt(1f - Mathf.Cos(deltaTrueAnomaly)); // FIXME blows up at deltaAnom of 0 and 2PI
-    }
-
-    private float CalculateY(float radialPositionA, float radialPositionB, float z, float S, float C, float A)
-    {
-        float secondTerm = A * (1f - z * S) / Mathf.Sqrt(C);
-        return radialPositionA + radialPositionB - secondTerm;
-    }
-
-    private float CalculateX(float y, float C)
-    {
-        return Mathf.Sqrt(y / C);
     }
 }

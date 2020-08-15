@@ -20,6 +20,9 @@ public class TrajectoryHandler : MonoBehaviour
     private int sourceIntersectionColorCount;
     private List<GameObject> sourceIntersectionObjectSpriteObjects;
 
+
+    // DEBUG
+
     #region GETSET
     public float SemimajorAxis
     {
@@ -113,6 +116,11 @@ public class TrajectoryHandler : MonoBehaviour
                 SpriteRenderer spriteRenderer = intersectionObject.GetComponentInChildren<SpriteRenderer>();
                 spriteRenderer.color = sourceIntersectionColors[i];
                 sourceIntersectionObjectSpriteObjects.Add(intersectionObject);
+                Vector2 localPosition = thisSourceIntersections.SegmentIntersections[j].ClosestPoint - orbitalBody.CurrentGravitySource.Position;
+                Debug.LogFormat("trajHand orbPos: {0}", orbitalBody.OrbitalPosition);
+                float timeOfFlight = OrbitalMechanics.UniversalVariableMethod.CalculateTimeOfFlight(orbitalBody.Position - orbitalBody.CurrentGravitySource.Position, localPosition, orbitalBody.Velocity - orbitalBody.CurrentGravitySource.Velocity, orbitalBody.EccentricityVector, orbitalBody.CurrentGravitySource.Mass);
+                IEnumerator timeOfFlightCalc = Timer(timeOfFlight);
+                StartCoroutine(timeOfFlightCalc);
             }
         }
     }
@@ -128,7 +136,6 @@ public class TrajectoryHandler : MonoBehaviour
             if (trajectoryHandler == null)
                 continue;
             List<SegmentIntersection> sourceSegmentIntersections = GetClosestPointOfSourceIntersections(trajectoryHandler);
-            Debug.LogFormat("segment int count: {0}", sourceSegmentIntersections.Count);
             if (SourceHasNearbySourceIntersections(sourceSegmentIntersections, source))
             {
                 sourceIntersections.Add(new SourceIntersections(sourceSegmentIntersections, source));
@@ -140,7 +147,6 @@ public class TrajectoryHandler : MonoBehaviour
     {
         for (int j = 0; j < nearestSourceIntersections.Count; j++)
         {
-            Debug.LogFormat("segment dist: {0}, source ROI: {1}", nearestSourceIntersections[j].MinDistSq, source.RadiusOfInfluenceSq);
             if (nearestSourceIntersections[j].MinDistSq < source.RadiusOfInfluenceSq)
                 return true;
         }
@@ -169,6 +175,14 @@ public class TrajectoryHandler : MonoBehaviour
         public List<SegmentIntersection> SegmentIntersections { get; }
         public GravitySource Source { get; }
 
+    }
+
+    //DEBUG
+    private IEnumerator Timer(float time)
+    {
+        // Waits until interval expires, then sets bool back to false   
+        yield return new WaitForSeconds(time);
+        Debug.LogFormat("{0} seconds executed!", time);
     }
 
     //private void OnDrawGizmos()

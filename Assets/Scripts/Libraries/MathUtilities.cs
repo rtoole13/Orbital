@@ -164,7 +164,6 @@ public static class MathUtilities
         // Returns a list of intersections as Vector2s. Or, in the case of no intersection the vertex in polygonVerticesA closest to polygonB
         List<SegmentIntersection> intersections = new List<SegmentIntersection>();
         float minDist = Mathf.Infinity;
-        Debug.LogFormat("countA: {0}, countB: {1}", polygonVerticesA.Length, polygonVerticesB.Length);
         SegmentIntersection closestIntersection = new SegmentIntersection(false, polygonVerticesA[0], Mathf.Infinity, polygonVerticesA[0]);
         for (int i = 0; i < polygonVerticesA.Length - 1; i++)
         {
@@ -190,7 +189,6 @@ public static class MathUtilities
         if (intersections.Count == 0)
             intersections.Add(closestIntersection); // No intersections. Take vertex in A closest to B
 
-        Debug.Log(intersections[0].MinDist);
         return intersections;
 
     }
