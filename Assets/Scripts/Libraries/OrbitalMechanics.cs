@@ -79,6 +79,16 @@ namespace OrbitalMechanics
             return nu;
         }
 
+        public static float TrueAnomaly(Vector2 orbitalPosition)
+        {
+            // From ORBITAL POSITION (not relative position)_ corresponding nu.
+            float nu = Vector2.SignedAngle(Vector2.right, orbitalPosition) * Mathf.Deg2Rad;
+            //Debug.LogFormat("raw nu: {0}", nu * Mathf.Rad2Deg);
+            if (nu < 0f)
+                nu = 2 * Mathf.PI + nu;
+            return nu;
+        }
+
         public static Vector3 SpecificRelativeAngularMomentum(Vector3 relativePosition, Vector3 relativeVelocity)
         {
             return Vector3.Cross(relativePosition, relativeVelocity);
@@ -538,21 +548,22 @@ namespace OrbitalMechanics
             return 1f - (Mathf.Pow(x, 2) * stumpffC / orbitalRadius);
         }
 
-        public static float CalculateTimeOfFlight(Vector2 relativePositionA, Vector2 relativePositionB, Vector2 direction, Vector3 eccentricityVector, float sourceMass)
+        public static float CalculateTimeOfFlight(Vector2 orbitalPosition, Vector2 orbitalVelocity, Vector2 destination, Vector3 eccentricityVector, float sourceMass)
         {
-            // Assuming positionA and positionB are valid positions on the orbital path.. Calculate time of flight between two positions
+            // Assuming positionA and positionB are valid positions (LOCAL PERIFOCAL COORD SPACE) on the orbital path.. Calculate time of flight between two positions
             float trueAnomalyA, trueAnomalyB, eccentricAnomalyA, eccentricAnomalyB;
             float eccentricity = eccentricityVector.magnitude;
-            Debug.LogFormat("rel vel: {0}", direction);
-            trueAnomalyA = Trajectory.TrueAnomaly(relativePositionA, direction, eccentricityVector);
-            trueAnomalyB = Trajectory.TrueAnomaly(relativePositionB, direction, eccentricityVector); // FIXME direction is wrong here. This is where "short way"/"long way" comes in
-            Debug.LogFormat("nuA: {0}, nuB: {1}", trueAnomalyA * Mathf.Rad2Deg, trueAnomalyB * Mathf.Rad2Deg);
+            trueAnomalyA = Trajectory.TrueAnomaly(orbitalPosition);
+            //Debug.LogFormat("TruAnomA: {0}", trueAnomalyA);
+
+            trueAnomalyB = Trajectory.TrueAnomaly(destination);
+            Debug.LogFormat("pos: {0}, nuA: {1}, nuB: {2}", orbitalPosition, trueAnomalyA * Mathf.Rad2Deg, trueAnomalyB * Mathf.Rad2Deg);
             eccentricAnomalyA = KeplerMethod.EccentricAnomalyAtEpoch(trueAnomalyA, eccentricity);
             eccentricAnomalyB = KeplerMethod.EccentricAnomalyAtEpoch(trueAnomalyB, eccentricity);
 
             float radiusA, radiusB;
-            radiusA = relativePositionA.magnitude;
-            radiusB = relativePositionB.magnitude;
+            radiusA = orbitalPosition.magnitude;
+            radiusB = destination.magnitude;
 
             float A, z, C, S, y, x;
             A = CalculateA(radiusA, radiusB, trueAnomalyA, trueAnomalyB);
@@ -568,8 +579,11 @@ namespace OrbitalMechanics
 
         private static float CalculateA(float radialPositionA, float radialPositionB, float trueAnomalyA, float trueAnomalyB)
         {
-            float deltaTrueAnomaly;
-            deltaTrueAnomaly = trueAnomalyB - trueAnomalyA;
+            float deltaTrueAnomaly = trueAnomalyB - trueAnomalyA;
+            if (trueAnomalyB < trueAnomalyA)
+                deltaTrueAnomaly = 2 * Mathf.PI + deltaTrueAnomaly;
+
+            Debug.LogFormat("deltaTrueAnom: {0}", deltaTrueAnomaly * Mathf.Rad2Deg);
             return Mathf.Sqrt(radialPositionA * radialPositionB) * Mathf.Sin(deltaTrueAnomaly) / Mathf.Sqrt(1f - Mathf.Cos(deltaTrueAnomaly)); // FIXME blows up at deltaAnom of 0 and 2PI
         }
 

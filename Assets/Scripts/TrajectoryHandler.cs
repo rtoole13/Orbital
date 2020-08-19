@@ -116,9 +116,9 @@ public class TrajectoryHandler : MonoBehaviour
                 SpriteRenderer spriteRenderer = intersectionObject.GetComponentInChildren<SpriteRenderer>();
                 spriteRenderer.color = sourceIntersectionColors[i];
                 sourceIntersectionObjectSpriteObjects.Add(intersectionObject);
-                Vector2 localPosition = thisSourceIntersections.SegmentIntersections[j].ClosestPoint - orbitalBody.CurrentGravitySource.Position;
-                Debug.LogFormat("trajHand orbPos: {0}", orbitalBody.OrbitalPosition);
-                float timeOfFlight = OrbitalMechanics.UniversalVariableMethod.CalculateTimeOfFlight(orbitalBody.Position - orbitalBody.CurrentGravitySource.Position, localPosition, orbitalBody.Velocity - orbitalBody.CurrentGravitySource.Velocity, orbitalBody.EccentricityVector, orbitalBody.CurrentGravitySource.Mass);
+                Vector2 destination = (thisSourceIntersections.SegmentIntersections[j].ClosestPoint - orbitalBody.CurrentGravitySource.Position).RotateVector(-orbitalBody.ArgumentOfPeriapsis);
+                Debug.LogFormat("trajHand trueAnom: {0}", orbitalBody.TrueAnomaly * Mathf.Rad2Deg);
+                float timeOfFlight = OrbitalMechanics.UniversalVariableMethod.CalculateTimeOfFlight(orbitalBody.OrbitalPosition, orbitalBody.OrbitalVelocity, destination, orbitalBody.EccentricityVector, orbitalBody.CurrentGravitySource.Mass);
                 IEnumerator timeOfFlightCalc = Timer(timeOfFlight);
                 StartCoroutine(timeOfFlightCalc);
             }
