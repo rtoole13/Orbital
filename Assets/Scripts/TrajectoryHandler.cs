@@ -112,13 +112,25 @@ public class TrajectoryHandler : MonoBehaviour
             SourceIntersections thisSourceIntersections = sourceIntersections[i];
             for (int j = 0; j < thisSourceIntersections.SegmentIntersections.Count; j++)
             {
-                GameObject intersectionObject = Instantiate(intersectionObjectPrefab, thisSourceIntersections.SegmentIntersections[j].ClosestPoint, Quaternion.identity);
-                SpriteRenderer spriteRenderer = intersectionObject.GetComponentInChildren<SpriteRenderer>();
+                // Plot current object's future position
+                GameObject intersectionObjectA = Instantiate(intersectionObjectPrefab, thisSourceIntersections.SegmentIntersections[j].ClosestPoint, Quaternion.identity);
+                SpriteRenderer spriteRenderer = intersectionObjectA.GetComponentInChildren<SpriteRenderer>();
                 spriteRenderer.color = sourceIntersectionColors[i];
-                sourceIntersectionObjectSpriteObjects.Add(intersectionObject);
+                sourceIntersectionObjectSpriteObjects.Add(intersectionObjectA);
+
+                // Calculate time of flight of current object to destination
                 Vector2 destination = (thisSourceIntersections.SegmentIntersections[j].ClosestPoint - orbitalBody.CurrentGravitySource.Position).RotateVector(-orbitalBody.ArgumentOfPeriapsis);
                 float timeOfFlight = OrbitalMechanics.UniversalVariableMethod.CalculateTimeOfFlight(orbitalBody.OrbitalPosition, orbitalBody.OrbitalVelocity, destination, orbitalBody.EccentricityVector, orbitalBody.CurrentGravitySource.Mass);
-                IEnumerator timeOfFlightCalc = Timer(timeOfFlight);
+                
+                // Plot this source object's position at timeOfFlight
+                Vector2 predictedWorldPosition = thisSourceIntersections.Source.PredictPosition(timeOfFlight);
+                GameObject intersectionObjectB = Instantiate(intersectionObjectPrefab, predictedWorldPosition, Quaternion.identity);
+                spriteRenderer = intersectionObjectB.GetComponentInChildren<SpriteRenderer>();
+                spriteRenderer.color = sourceIntersectionColors[i];
+                sourceIntersectionObjectSpriteObjects.Add(intersectionObjectB);
+
+                //Debug
+                IEnumerator timeOfFlightCalc = TimerToPosition(timeOfFlight, predictedWorldPosition, thisSourceIntersections.Source);
                 StartCoroutine(timeOfFlightCalc);
             }
         }
@@ -177,10 +189,12 @@ public class TrajectoryHandler : MonoBehaviour
     }
 
     //DEBUG
-    private IEnumerator Timer(float time)
+    private IEnumerator TimerToPosition(float time, Vector2 position, GravitySource source)
     {
         // Waits until interval expires, then sets bool back to false   
         yield return new WaitForSeconds(time);
+        Debug.LogFormat("Predicted to arrive at {0} in {1}", position, time);
+        Debug.LogFormat("Actual position: {0}", source.Position);
     }
 
     //private void OnDrawGizmos()

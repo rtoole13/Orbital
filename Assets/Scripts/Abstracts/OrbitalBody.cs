@@ -316,6 +316,21 @@ public abstract class OrbitalBody : MonoBehaviour
         // Invoke orbit calculation event, triggering things like trajectory drawing
         OnOrbitCalculationEvent(); 
     }
+
+    public Vector2 PredictPosition(float timeOfFlight)
+    {
+        Vector2 relativePosition = Position - CurrentGravitySource.Position;
+        Vector2 relativeVelocity = Velocity - CurrentGravitySource.Velocity;
+        Debug.LogFormat("current: {0}, new: {1}", SpecificRelativeAngularMomentum, Mechanics.Trajectory.SpecificRelativeAngularMomentum(relativePosition, relativeVelocity));
+        // Initialize Solver
+        UniversalVariableSolver tempTrajSolver = new UniversalVariableSolver();
+        tempTrajSolver.InitializeSolver(relativePosition, relativeVelocity, CurrentGravitySource.Mass, SpecificRelativeAngularMomentum, EccentricityVector, SemimajorAxis);
+
+        // Solve for new position given time of flight
+        tempTrajSolver.UpdateStateVariables(timeOfFlight);
+        return tempTrajSolver.CalculatedPosition.RotateVector(ArgumentOfPeriapsis) + CurrentGravitySource.Position;
+    }
+
     #endregion PHYSICS
 
     #region GENERAL
