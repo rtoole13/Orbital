@@ -59,7 +59,6 @@ public class UniversalVariableSolver : Solver
         epochVelocity = CalculatedVelocity;
 
         // Initialize true anomaly and FPA
-        Debug.LogFormat("UVM pos: {0}", CalculatedPosition);
         TrueAnomaly = OrbitalMechanics.Trajectory.TrueAnomaly(CalculatedPosition, CalculatedVelocity, EccentricityVector);
         FlightPathAngle = OrbitalMechanics.Trajectory.FlightPathAngle(specificRelativeAngularMomentum.magnitude, CalculatedPosition, CalculatedVelocity);
 

@@ -80,6 +80,15 @@ public static class MathUtilities
         return Sinh(value) / (Cosh(value) + 1f);
     }
 
+    public static float WrapDeltaAngle(float angleA, float angleB)
+    {
+        // Returns difference between angleB and angleA, wrapping at 2 * PI
+        float deltaAngle = angleB - angleA;
+        if (deltaAngle < 0)
+            deltaAngle += 2 * Mathf.PI;
+        return deltaAngle;
+    }
+
     #endregion
     #region GEOMETRY
     public static SegmentIntersection GetLineIntersection(Vector2 pointA, Vector2 pointB, Vector2 pointC, Vector2 pointD)

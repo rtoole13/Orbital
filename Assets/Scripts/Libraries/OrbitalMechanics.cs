@@ -81,12 +81,8 @@ namespace OrbitalMechanics
 
         public static float TrueAnomaly(Vector2 orbitalPosition)
         {
-            // From ORBITAL POSITION (not relative position)_ corresponding nu.
-            float nu = Vector2.SignedAngle(Vector2.right, orbitalPosition) * Mathf.Deg2Rad;
-            //Debug.LogFormat("raw nu: {0}", nu * Mathf.Rad2Deg);
-            if (nu < 0f)
-                nu = 2 * Mathf.PI + nu;
-            return nu;
+            // From ORBITAL POSITION (not relative position) corresponding nu.
+            return MathUtilities.WrapDeltaAngle(0f, Vector2.Angle(Vector2.right, orbitalPosition) * Mathf.Deg2Rad);
         }
 
         public static Vector3 SpecificRelativeAngularMomentum(Vector3 relativePosition, Vector3 relativeVelocity)
@@ -397,8 +393,9 @@ namespace OrbitalMechanics
         
         public static float ZfromDeltaE(float eccentricAnomalyA, float eccentricAnomalyB)
         {
-            // Something of hybrid Kepler/UVM method..
-            return Mathf.Pow(eccentricAnomalyB - eccentricAnomalyA, 2);
+            // Something of a hybrid Kepler/UVM method..
+            float deltaE = MathUtilities.WrapDeltaAngle(eccentricAnomalyA, eccentricAnomalyB);
+            return Mathf.Pow(deltaE, 2);
         }
         
         public static float slopeTimeVsX(float mainMass, float orbitalRadius)
@@ -557,16 +554,15 @@ namespace OrbitalMechanics
             //Debug.LogFormat("TruAnomA: {0}", trueAnomalyA);
 
             trueAnomalyB = Trajectory.TrueAnomaly(destination);
-            Debug.LogFormat("pos: {0}, nuA: {1}, nuB: {2}", orbitalPosition, trueAnomalyA * Mathf.Rad2Deg, trueAnomalyB * Mathf.Rad2Deg);
             eccentricAnomalyA = KeplerMethod.EccentricAnomalyAtEpoch(trueAnomalyA, eccentricity);
             eccentricAnomalyB = KeplerMethod.EccentricAnomalyAtEpoch(trueAnomalyB, eccentricity);
-
             float radiusA, radiusB;
             radiusA = orbitalPosition.magnitude;
             radiusB = destination.magnitude;
 
             float A, z, C, S, y, x;
             A = CalculateA(radiusA, radiusB, trueAnomalyA, trueAnomalyB);
+            
             z = ZfromDeltaE(eccentricAnomalyA, eccentricAnomalyB);
             C = StumpffC(z);
             S = StumpffS(z);
@@ -579,11 +575,7 @@ namespace OrbitalMechanics
 
         private static float CalculateA(float radialPositionA, float radialPositionB, float trueAnomalyA, float trueAnomalyB)
         {
-            float deltaTrueAnomaly = trueAnomalyB - trueAnomalyA;
-            if (trueAnomalyB < trueAnomalyA)
-                deltaTrueAnomaly = 2 * Mathf.PI + deltaTrueAnomaly;
-
-            Debug.LogFormat("deltaTrueAnom: {0}", deltaTrueAnomaly * Mathf.Rad2Deg);
+            float deltaTrueAnomaly = MathUtilities.WrapDeltaAngle(trueAnomalyA, trueAnomalyB);
             return Mathf.Sqrt(radialPositionA * radialPositionB) * Mathf.Sin(deltaTrueAnomaly) / Mathf.Sqrt(1f - Mathf.Cos(deltaTrueAnomaly)); // FIXME blows up at deltaAnom of 0 and 2PI
         }
 

@@ -312,7 +312,7 @@ public abstract class OrbitalBody : MonoBehaviour
         TimeSinceEpoch = 0f;
 
         UpdateStateVectorsBySolver();
-        Debug.LogFormat("orbBod orbPos: {0}", OrbitalPosition);
+        
         // Invoke orbit calculation event, triggering things like trajectory drawing
         OnOrbitCalculationEvent(); 
     }

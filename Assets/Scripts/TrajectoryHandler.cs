@@ -117,7 +117,6 @@ public class TrajectoryHandler : MonoBehaviour
                 spriteRenderer.color = sourceIntersectionColors[i];
                 sourceIntersectionObjectSpriteObjects.Add(intersectionObject);
                 Vector2 destination = (thisSourceIntersections.SegmentIntersections[j].ClosestPoint - orbitalBody.CurrentGravitySource.Position).RotateVector(-orbitalBody.ArgumentOfPeriapsis);
-                Debug.LogFormat("trajHand trueAnom: {0}", orbitalBody.TrueAnomaly * Mathf.Rad2Deg);
                 float timeOfFlight = OrbitalMechanics.UniversalVariableMethod.CalculateTimeOfFlight(orbitalBody.OrbitalPosition, orbitalBody.OrbitalVelocity, destination, orbitalBody.EccentricityVector, orbitalBody.CurrentGravitySource.Mass);
                 IEnumerator timeOfFlightCalc = Timer(timeOfFlight);
                 StartCoroutine(timeOfFlightCalc);
@@ -182,7 +181,6 @@ public class TrajectoryHandler : MonoBehaviour
     {
         // Waits until interval expires, then sets bool back to false   
         yield return new WaitForSeconds(time);
-        Debug.LogFormat("{0} seconds executed!", time);
     }
 
     //private void OnDrawGizmos()
