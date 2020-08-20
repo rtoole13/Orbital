@@ -82,7 +82,10 @@ namespace OrbitalMechanics
         public static float TrueAnomaly(Vector2 orbitalPosition)
         {
             // From ORBITAL POSITION (not relative position) corresponding nu.
-            return MathUtilities.WrapDeltaAngle(0f, Vector2.Angle(Vector2.right, orbitalPosition) * Mathf.Deg2Rad);
+            float nu = Vector2.SignedAngle(Vector2.right, orbitalPosition) * Mathf.Deg2Rad;
+            if (nu < 0f)
+                nu += 2 * Mathf.PI;
+            return nu;
         }
 
         public static Vector3 SpecificRelativeAngularMomentum(Vector3 relativePosition, Vector3 relativeVelocity)
@@ -551,11 +554,10 @@ namespace OrbitalMechanics
             float trueAnomalyA, trueAnomalyB, eccentricAnomalyA, eccentricAnomalyB;
             float eccentricity = eccentricityVector.magnitude;
             trueAnomalyA = Trajectory.TrueAnomaly(orbitalPosition);
-            //Debug.LogFormat("TruAnomA: {0}", trueAnomalyA);
-
             trueAnomalyB = Trajectory.TrueAnomaly(destination);
             eccentricAnomalyA = KeplerMethod.EccentricAnomalyAtEpoch(trueAnomalyA, eccentricity);
             eccentricAnomalyB = KeplerMethod.EccentricAnomalyAtEpoch(trueAnomalyB, eccentricity);
+
             float radiusA, radiusB;
             radiusA = orbitalPosition.magnitude;
             radiusB = destination.magnitude;
@@ -591,4 +593,3 @@ namespace OrbitalMechanics
         }
     }
 }
-
