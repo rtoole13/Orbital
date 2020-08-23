@@ -15,7 +15,6 @@ public abstract class OrbitalBody : MonoBehaviour
     private GravitySource _gravitySource;
     [SerializeField]
     private float _mass = 1.0f;
-    private float _orbitalPeriod;
     private Vector2 _orbitalPosition;
     private float _orbitalRadius;
     private float _orbitalSpeed;
@@ -242,11 +241,7 @@ public abstract class OrbitalBody : MonoBehaviour
         }
     }
 
-    public float OrbitalPeriod
-    {
-        get { return _orbitalPeriod; }
-        protected set { _orbitalPeriod = value; }
-    }
+    public float OrbitalPeriod { get { return trajectorySolver.OrbitalPeriod; }}
 
     public float TimeSinceEpoch
     {

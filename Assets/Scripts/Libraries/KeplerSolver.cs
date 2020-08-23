@@ -9,7 +9,6 @@ public class KeplerSolver : Solver
     private float meanAnomaly;
     private float meanAnomalyAtEpoch;
     private float meanMotion;
-    private float orbitalPeriod;
     private int maxNewtonianMethodIterations = 6;
 
 
@@ -51,18 +50,18 @@ public class KeplerSolver : Solver
         meanMotion = OrbitalMechanics.KeplerMethod.MeanMotion(sourceMass, semimajorAxis);
         if (trajectoryType == OrbitalMechanics.Globals.TrajectoryType.Ellipse)
         {
-            orbitalPeriod = OrbitalMechanics.KeplerMethod.OrbitalPeriod(meanMotion);
+            OrbitalPeriod = OrbitalMechanics.KeplerMethod.OrbitalPeriod(meanMotion);
             InitializeEllipticalParameters(sourceRelativePosition, sourceRelativeVelocity);
 
         }
         else if (trajectoryType == OrbitalMechanics.Globals.TrajectoryType.Hyperbola)
         {
-            orbitalPeriod = Mathf.Infinity;
+            OrbitalPeriod = Mathf.Infinity;
             InitializeHyperbolicParameters(sourceRelativePosition, sourceRelativeVelocity);
         }
         else
         {
-            orbitalPeriod = Mathf.Infinity;
+            OrbitalPeriod = Mathf.Infinity;
             InitializeParabolicParameters();
         }
     }
@@ -141,7 +140,7 @@ public class KeplerSolver : Solver
     private void UpdateStateVariablesElliptically(float timeOfFlight)
     {
         // Update eccentricAnomaly
-        timeOfFlight %= orbitalPeriod;
+        timeOfFlight %= OrbitalPeriod;
         meanAnomaly = OrbitalMechanics.KeplerMethod.MeanAnomaly(meanAnomalyAtEpoch, meanMotion, timeOfFlight, true);
         eccentricAnomaly = OrbitalMechanics.KeplerMethod.EccentricAnomaly(meanAnomaly, eccentricity, maxNewtonianMethodIterations);
 

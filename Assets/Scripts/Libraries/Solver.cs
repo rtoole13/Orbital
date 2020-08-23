@@ -25,6 +25,7 @@ public abstract class Solver
     protected float semimajorAxis;
     protected float semimajorAxisReciprocal;
     protected OrbitalMechanics.Globals.TrajectoryType trajectoryType;
+    protected float _orbitalPeriod;
 
     // Hyperbolic Orbital Parameters
     protected float _hyperbolicExcessSpeed;
@@ -66,6 +67,12 @@ public abstract class Solver
         {
             _calculatedVelocity = value; 
         }
+    }
+
+    public float OrbitalPeriod
+    {
+        get { return _orbitalPeriod; }
+        protected set { _orbitalPeriod = value; }
     }
 
     public float FlightPathAngle
