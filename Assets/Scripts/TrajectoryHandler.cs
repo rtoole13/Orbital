@@ -18,10 +18,7 @@ public class TrajectoryHandler : MonoBehaviour
     private List<SourceIntersections> sourceIntersections;
     private List<Color> sourceIntersectionColors;
     private int sourceIntersectionColorCount;
-    private List<GameObject> sourceIntersectionObjectSpriteObjects;
-
-
-    // DEBUG
+    private List<GameObject> sourceIntersectionObjectSpriteObjects;   
 
     #region GETSET
     public float SemimajorAxis
@@ -82,7 +79,7 @@ public class TrajectoryHandler : MonoBehaviour
         }
 
         // Plot nearest intersections
-        PlotNearestSourceIntersections();
+        //PlotNearestSourceIntersections();
     }
 
     private void ResetNearestSourceIntersections()
@@ -130,7 +127,7 @@ public class TrajectoryHandler : MonoBehaviour
                 Vector2 worldDestination = thisSourceIntersections.SegmentIntersections[j].ClosestPoint;
                 Vector2 localDestination = (worldDestination - orbitalBody.CurrentGravitySource.Position).RotateVector(-orbitalBody.ArgumentOfPeriapsis);
                 float timeOfFlight = OrbitalMechanics.UniversalVariableMethod.CalculateTimeOfFlight(orbitalBody.OrbitalPosition, orbitalBody.OrbitalVelocity, localDestination, orbitalBody.EccentricityVector, orbitalBody.CurrentGravitySource.Mass);
-                 
+                
                 // Plot this source object's position at timeOfFlight
                 Vector2 predictedWorldPosition = thisSourceIntersections.Source.PredictPosition(timeOfFlight);
                 GameObject intersectionObjectB = InitiateIntersectionObject(predictedWorldPosition, sourceIntersectionColors[i]);
@@ -236,22 +233,5 @@ public class TrajectoryHandler : MonoBehaviour
 
     }
 
-    //private void OnDrawGizmos()
-    //{
-    //    if (trajectoryPlotter == null)
-    //        return;
-
-    //    if (trajectoryPlotter.GetVertexCount() == 0)
-    //        return;
-
-    //    if (debugTrajectoryTarget == null)
-    //        return;
-
-    //    List<Vector2> intersections = GetClosestPointOfSourceIntersections(debugTrajectoryTarget);
-    //    Gizmos.color = Color.green;
-    //    for (int i = 0; i < intersections.Count; i++)
-    //    {
-    //        Gizmos.DrawSphere(intersections[i], 1f);
-    //    }
-    //}
+    
 }

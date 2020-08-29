@@ -10,6 +10,7 @@ public class ManeuverNode : MonoBehaviour
     public GameObject trajectoryObjectPrefab;
     private GameObject trajectoryObject;
     private TrajectoryPlotter trajectoryPlotter;
+    private IntersectionCalculator intersectionCalculator;
     private Ship ship;
     private Gradient nodeOutlineGradient;
     private Color nodeOutlineBaseColor;
@@ -278,6 +279,10 @@ public class ManeuverNode : MonoBehaviour
             // Instantiate prefab if null
             trajectoryObject = Instantiate(trajectoryObjectPrefab);
             trajectoryPlotter = trajectoryObject.GetComponent<TrajectoryPlotter>();
+
+            // Pass ship to intersection calculator
+            intersectionCalculator = trajectoryObject.GetComponent<IntersectionCalculator>();
+            intersectionCalculator.SetOrbitalBody(ship);
         }
         trajectoryObject.transform.parent = ship.CurrentGravitySource.transform;
         trajectoryObject.transform.position = trajectoryObject.transform.parent.position;
@@ -295,6 +300,7 @@ public class ManeuverNode : MonoBehaviour
         {
             trajectoryPlotter.BuildHyperbolicTrajectory(orbit.SemimajorAxis, orbit.SemiminorAxis, orbit.Eccentricity, orbit.ArgumentOfPeriapsis);
         }
+        intersectionCalculator.PlotNearestSourceIntersections();
     }
     #endregion
 

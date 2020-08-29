@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8805186226437833570}
   - component: {fileID: 1296952420008498741}
   - component: {fileID: 1271720655157076301}
+  - component: {fileID: 6250060426499545910}
   m_Layer: 0
   m_Name: TrajectoryPrefab
   m_TagString: Untagged
@@ -144,3 +145,17 @@ MonoBehaviour:
   minimumWidth: 0.1
   maximumWidth: 0.5
   segments: 64
+--- !u!114 &6250060426499545910
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3031465301417399082}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efc66d1278bbd9e40a9d6d0423c19e54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  intersectionObjectPrefab: {fileID: 1862555240802640936, guid: 756b2f4f71652ad4d8c382e544af9eec,
+    type: 3}
