@@ -58,7 +58,7 @@ public class UniversalVariableSolver : Solver
         epochVelocity = CalculatedVelocity;
 
         // Initialize true anomaly and FPA
-        TrueAnomaly = OrbitalMechanics.Trajectory.TrueAnomaly(CalculatedPosition, CalculatedVelocity, EccentricityVector);
+        TrueAnomaly = OrbitalMechanics.Trajectory.TrueAnomaly(sourceRelativePosition, sourceRelativeVelocity, EccentricityVector);
         FlightPathAngle = OrbitalMechanics.Trajectory.FlightPathAngle(specificRelativeAngularMomentum.magnitude, CalculatedPosition, CalculatedVelocity);
 
         
@@ -125,7 +125,7 @@ public class UniversalVariableSolver : Solver
         CalculatedSpeed = CalculatedVelocity.magnitude;
 
         // Update true anomaly and flight path angle
-        TrueAnomaly = OrbitalMechanics.Trajectory.TrueAnomaly(CalculatedPosition, CalculatedVelocity, Vector2.right);
-        FlightPathAngle = OrbitalMechanics.Trajectory.FlightPathAngle(specificRelativeAngularMomentum.magnitude, CalculatedPosition, CalculatedVelocity);
+        TrueAnomaly = OrbitalMechanics.Trajectory.TrueAnomaly(CalculatedPosition);
+        FlightPathAngle = OrbitalMechanics.Trajectory.FlightPathAngle(eccentricity, TrueAnomaly);
     }
 }
