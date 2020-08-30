@@ -185,23 +185,4 @@ public class IntersectionCalculator : MonoBehaviour
         public List<SegmentIntersection> SegmentIntersections { get; }
         public GravitySource Source { get; }
     }
-
-    //private void OnDrawGizmos()
-    //{
-    //    if (trajectoryPlotter == null)
-    //        return;
-
-    //    if (trajectoryPlotter.GetVertexCount() == 0)
-    //        return;
-
-    //    if (debugTrajectoryTarget == null)
-    //        return;
-
-    //    List<Vector2> intersections = GetClosestPointOfSourceIntersections(debugTrajectoryTarget);
-    //    Gizmos.color = Color.green;
-    //    for (int i = 0; i < intersections.Count; i++)
-    //    {
-    //        Gizmos.DrawSphere(intersections[i], 1f);
-    //    }
-    //}
 }
