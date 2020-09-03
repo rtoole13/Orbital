@@ -10,10 +10,6 @@ public abstract class Solver
     private float _calculatedSpeed;
     private Vector2 _calculatedVelocity;
     private float _flightPathAngle;
-    //private Vector2 _lastPosition;
-    //private float _lastRadius;
-    //private float _lastSpeed;
-    //private Vector2 _lastVelocity;
     private float _trueAnomaly;
 
     // General Orbital Parameters
@@ -33,6 +29,7 @@ public abstract class Solver
     protected Vector2[] _hyperbolicAsymptotes;
 
     #region GETSET
+    public Trajectory Trajectory { get; private set; }
     public Vector2 CalculatedPosition
     {
         get { return _calculatedPosition; }
@@ -148,11 +145,8 @@ public abstract class Solver
         semimajorAxisReciprocal = 1f / semimajorAxis;
     }
 
-    //protected virtual void SetLastStateVariables(float radius, float speed, Vector2 position, Vector2 velocity)
-    //{
-    //    LastRadius = radius;
-    //    LastSpeed = speed;
-    //    LastPosition = position;
-    //    LastVelocity = velocity;
-    //}
+    public virtual void InitializeSolver(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity, Trajectory trajectory)
+    {
+        Trajectory = trajectory;
+    }
 }

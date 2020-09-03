@@ -15,6 +15,8 @@ public class UniversalVariableSolver : Solver
     private Vector2 epochPosition;
     private float epochRadius;
     private Vector2 epochVelocity;
+
+    #region CONSTRUCTOR
     public UniversalVariableSolver()
     {
         x = 0f;
@@ -25,6 +27,14 @@ public class UniversalVariableSolver : Solver
         g = 0f;
         fPrime = 0f;
         g = 1f;
+    }
+    #endregion CONSTRUCTOR
+    public override void InitializeSolver(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity, Trajectory trajectory)
+    {
+        base.InitializeSolver(sourceRelativePosition, sourceRelativeVelocity, trajectory);
+        
+        // Initialize calculated variables
+        InitializeVariables(sourceRelativePosition, sourceRelativeVelocity);
     }
 
     public override void InitializeSolver(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity, float _sourceMass, Vector3 _specificRelativeAngularMomentum, Vector3 eccentricityVector, float _semimajorAxis)

@@ -41,6 +41,8 @@ public abstract class OrbitalBody : MonoBehaviour
     public event OnOrbitCalculation OnOrbitCalculationEvent;
 
     #region GETSET
+    public Trajectory Trajectory { get; private set; }
+
     public GravitySource CurrentGravitySource
     {
         get { return _gravitySource; }
@@ -282,6 +284,7 @@ public abstract class OrbitalBody : MonoBehaviour
 
     protected virtual void Start()
     {
+        Trajectory = new Trajectory();
         trajectorySolver = new UniversalVariableSolver();
     }
 
@@ -290,18 +293,10 @@ public abstract class OrbitalBody : MonoBehaviour
     #region PHYSICS
     protected virtual void CalculateOrbitalParametersFromStateVectors(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)
     {
-        // Get Basic Orbital Elements
-        SpecificRelativeAngularMomentum = Mechanics.Trajectory.SpecificRelativeAngularMomentum(sourceRelativePosition, sourceRelativeVelocity);
-        ClockWiseOrbit = SpecificRelativeAngularMomentum.z < 0;
-        EccentricityVector = Mechanics.Trajectory.EccentricityVector(sourceRelativePosition, sourceRelativeVelocity, SpecificRelativeAngularMomentum, CurrentGravitySource.Mass);
-        SemimajorAxis = Mechanics.Trajectory.SemimajorAxis(sourceRelativePosition.magnitude, sourceRelativeVelocity.sqrMagnitude, CurrentGravitySource.Mass);
-        SemimajorAxisReciprocal = 1f / SemimajorAxis;
-        SemiminorAxis = Mechanics.Trajectory.SemiminorAxis(SemimajorAxis, Eccentricity);
-        SpecificOrbitalEnergy = Mechanics.Trajectory.SpecificOrbitalEnergy(CurrentGravitySource.Mass, SemimajorAxis);
-        ArgumentOfPeriapsis = Mechanics.Trajectory.ArgumentOfPeriapse(EccentricityVector, sourceRelativePosition);
+        Trajectory.CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity, CurrentGravitySource.Mass);
 
         // Initialize Solver
-        trajectorySolver.InitializeSolver(sourceRelativePosition, sourceRelativeVelocity, CurrentGravitySource.Mass, SpecificRelativeAngularMomentum, EccentricityVector, SemimajorAxis);
+        trajectorySolver.InitializeSolver(sourceRelativePosition, sourceRelativeVelocity, Trajectory);
         
         // Epoch parameters
         TimeSinceEpoch = 0f;
