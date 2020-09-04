@@ -145,14 +145,14 @@ public class ManeuverNode : MonoBehaviour
         orbitalDirection = CalculateOrbitalDirection(trueAnomaly);
         orthogonalDirection = orbitalDirection.RotateVector(-Mathf.PI / 2);
 
-        float orbitalRadius = Mechanics.Trajectory.OrbitalRadius(ship.Eccentricity, ship.SemimajorAxis, trueAnomaly);
-        orbitalSpeed = Mechanics.Trajectory.OrbitalSpeed(ship.CurrentGravitySource.Mass, orbitalRadius, ship.SemimajorAxis);
+        float orbitalRadius = Mechanics.Trajectory.OrbitalRadius(ship.Trajectory.Eccentricity, ship.Trajectory.SemimajorAxis, trueAnomaly);
+        orbitalSpeed = Mechanics.Trajectory.OrbitalSpeed(ship.CurrentGravitySource.Mass, orbitalRadius, ship.Trajectory.SemimajorAxis);
 
-        Vector2 orbitalPosition = Mechanics.Trajectory.OrbitalPosition(orbitalRadius, trueAnomaly, ship.ClockWiseOrbit);
+        Vector2 orbitalPosition = Mechanics.Trajectory.OrbitalPosition(orbitalRadius, trueAnomaly, ship.Trajectory.ClockWiseOrbit);
 
         // Direction and position in world coordinate space
         Vector2 worldPosition = OrbitalPositionToWorld(orbitalPosition);
-        Vector2 worldDirection = orbitalDirection.RotateVector(ship.ArgumentOfPeriapsis);
+        Vector2 worldDirection = orbitalDirection.RotateVector(ship.Trajectory.ArgumentOfPeriapsis);
         UpdateTransform(worldPosition, worldDirection);
         UpdateOrbit();
     }
@@ -172,15 +172,15 @@ public class ManeuverNode : MonoBehaviour
 
     private Vector2 WorldPositionFromTrueAnomaly(float trueAnomaly)
     {
-        float orbitalRadius = Mechanics.Trajectory.OrbitalRadius(ship.Eccentricity, ship.SemimajorAxis, trueAnomaly);
-        Vector2 orbitalPosition = Mechanics.Trajectory.OrbitalPosition(orbitalRadius, trueAnomaly, ship.ClockWiseOrbit);
+        float orbitalRadius = Mechanics.Trajectory.OrbitalRadius(ship.Trajectory.Eccentricity, ship.Trajectory.SemimajorAxis, trueAnomaly);
+        Vector2 orbitalPosition = Mechanics.Trajectory.OrbitalPosition(orbitalRadius, trueAnomaly, ship.Trajectory.ClockWiseOrbit);
         return OrbitalPositionToWorld(orbitalPosition);
     }
 
     private Vector2 CalculateOrbitalDirection(float trueAnomaly)
     {
-        float flightPathAngle = Mechanics.Trajectory.FlightPathAngle(ship.Eccentricity, trueAnomaly);
-        return Mechanics.Trajectory.OrbitalDirection(trueAnomaly, flightPathAngle, ship.ClockWiseOrbit);
+        float flightPathAngle = Mechanics.Trajectory.FlightPathAngle(ship.Trajectory.Eccentricity, trueAnomaly);
+        return Mechanics.Trajectory.OrbitalDirection(trueAnomaly, flightPathAngle, ship.Trajectory.ClockWiseOrbit);
 
     }
 
@@ -189,7 +189,7 @@ public class ManeuverNode : MonoBehaviour
         Vector2 translation = ship.CurrentGravitySource != null
             ? ship.CurrentGravitySource.Position
             : Vector2.zero;
-        return perifocalPosition.RotateVector(ship.ArgumentOfPeriapsis) + translation;
+        return perifocalPosition.RotateVector(ship.Trajectory.ArgumentOfPeriapsis) + translation;
     }
 
     private Vector2 OrbitalVelocityToWorld(Vector2 perifocalVelocity)
@@ -197,7 +197,7 @@ public class ManeuverNode : MonoBehaviour
         Vector2 velocity = ship.CurrentGravitySource != null
                 ? ship.CurrentGravitySource.Velocity
                 : Vector2.zero;
-        return perifocalVelocity.RotateVector(ship.ArgumentOfPeriapsis) + velocity;
+        return perifocalVelocity.RotateVector(ship.Trajectory.ArgumentOfPeriapsis) + velocity;
     }
 
     public void ShowNode()
@@ -289,7 +289,7 @@ public class ManeuverNode : MonoBehaviour
 
         // Specifically velocity in world coordinates!
         Vector2 newOrbitalVelocity = orbitalSpeed * orbitalDirection + DeltaOrbitalVelocity;
-        Vector2 relVel = newOrbitalVelocity.RotateVector(ship.ArgumentOfPeriapsis);
+        Vector2 relVel = newOrbitalVelocity.RotateVector(ship.Trajectory.ArgumentOfPeriapsis);
         Vector2 relPos = (Vector2)transform.position - ship.CurrentGravitySource.Position; // world pos - newSource.pos
         orbit.CalculateOrbitalParametersFromStateVectors(relPos, relVel, ship.CurrentGravitySource.Mass);
         if (orbit.TrajectoryType == Mechanics.Globals.TrajectoryType.Ellipse)

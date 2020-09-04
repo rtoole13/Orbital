@@ -68,8 +68,5 @@ public class Trajectory
             Period = Mathf.Infinity;
         }
         ValidOrbit = true;
-
     }
-
-    
 }

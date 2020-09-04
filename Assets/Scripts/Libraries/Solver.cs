@@ -14,19 +14,6 @@ public abstract class Solver
 
     // General Orbital Parameters
     protected float sourceMass;
-    protected Vector3 specificRelativeAngularMomentum;
-    protected bool clockWiseOrbit;
-    protected Vector3 _eccentricityVector;
-    protected float eccentricity;
-    protected float semimajorAxis;
-    protected float semimajorAxisReciprocal;
-    protected OrbitalMechanics.Globals.TrajectoryType trajectoryType;
-    protected float _orbitalPeriod;
-
-    // Hyperbolic Orbital Parameters
-    protected float _hyperbolicExcessSpeed;
-    protected float _trueAnomalyOfAsymptote;
-    protected Vector2[] _hyperbolicAsymptotes;
 
     #region GETSET
     public Trajectory Trajectory { get; private set; }
@@ -66,11 +53,6 @@ public abstract class Solver
         }
     }
 
-    public float OrbitalPeriod
-    {
-        get { return _orbitalPeriod; }
-        protected set { _orbitalPeriod = value; }
-    }
 
     public float FlightPathAngle
     {
@@ -78,75 +60,17 @@ public abstract class Solver
         protected set { _flightPathAngle = value; }
     }
 
-    public float HyperbolicExcessSpeed
-    {
-        get { return _hyperbolicExcessSpeed; }
-        protected set { _hyperbolicExcessSpeed = value; }
-    }
-
-    public float TrueAnomalyOfAsymptote
-    {
-        get { return _trueAnomalyOfAsymptote; }
-        protected set { _trueAnomalyOfAsymptote = value; }
-    }
-
-    public Vector2[] HyperbolicAsymptotes
-    {
-        get { return _hyperbolicAsymptotes; }
-        protected set { _hyperbolicAsymptotes = value; }
-    }
-    
     public float TrueAnomaly
     {
         get { return _trueAnomaly; }
         protected set { _trueAnomaly = value; }
     }
-
-    protected Vector3 EccentricityVector
-    {
-        get { return _eccentricityVector; }
-        set
-        {
-            _eccentricityVector = value;
-            eccentricity = _eccentricityVector.magnitude;
-            if (eccentricity == 1f)
-            {
-                trajectoryType = OrbitalMechanics.Globals.TrajectoryType.Parabola;
-            }
-            else if (eccentricity < 1f)
-            {
-                trajectoryType = OrbitalMechanics.Globals.TrajectoryType.Ellipse;
-            }
-            else
-            {
-                trajectoryType = OrbitalMechanics.Globals.TrajectoryType.Hyperbola;
-            }
-        }
-    }
     #endregion GETSET
 
-    public virtual void InitializeSolver(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity, float _sourceMass)
+
+    public virtual void InitializeSolver(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity, float _sourceMass, Trajectory trajectory)
     {
         sourceMass = _sourceMass;
-        specificRelativeAngularMomentum = OrbitalMechanics.Trajectory.SpecificRelativeAngularMomentum(sourceRelativePosition, sourceRelativeVelocity);
-        clockWiseOrbit = specificRelativeAngularMomentum.z < 0;
-        EccentricityVector = OrbitalMechanics.Trajectory.EccentricityVector(sourceRelativePosition, sourceRelativeVelocity, specificRelativeAngularMomentum, sourceMass);
-        semimajorAxis = OrbitalMechanics.Trajectory.SemimajorAxis(sourceRelativePosition.magnitude, sourceRelativeVelocity.sqrMagnitude, sourceMass);
-        semimajorAxisReciprocal = 1f / semimajorAxis;
-    }
-
-    public virtual void InitializeSolver(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity, float _sourceMass, Vector3 _specificRelativeAngularMomentum, Vector3 eccentricityVector, float _semimajorAxis)
-    {
-        sourceMass = _sourceMass;
-        specificRelativeAngularMomentum = _specificRelativeAngularMomentum;
-        clockWiseOrbit = specificRelativeAngularMomentum.z < 0;
-        EccentricityVector = eccentricityVector;
-        semimajorAxis = _semimajorAxis;
-        semimajorAxisReciprocal = 1f / semimajorAxis;
-    }
-
-    public virtual void InitializeSolver(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity, Trajectory trajectory)
-    {
         Trajectory = trajectory;
     }
 }

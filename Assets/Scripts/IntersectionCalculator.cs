@@ -66,8 +66,8 @@ public class IntersectionCalculator : MonoBehaviour
 
                 // Calculate time of flight of current object to destination
                 Vector2 worldDestination = thisSourceIntersections.SegmentIntersections[j].ClosestPoint;
-                Vector2 localDestination = (worldDestination - orbitalBody.CurrentGravitySource.Position).RotateVector(-orbitalBody.ArgumentOfPeriapsis);
-                float timeOfFlight = OrbitalMechanics.UniversalVariableMethod.CalculateTimeOfFlight(orbitalBody.OrbitalPosition, orbitalBody.OrbitalVelocity, localDestination, orbitalBody.EccentricityVector, orbitalBody.CurrentGravitySource.Mass);
+                Vector2 localDestination = (worldDestination - orbitalBody.CurrentGravitySource.Position).RotateVector(-orbitalBody.Trajectory.ArgumentOfPeriapsis);
+                float timeOfFlight = OrbitalMechanics.UniversalVariableMethod.CalculateTimeOfFlight(orbitalBody.OrbitalPosition, orbitalBody.OrbitalVelocity, localDestination, orbitalBody.Trajectory.EccentricityVector, orbitalBody.CurrentGravitySource.Mass);
 
                 // Plot this source object's position at timeOfFlight
                 Vector2 predictedWorldPosition = thisSourceIntersections.Source.PredictPosition(timeOfFlight);
@@ -96,14 +96,14 @@ public class IntersectionCalculator : MonoBehaviour
             return;
 
         // Calculate time of flight to next closest point
-        if (orbitalBody.TrajectoryType != OrbitalMechanics.Globals.TrajectoryType.Ellipse)
+        if (orbitalBody.Trajectory.TrajectoryType != OrbitalMechanics.Globals.TrajectoryType.Ellipse)
         {
             RemoveIntersectionObjectPair(intersectionObjectA, intersectionObjectB);
             return;
         }
 
         // Returns to this position in one period.
-        float timeOfFlight = orbitalBody.OrbitalPeriod;
+        float timeOfFlight = orbitalBody.Trajectory.Period;
 
         // Update intersection object's position
         intersectionObjectB.transform.position = source.PredictPosition(timeOfFlight);

@@ -17,12 +17,12 @@ public class TrajectoryHandler : MonoBehaviour
     #region GETSET
     public float SemimajorAxis
     {
-        get { return orbitalBody.SemimajorAxis; }
+        get { return orbitalBody.Trajectory.SemimajorAxis; }
 
     }
     public float SemiminorAxis
     {
-        get { return orbitalBody.SemiminorAxis; }
+        get { return orbitalBody.Trajectory.SemiminorAxis; }
     }
 
     #endregion GETSET
@@ -52,13 +52,13 @@ public class TrajectoryHandler : MonoBehaviour
         
         trajectoryObject.transform.parent = orbitalBody.CurrentGravitySource.transform;
         trajectoryObject.transform.position = trajectoryObject.transform.parent.position;
-        if (orbitalBody.Eccentricity >= 1f)
+        if (orbitalBody.Trajectory.Eccentricity >= 1f)
         {
-            trajectoryPlotter.BuildHyperbolicTrajectory(SemimajorAxis, SemiminorAxis, orbitalBody.Eccentricity, orbitalBody.ArgumentOfPeriapsis);
+            trajectoryPlotter.BuildHyperbolicTrajectory(SemimajorAxis, SemiminorAxis, orbitalBody.Trajectory.Eccentricity, orbitalBody.Trajectory.ArgumentOfPeriapsis);
         }
         else
         {
-            trajectoryPlotter.BuildEllipticalTrajectory(SemimajorAxis, SemiminorAxis, orbitalBody.Eccentricity, orbitalBody.ArgumentOfPeriapsis);
+            trajectoryPlotter.BuildEllipticalTrajectory(SemimajorAxis, SemiminorAxis, orbitalBody.Trajectory.Eccentricity, orbitalBody.Trajectory.ArgumentOfPeriapsis);
         }
 
         // Plot nearest intersections

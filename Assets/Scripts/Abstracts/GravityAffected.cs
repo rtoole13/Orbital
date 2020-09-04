@@ -188,7 +188,7 @@ public abstract class GravityAffected : OrbitalBody
         Gizmos.color = Color.green;
         if (CurrentGravitySource == null)
             return;
-        Gizmos.DrawRay(CurrentGravitySource.Position, EccentricityVector * 100f);
+        Gizmos.DrawRay(CurrentGravitySource.Position, Trajectory.EccentricityVector * 100f);
         //Vector3 originA = Vector3.zero;
         //float radiusA = 5f;
         //Vector3 originB = new Vector3(6.4f, 5.8f, 0f);

@@ -29,30 +29,17 @@ public class UniversalVariableSolver : Solver
         g = 1f;
     }
     #endregion CONSTRUCTOR
-    public override void InitializeSolver(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity, Trajectory trajectory)
+    public override void InitializeSolver(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity, float sourceMass, Trajectory trajectory)
     {
-        base.InitializeSolver(sourceRelativePosition, sourceRelativeVelocity, trajectory);
+        base.InitializeSolver(sourceRelativePosition, sourceRelativeVelocity, sourceMass, trajectory);
         
-        // Initialize calculated variables
-        InitializeVariables(sourceRelativePosition, sourceRelativeVelocity);
-    }
-
-    public override void InitializeSolver(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity, float _sourceMass, Vector3 _specificRelativeAngularMomentum, Vector3 eccentricityVector, float _semimajorAxis)
-    {
-        // Initialize orbital parameters
-        base.InitializeSolver(sourceRelativePosition, sourceRelativeVelocity, _sourceMass, _specificRelativeAngularMomentum, eccentricityVector, _semimajorAxis);
-
-        OrbitalPeriod = (trajectoryType == OrbitalMechanics.Globals.TrajectoryType.Ellipse)
-            ? OrbitalMechanics.Trajectory.OrbitalPeriod(semimajorAxis, sourceMass)
-            : Mathf.Infinity;
-
         // Initialize calculated variables
         InitializeVariables(sourceRelativePosition, sourceRelativeVelocity);
     }
 
     private void InitializeVariables(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)
     {
-        float argumentOfPeriapsis = OrbitalMechanics.Trajectory.ArgumentOfPeriapse(EccentricityVector, sourceRelativePosition);
+        float argumentOfPeriapsis = OrbitalMechanics.Trajectory.ArgumentOfPeriapse(Trajectory.EccentricityVector, sourceRelativePosition);
         
         // Calculate Position
         Vector2 calculatedPosition = (Vector2)sourceRelativePosition;
@@ -68,38 +55,24 @@ public class UniversalVariableSolver : Solver
         epochVelocity = CalculatedVelocity;
 
         // Initialize true anomaly and FPA
-        TrueAnomaly = OrbitalMechanics.Trajectory.TrueAnomaly(sourceRelativePosition, sourceRelativeVelocity, EccentricityVector);
-        FlightPathAngle = OrbitalMechanics.Trajectory.FlightPathAngle(specificRelativeAngularMomentum.magnitude, CalculatedPosition, CalculatedVelocity);
+        TrueAnomaly = OrbitalMechanics.Trajectory.TrueAnomaly(sourceRelativePosition, sourceRelativeVelocity, Trajectory.EccentricityVector);
+        FlightPathAngle = OrbitalMechanics.Trajectory.FlightPathAngle(Trajectory.SpecificRelativeAngularMomentum.magnitude, CalculatedPosition, CalculatedVelocity);
 
-        
-        if (trajectoryType == OrbitalMechanics.Globals.TrajectoryType.Ellipse)
+
+        // Initial guess at x
+        GuessX();
+    }
+
+    public void GuessX()
+    {
+        if (Trajectory.TrajectoryType == OrbitalMechanics.Globals.TrajectoryType.Ellipse)
         {
-            InitializeEllipticalParameters();
+            x = OrbitalMechanics.UniversalVariableMethod.EllipticalGuessX(sourceMass, Trajectory.SemimajorAxis, 0f);
         }
         else
         {
-            //Hyperbolic or parabolic(?)
-            InitializeHyperbolicParameters();
+            x = OrbitalMechanics.UniversalVariableMethod.HyperbolicGuessX(sourceMass, Trajectory.SemimajorAxis, 0, CalculatedPosition, CalculatedVelocity);
         }
-    }
-
-    public void InitializeEllipticalParameters()
-    {
-        // Initial guess at x
-        x = OrbitalMechanics.UniversalVariableMethod.EllipticalGuessX(sourceMass, semimajorAxis, 0f);
-        HyperbolicExcessSpeed = Mathf.Infinity;
-        TrueAnomalyOfAsymptote = Mathf.Infinity;
-        HyperbolicAsymptotes= new Vector2[2];
-
-    }
-
-    public void InitializeHyperbolicParameters()
-    {
-        // Initial guess at x
-        x = OrbitalMechanics.UniversalVariableMethod.HyperbolicGuessX(sourceMass, semimajorAxis, 0, CalculatedPosition, CalculatedVelocity);
-        HyperbolicExcessSpeed = OrbitalMechanics.HyperbolicTrajectory.ExcessVelocity(sourceMass, semimajorAxis);
-        TrueAnomalyOfAsymptote = OrbitalMechanics.HyperbolicTrajectory.TrueAnomalyOfAsymptote(eccentricity, clockWiseOrbit);
-        HyperbolicAsymptotes = OrbitalMechanics.HyperbolicTrajectory.Asymptotes(TrueAnomalyOfAsymptote, clockWiseOrbit);
     }
 
     public void UpdateStateVariables(float timeOfFlight)
@@ -108,14 +81,14 @@ public class UniversalVariableSolver : Solver
         //SetLastStateVariables(CalculatedRadius, CalculatedSpeed, CalculatedPosition, CalculatedVelocity);
 
         // Wrap time of flight by period if possible
-        if (trajectoryType == OrbitalMechanics.Globals.TrajectoryType.Ellipse)
-            timeOfFlight %= OrbitalPeriod;
+        if (Trajectory.TrajectoryType == OrbitalMechanics.Globals.TrajectoryType.Ellipse)
+            timeOfFlight %= Trajectory.Period;
 
         // Update the universal variable x
-        OrbitalMechanics.UniversalVariableMethod.UniversalVariable(ref x, timeOfFlight, sourceMass, semimajorAxis, epochRadius, epochPosition, epochVelocity);
+        OrbitalMechanics.UniversalVariableMethod.UniversalVariable(ref x, timeOfFlight, sourceMass, Trajectory.SemimajorAxis, epochRadius, epochPosition, epochVelocity);
         
         // Update z, c, and s based off of latest x
-        z = Mathf.Pow(x, 2) / semimajorAxis;
+        z = Mathf.Pow(x, 2) / Trajectory.SemimajorAxis;
         stumpffS = OrbitalMechanics.UniversalVariableMethod.StumpffS(z);
         stumpffC = OrbitalMechanics.UniversalVariableMethod.StumpffC(z);
 
@@ -136,6 +109,6 @@ public class UniversalVariableSolver : Solver
 
         // Update true anomaly and flight path angle
         TrueAnomaly = OrbitalMechanics.Trajectory.TrueAnomaly(CalculatedPosition);
-        FlightPathAngle = OrbitalMechanics.Trajectory.FlightPathAngle(eccentricity, TrueAnomaly);
+        FlightPathAngle = OrbitalMechanics.Trajectory.FlightPathAngle(Trajectory.Eccentricity, TrueAnomaly);
     }
 }

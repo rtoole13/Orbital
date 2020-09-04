@@ -219,10 +219,10 @@ public class ManeuverNodeHandler : MonoBehaviour
         Vector2 periapse = new Vector2(1f, 0f);
         float angle = Vector2.SignedAngle(periapse, perifocalPosition) * Mathf.Deg2Rad;
 
-        if (ship.ClockWiseOrbit)
+        if (ship.Trajectory.ClockWiseOrbit)
             angle *= -1f;
 
-        if (ship.TrajectoryType == Mechanics.Globals.TrajectoryType.Hyperbola) // For hyperbolas, range +/- trueAnomOfAsymptote
+        if (ship.Trajectory.TrajectoryType == Mechanics.Globals.TrajectoryType.Hyperbola) // For hyperbolas, range +/- trueAnomOfAsymptote
             return angle;
 
         float twoPi = 2f * Mathf.PI;
@@ -297,7 +297,7 @@ public class ManeuverNodeHandler : MonoBehaviour
 
     private void ExecuteManeuver(ManeuverNode node)
     {
-        Vector2 deltaVel = node.DeltaOrbitalVelocity.RotateVector(ship.ArgumentOfPeriapsis);
+        Vector2 deltaVel = node.DeltaOrbitalVelocity.RotateVector(ship.Trajectory.ArgumentOfPeriapsis);
         if (deltaVel.sqrMagnitude > 0f)
             ship.ExecuteInstantBurn(deltaVel);
         EmptyManeuvers();

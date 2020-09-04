@@ -158,14 +158,14 @@ public class Ship : GravityAffected, ICameraTrackable
         else if (StabilityAssistMode == ShipSystems.StabilityAssistMode.RadialIn)
         {
             // Rotate to radial in
-            Vector2 dir = OrbitalPosition.RotateVector(ArgumentOfPeriapsis).normalized;
+            Vector2 dir = OrbitalPosition.RotateVector(Trajectory.ArgumentOfPeriapsis).normalized;
             float sign = Vector2.SignedAngle(transform.up, -dir);
             rotationRate += (sign * stabilityAssistAccel);
         }
         else
         {
             // Rotate to radial out
-            Vector2 dir = OrbitalPosition.RotateVector(ArgumentOfPeriapsis).normalized;
+            Vector2 dir = OrbitalPosition.RotateVector(Trajectory.ArgumentOfPeriapsis).normalized;
             float sign = Vector2.SignedAngle(transform.up, dir);
             rotationRate += (sign * stabilityAssistAccel);
         }
@@ -213,7 +213,7 @@ public class Ship : GravityAffected, ICameraTrackable
         Gizmos.DrawRay(Position, 5f * OrbitalDirectionToWorld);
 
         Gizmos.color = Color.blue;
-        Gizmos.DrawRay(Position, 5f * OrbitalPosition.RotateVector(ArgumentOfPeriapsis).normalized);
+        Gizmos.DrawRay(Position, 5f * OrbitalPosition.RotateVector(Trajectory.ArgumentOfPeriapsis).normalized);
     }
 }
 

@@ -8,33 +8,21 @@ public abstract class OrbitalBody : MonoBehaviour
 {
     public Vector2 startVelocity;
 
-    private float _argumentOfPeriapsis;
-    private float _eccentricity;
-    private Vector3 _eccentricityVector;
     private float _flightPathAngle;
     private GravitySource _gravitySource;
+
     [SerializeField]
     private float _mass = 1.0f;
     private Vector2 _orbitalPosition;
     private float _orbitalRadius;
     private float _orbitalSpeed;
     private Vector2 _orbitalVelocity;
-    private bool _clockWiseOrbit = false;
-    private float _semimajorAxis;
-    private float _semimajorAxisReciprocal;
-    private float _semiminorAxis;
-    private float _specificOrbitalEnergy;
-    private Vector3 _specificRelativeAngularMomentum;
-    private float _specificRelativeAngularMomentumMagnitude;
     private float _timeSinceEpoch;
     private TrajectoryHandler _trajectoryHandler;
     private float _trueAnomaly;
-    private Mechanics.Globals.TrajectoryType _trajectoryType;
     private bool _updatingIteratively = true;
-    
 
     protected Rigidbody2D body;
-    //protected KeplerSolver trajectorySolver;
     protected UniversalVariableSolver trajectorySolver;
 
     public delegate void OnOrbitCalculation();
@@ -79,11 +67,6 @@ public abstract class OrbitalBody : MonoBehaviour
         get { return (Position - CurrentGravitySource.Position).magnitude; }
     }
 
-    public bool ClockWiseOrbit
-    {
-        get { return _clockWiseOrbit; }
-        private set { _clockWiseOrbit = value; }
-    }
     public float FlightPathAngle
     {
         get { return _flightPathAngle; }
@@ -122,82 +105,6 @@ public abstract class OrbitalBody : MonoBehaviour
         }
     }
 
-    public Vector3 SpecificRelativeAngularMomentum
-    {
-        get { return _specificRelativeAngularMomentum; }
-        private set
-        {
-            _specificRelativeAngularMomentum = value;
-            _specificRelativeAngularMomentumMagnitude = value.magnitude;
-        }
-    }
-
-    public float SpecificRelativeAngularMomentumMagnitude
-    {
-        get { return _specificRelativeAngularMomentumMagnitude; }
-    }
-
-    public Vector3 EccentricityVector
-    {
-        get { return _eccentricityVector; }
-        protected set
-        {
-            _eccentricityVector = value;
-            _eccentricity = _eccentricityVector.magnitude;
-            if (_eccentricity < 1f)
-            {
-                _trajectoryType = Mechanics.Globals.TrajectoryType.Ellipse;
-            }
-            else
-            {
-                // == 1 more or less impossible, ignore parabola
-                _trajectoryType = Mechanics.Globals.TrajectoryType.Hyperbola;
-            }
-        }
-    }
-
-    public Mechanics.Globals.TrajectoryType TrajectoryType
-    {
-        get { return _trajectoryType; }
-        protected set { _trajectoryType = value; }
-    }
-
-    public float Eccentricity
-    {
-        get { return _eccentricity; }
-    }
-
-    public float SpecificOrbitalEnergy
-    {
-        get { return _specificOrbitalEnergy; }
-        protected set { _specificOrbitalEnergy = value; }
-
-    }
-
-    public float ArgumentOfPeriapsis
-    {
-        get { return _argumentOfPeriapsis; }
-        protected set { _argumentOfPeriapsis = value; }
-    }
-
-    public float SemimajorAxis
-    {
-        get { return _semimajorAxis; }
-        protected set { _semimajorAxis = value; }
-    }
-
-    public float SemimajorAxisReciprocal
-    {
-        get { return _semimajorAxisReciprocal; }
-        protected set { _semimajorAxisReciprocal = value; }
-    }
-
-    public float SemiminorAxis
-    {
-        get { return _semiminorAxis; }
-        protected set { _semiminorAxis = value; }
-    }
-
     public Vector2 OrbitalPosition
     {
         get { return _orbitalPosition; }
@@ -228,7 +135,7 @@ public abstract class OrbitalBody : MonoBehaviour
             Vector2 position = CurrentGravitySource != null
                 ? CurrentGravitySource.Position
                 : Vector2.zero;
-            return OrbitalPosition.RotateVector(ArgumentOfPeriapsis) + position;
+            return OrbitalPosition.RotateVector(Trajectory.ArgumentOfPeriapsis) + position;
         }
     }
 
@@ -239,11 +146,9 @@ public abstract class OrbitalBody : MonoBehaviour
             Vector2 velocity = CurrentGravitySource != null
                 ? CurrentGravitySource.Velocity
                 : Vector2.zero;
-            return OrbitalVelocity.RotateVector(ArgumentOfPeriapsis) + velocity;
+            return OrbitalVelocity.RotateVector(Trajectory.ArgumentOfPeriapsis) + velocity;
         }
     }
-
-    public float OrbitalPeriod { get { return trajectorySolver.OrbitalPeriod; }}
 
     public float TimeSinceEpoch
     {
@@ -261,8 +166,8 @@ public abstract class OrbitalBody : MonoBehaviour
     {
         get
         {
-            Vector2 dir = Mechanics.Trajectory.OrbitalDirection(TrueAnomaly, FlightPathAngle, ClockWiseOrbit);
-            return dir.RotateVector(ArgumentOfPeriapsis);
+            Vector2 dir = Mechanics.Trajectory.OrbitalDirection(TrueAnomaly, FlightPathAngle, Trajectory.ClockWiseOrbit);
+            return dir.RotateVector(Trajectory.ArgumentOfPeriapsis);
         }
     }
 
@@ -296,7 +201,7 @@ public abstract class OrbitalBody : MonoBehaviour
         Trajectory.CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity, CurrentGravitySource.Mass);
 
         // Initialize Solver
-        trajectorySolver.InitializeSolver(sourceRelativePosition, sourceRelativeVelocity, Trajectory);
+        trajectorySolver.InitializeSolver(sourceRelativePosition, sourceRelativeVelocity, CurrentGravitySource.Mass, Trajectory);
         
         // Epoch parameters
         TimeSinceEpoch = 0f;
@@ -311,14 +216,14 @@ public abstract class OrbitalBody : MonoBehaviour
     {
         Vector2 relativePosition = Position - CurrentGravitySource.Position;
         Vector2 relativeVelocity = Velocity - CurrentGravitySource.Velocity;
-        Debug.LogFormat("current: {0}, new: {1}", SpecificRelativeAngularMomentum, Mechanics.Trajectory.SpecificRelativeAngularMomentum(relativePosition, relativeVelocity));
+        
         // Initialize Solver
         UniversalVariableSolver tempTrajSolver = new UniversalVariableSolver();
-        tempTrajSolver.InitializeSolver(relativePosition, relativeVelocity, CurrentGravitySource.Mass, SpecificRelativeAngularMomentum, EccentricityVector, SemimajorAxis);
+        tempTrajSolver.InitializeSolver(relativePosition, relativeVelocity, CurrentGravitySource.Mass, Trajectory);
 
         // Solve for new position given time of flight
         tempTrajSolver.UpdateStateVariables(timeOfFlight);
-        return tempTrajSolver.CalculatedPosition.RotateVector(ArgumentOfPeriapsis) + CurrentGravitySource.Position;
+        return tempTrajSolver.CalculatedPosition.RotateVector(Trajectory.ArgumentOfPeriapsis) + CurrentGravitySource.Position;
     }
 
     #endregion PHYSICS
@@ -331,7 +236,6 @@ public abstract class OrbitalBody : MonoBehaviour
 
         TimeSinceEpoch += Time.fixedDeltaTime;
         trajectorySolver.UpdateStateVariables(TimeSinceEpoch);
-        //Debug.LogFormat("kepler: {0}, uvm: {1}", trajectorySolver.CalculatedPosition, uvmSolver.CalculatedPosition);
         UpdateStateVectorsBySolver();
     }
 
@@ -353,7 +257,7 @@ public abstract class OrbitalBody : MonoBehaviour
         position = CurrentGravitySource != null
             ? position - CurrentGravitySource.Position
             : position;
-        return position.RotateVector(-ArgumentOfPeriapsis);
+        return position.RotateVector(-Trajectory.ArgumentOfPeriapsis);
     }
     
     #endregion GENERAL
@@ -370,11 +274,11 @@ public abstract class OrbitalBody : MonoBehaviour
         //Gizmos.color = Color.red;
         //Gizmos.DrawSphere(uvmSolver.CalculatedPosition.RotateVector(ArgumentOfPeriapsis), 1f);
 
-        if (TrajectoryType == Mechanics.Globals.TrajectoryType.Hyperbola)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawRay(CurrentGravitySource.Position - SemimajorAxis * (Vector2)EccentricityVector, 1000f * trajectorySolver.HyperbolicAsymptotes[0].RotateVector(ArgumentOfPeriapsis));
-            Gizmos.DrawRay(CurrentGravitySource.Position - SemimajorAxis * (Vector2)EccentricityVector, 1000f * trajectorySolver.HyperbolicAsymptotes[1].RotateVector(ArgumentOfPeriapsis));
-        }
+        //if (Trajectory.TrajectoryType == Mechanics.Globals.TrajectoryType.Hyperbola)
+        //{
+        //    Gizmos.color = Color.green;
+        //    Gizmos.DrawRay(CurrentGravitySource.Position - Trajectory.SemimajorAxis * (Vector2)Trajectory.EccentricityVector, 1000f * trajectorySolver.HyperbolicAsymptotes[0].RotateVector(Trajectory.ArgumentOfPeriapsis));
+        //    Gizmos.DrawRay(CurrentGravitySource.Position - Trajectory.SemimajorAxis * (Vector2)Trajectory.EccentricityVector, 1000f * trajectorySolver.HyperbolicAsymptotes[1].RotateVector(Trajectory.ArgumentOfPeriapsis));
+        //}
     }
 }
