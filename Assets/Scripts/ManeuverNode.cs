@@ -21,7 +21,7 @@ public class ManeuverNode : MonoBehaviour
     private Vector2 worldVelocity;
     private Vector2 orthogonalDirection;
     private int rank; //intended to specify whether maneuver is on current trajectory, rank 0, or a future trajectory 1+
-    private Orbit orbit;
+    private Trajectory trajectory;
 
     private List<ManeuverNode> maneuverNodes;
     private CircleCollider2D nodeCollider;
@@ -77,7 +77,7 @@ public class ManeuverNode : MonoBehaviour
         orthogonalOutVectorHandler.DeltaVelocityAdjustedEvent += AdjustVelocityOrthogonallyOutward;
         orthogonalInVectorHandler.DeltaVelocityAdjustedEvent += AdjustVelocityOrthogonallyInward;
 
-        orbit = new Orbit();
+        trajectory = new Trajectory();
         maneuverNodes = new List<ManeuverNode>();
     }
 
@@ -291,16 +291,16 @@ public class ManeuverNode : MonoBehaviour
         Vector2 newOrbitalVelocity = orbitalSpeed * orbitalDirection + DeltaOrbitalVelocity;
         Vector2 relVel = newOrbitalVelocity.RotateVector(ship.Trajectory.ArgumentOfPeriapsis);
         Vector2 relPos = (Vector2)transform.position - ship.CurrentGravitySource.Position; // world pos - newSource.pos
-        orbit.CalculateOrbitalParametersFromStateVectors(relPos, relVel, ship.CurrentGravitySource.Mass);
-        if (orbit.TrajectoryType == Mechanics.Globals.TrajectoryType.Ellipse)
+        trajectory.CalculateOrbitalParametersFromStateVectors(relPos, relVel, ship.CurrentGravitySource.Mass);
+        if (trajectory.TrajectoryType == Mechanics.Globals.TrajectoryType.Ellipse)
         {
-            trajectoryPlotter.BuildEllipticalTrajectory(orbit.SemimajorAxis, orbit.SemiminorAxis, orbit.Eccentricity, orbit.ArgumentOfPeriapsis);
+            trajectoryPlotter.BuildEllipticalTrajectory(trajectory.SemimajorAxis, trajectory.SemiminorAxis, trajectory.Eccentricity, trajectory.ArgumentOfPeriapsis);
         }
         else
         {
-            trajectoryPlotter.BuildHyperbolicTrajectory(orbit.SemimajorAxis, orbit.SemiminorAxis, orbit.Eccentricity, orbit.ArgumentOfPeriapsis);
+            trajectoryPlotter.BuildHyperbolicTrajectory(trajectory.SemimajorAxis, trajectory.SemiminorAxis, trajectory.Eccentricity, trajectory.ArgumentOfPeriapsis);
         }
-        intersectionCalculator.PlotNearestSourceIntersections();
+        //intersectionCalculator.PlotNearestSourceIntersections();
     }
     #endregion
 

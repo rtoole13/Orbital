@@ -25,10 +25,12 @@ public class IntersectionCalculator : MonoBehaviour
 
         // Initialize source intersection colors
         // FIXME THIS IS TEMPORARY
-        sourceIntersectionColors = new List<Color>();
-        sourceIntersectionColors.Add(Color.red);
-        sourceIntersectionColors.Add(Color.green);
-        sourceIntersectionColors.Add(Color.blue);
+        sourceIntersectionColors = new List<Color>
+        {
+            Color.red,
+            Color.green,
+            Color.blue
+        };
         sourceIntersectionColorCount = sourceIntersectionColors.Count;
         sourceIntersectionObjectSpriteObjects = new List<GameObject>();
 
@@ -43,6 +45,7 @@ public class IntersectionCalculator : MonoBehaviour
 
     public void PlotNearestSourceIntersections()
     {
+
         if (!(orbitalBody is GravityAffected))
             return;
 
@@ -68,7 +71,7 @@ public class IntersectionCalculator : MonoBehaviour
                 Vector2 worldDestination = thisSourceIntersections.SegmentIntersections[j].ClosestPoint;
                 Vector2 localDestination = (worldDestination - orbitalBody.CurrentGravitySource.Position).RotateVector(-orbitalBody.Trajectory.ArgumentOfPeriapsis);
                 float timeOfFlight = OrbitalMechanics.UniversalVariableMethod.CalculateTimeOfFlight(orbitalBody.OrbitalPosition, orbitalBody.OrbitalVelocity, localDestination, orbitalBody.Trajectory.EccentricityVector, orbitalBody.CurrentGravitySource.Mass);
-
+                
                 // Plot this source object's position at timeOfFlight
                 Vector2 predictedWorldPosition = thisSourceIntersections.Source.PredictPosition(timeOfFlight);
                 GameObject intersectionObjectB = InitiateIntersectionObject(predictedWorldPosition, sourceIntersectionColors[i]);
