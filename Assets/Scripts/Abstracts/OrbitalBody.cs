@@ -198,7 +198,7 @@ public abstract class OrbitalBody : MonoBehaviour
     #region PHYSICS
     protected virtual void CalculateOrbitalParametersFromStateVectors(Vector3 sourceRelativePosition, Vector3 sourceRelativeVelocity)
     {
-        Trajectory.CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity, CurrentGravitySource.Mass);
+        Trajectory.CalculateOrbitalParametersFromStateVectors(sourceRelativePosition, sourceRelativeVelocity, CurrentGravitySource);
 
         // Initialize Solver
         trajectorySolver.InitializeSolver(sourceRelativePosition, sourceRelativeVelocity, CurrentGravitySource.Mass, Trajectory);
@@ -214,9 +214,13 @@ public abstract class OrbitalBody : MonoBehaviour
 
     public Vector2 PredictPosition(float timeOfFlight)
     {
-        Vector2 relativePosition = Position - CurrentGravitySource.Position;
-        Vector2 relativeVelocity = Velocity - CurrentGravitySource.Velocity;
-        
+        Vector2 relativePosition = Position;
+        Vector2 relativeVelocity = Velocity;
+        if (CurrentGravitySource != null)
+        {
+            relativePosition -= CurrentGravitySource.Position;
+            relativeVelocity -= CurrentGravitySource.Velocity;
+        }
         // Initialize Solver
         UniversalVariableSolver tempTrajSolver = new UniversalVariableSolver();
         tempTrajSolver.InitializeSolver(relativePosition, relativeVelocity, CurrentGravitySource.Mass, Trajectory);

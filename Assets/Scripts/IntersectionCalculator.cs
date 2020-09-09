@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(TrajectoryPlotter))]
 public class IntersectionCalculator : MonoBehaviour
 {
     public GameObject intersectionObjectPrefab;
 
-    private OrbitalBody orbitalBody;
     private TrajectoryPlotter trajectoryPlotter;
-
+    
     private List<SourceIntersections> sourceIntersections;
     private List<Color> sourceIntersectionColors;
     private int sourceIntersectionColorCount;
@@ -18,9 +18,6 @@ public class IntersectionCalculator : MonoBehaviour
     private void Awake()
     {
         trajectoryPlotter = GetComponent<TrajectoryPlotter>();
-        if (trajectoryPlotter == null)
-            throw new UnityException(string.Format("Expecting a trajectory plotter as a sibling!"));
-
         sourceIntersections = new List<SourceIntersections>();
 
         // Initialize source intersection colors
@@ -37,23 +34,14 @@ public class IntersectionCalculator : MonoBehaviour
     }
 
     #endregion UNITY
-
-    public void SetOrbitalBody(OrbitalBody _orbitalBody)
+    
+    public void PlotNearestSourceIntersections(Vector2 orbitalPosition, Vector2 orbitalVelocity, Trajectory trajectory)
     {
-        orbitalBody = _orbitalBody;
-    }
-
-    public void PlotNearestSourceIntersections()
-    {
-
-        if (!(orbitalBody is GravityAffected))
-            return;
-
         // Clear previous source intersections
         ResetNearestSourceIntersections();
 
         // Update sources considered candidates for intersection
-        GetNearbySourceIntersections();
+        GetNearbySourceIntersections(trajectory.ParentGravitySource);
 
         for (int i = 0; i < sourceIntersections.Count; i++)
         {
@@ -69,8 +57,8 @@ public class IntersectionCalculator : MonoBehaviour
 
                 // Calculate time of flight of current object to destination
                 Vector2 worldDestination = thisSourceIntersections.SegmentIntersections[j].ClosestPoint;
-                Vector2 localDestination = (worldDestination - orbitalBody.CurrentGravitySource.Position).RotateVector(-orbitalBody.Trajectory.ArgumentOfPeriapsis);
-                float timeOfFlight = OrbitalMechanics.UniversalVariableMethod.CalculateTimeOfFlight(orbitalBody.OrbitalPosition, orbitalBody.OrbitalVelocity, localDestination, orbitalBody.Trajectory.EccentricityVector, orbitalBody.CurrentGravitySource.Mass);
+                Vector2 localDestination = (worldDestination - trajectory.ParentGravitySource.Position).RotateVector(-trajectory.ArgumentOfPeriapsis);
+                float timeOfFlight = OrbitalMechanics.UniversalVariableMethod.CalculateTimeOfFlight(orbitalPosition, orbitalVelocity, localDestination, trajectory.EccentricityVector, trajectory.ParentGravitySource.Mass);
                 
                 // Plot this source object's position at timeOfFlight
                 Vector2 predictedWorldPosition = thisSourceIntersections.Source.PredictPosition(timeOfFlight);
@@ -78,7 +66,7 @@ public class IntersectionCalculator : MonoBehaviour
 
 
                 //Debug
-                IEnumerator timeOfFlightCalc = TimerToPosition(timeOfFlight, thisSourceIntersections.Source, intersectionObjectA, intersectionObjectB);
+                IEnumerator timeOfFlightCalc = TimerToPosition(timeOfFlight, thisSourceIntersections.Source, trajectory, intersectionObjectA, intersectionObjectB);
                 StartCoroutine(timeOfFlightCalc);
             }
         }
@@ -93,42 +81,42 @@ public class IntersectionCalculator : MonoBehaviour
         return intersectionObjectB;
     }
 
-    private void UpdateIntersectionObject(GravitySource source, GameObject intersectionObjectA, GameObject intersectionObjectB)
+    private void UpdateIntersectionObject(OrbitalBody otherObject, Trajectory trajectory, GameObject intersectionObjectA, GameObject intersectionObjectB)
     {
         if (intersectionObjectA == null || intersectionObjectB == null)
             return;
 
         // Calculate time of flight to next closest point
-        if (orbitalBody.Trajectory.TrajectoryType != OrbitalMechanics.Globals.TrajectoryType.Ellipse)
+        if (trajectory.TrajectoryType != OrbitalMechanics.Globals.TrajectoryType.Ellipse)
         {
             RemoveIntersectionObjectPair(intersectionObjectA, intersectionObjectB);
             return;
         }
 
         // Returns to this position in one period.
-        float timeOfFlight = orbitalBody.Trajectory.Period;
+        float timeOfFlight = trajectory.Period;
 
         // Update intersection object's position
-        intersectionObjectB.transform.position = source.PredictPosition(timeOfFlight);
+        intersectionObjectB.transform.position = otherObject.PredictPosition(timeOfFlight);
 
         // Kick off another coroutine for tracking time til intersection point.
-        IEnumerator timeOfFlightCalc = TimerToPosition(timeOfFlight, source, intersectionObjectA, intersectionObjectB);
+        IEnumerator timeOfFlightCalc = TimerToPosition(timeOfFlight, otherObject, trajectory, intersectionObjectA, intersectionObjectB);
         StartCoroutine(timeOfFlightCalc);
     }
 
-    private IEnumerator TimerToPosition(float time, GravitySource source, GameObject intersectionObjectA, GameObject intersectionObjectB)
+    private IEnumerator TimerToPosition(float time, OrbitalBody otherObject, Trajectory trajectory, GameObject intersectionObjectA, GameObject intersectionObjectB)
     {
         // Waits until interval expires, then sets bool back to false   
         yield return new WaitForSeconds(time);
 
         // Recalculate time of flight for orbitalBody to reach orbitalBodyPosition and then source's predicted position
-        UpdateIntersectionObject(source, intersectionObjectA, intersectionObjectB);
+        UpdateIntersectionObject(otherObject, trajectory, intersectionObjectA, intersectionObjectB);
     }
 
-    private void GetNearbySourceIntersections()
+    private void GetNearbySourceIntersections(GravitySource gravitySource)
     {
         sourceIntersections.Clear();
-        List<GravitySource> sourcesInSystem = orbitalBody.CurrentGravitySource.OrbitalBodies;
+        List<GravitySource> sourcesInSystem = gravitySource.OrbitalBodies;
         for (int i = 0; i < sourcesInSystem.Count; i++)
         {
             GravitySource source = sourcesInSystem[i];

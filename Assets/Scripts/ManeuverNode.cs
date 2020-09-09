@@ -282,7 +282,7 @@ public class ManeuverNode : MonoBehaviour
 
             // Pass ship to intersection calculator
             intersectionCalculator = trajectoryObject.GetComponent<IntersectionCalculator>();
-            intersectionCalculator.SetOrbitalBody(ship);
+            //intersectionCalculator.SetOrbitalBody(ship);
         }
         trajectoryObject.transform.parent = ship.CurrentGravitySource.transform;
         trajectoryObject.transform.position = trajectoryObject.transform.parent.position;
@@ -291,7 +291,7 @@ public class ManeuverNode : MonoBehaviour
         Vector2 newOrbitalVelocity = orbitalSpeed * orbitalDirection + DeltaOrbitalVelocity;
         Vector2 relVel = newOrbitalVelocity.RotateVector(ship.Trajectory.ArgumentOfPeriapsis);
         Vector2 relPos = (Vector2)transform.position - ship.CurrentGravitySource.Position; // world pos - newSource.pos
-        trajectory.CalculateOrbitalParametersFromStateVectors(relPos, relVel, ship.CurrentGravitySource.Mass);
+        trajectory.CalculateOrbitalParametersFromStateVectors(relPos, relVel, ship.CurrentGravitySource);
         if (trajectory.TrajectoryType == Mechanics.Globals.TrajectoryType.Ellipse)
         {
             trajectoryPlotter.BuildEllipticalTrajectory(trajectory.SemimajorAxis, trajectory.SemiminorAxis, trajectory.Eccentricity, trajectory.ArgumentOfPeriapsis);
