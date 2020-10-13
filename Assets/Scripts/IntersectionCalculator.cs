@@ -8,18 +8,17 @@ public class IntersectionCalculator : MonoBehaviour
     public GameObject intersectionObjectPrefab;
 
     private TrajectoryPlotter trajectoryPlotter;
-    
+
+    private GravitySource currentGravitySource;
     private List<SourceIntersections> sourceIntersections;
     private List<Color> sourceIntersectionColors;
     private int sourceIntersectionColorCount;
-    private List<GameObject> sourceIntersectionObjectSpriteObjects;
 
     #region UNITY
     private void Awake()
     {
         trajectoryPlotter = GetComponent<TrajectoryPlotter>();
         sourceIntersections = new List<SourceIntersections>();
-
         // Initialize source intersection colors
         // FIXME THIS IS TEMPORARY
         sourceIntersectionColors = new List<Color>
@@ -29,151 +28,274 @@ public class IntersectionCalculator : MonoBehaviour
             Color.blue
         };
         sourceIntersectionColorCount = sourceIntersectionColors.Count;
-        sourceIntersectionObjectSpriteObjects = new List<GameObject>();
-
     }
 
     #endregion UNITY
     
-    public void PlotNearestSourceIntersections(Vector2 orbitalPosition, Vector2 orbitalVelocity, Trajectory trajectory)
+    public void PlotNearestSourceIntersections(OrbitalBody orbitalBody)
     {
-        // Clear previous source intersections
-        ResetNearestSourceIntersections();
+        // Called by TrajectoryHandlers AND by coroutines on intersection update
+        PlotNearestSourceIntersections(orbitalBody, orbitalBody.OrbitalPosition, orbitalBody.OrbitalVelocity, 0f, orbitalBody.Trajectory);
+    }
+
+    public void PlotNearestSourceIntersections(OrbitalBody orbitalBody, Vector2 orbitalPosition, Vector2 orbitalVelocity, float timeToPosition, Trajectory trajectory)
+    {
+        // orbitalPosition/Velocity are not necessarily equivalent to orbitalBody.orbitalPosition/Velocity (ManeuverNode predicted trajectories for instance)
 
         // Update sources considered candidates for intersection
-        GetNearbySourceIntersections(trajectory.ParentGravitySource);
+        UpdateNearbySourceIntersections(trajectory.ParentGravitySource);
 
         for (int i = 0; i < sourceIntersections.Count; i++)
         {
             Color intersectionColor = sourceIntersectionColors[MathUtilities.IntModulo(i, sourceIntersectionColorCount)];
-            SourceIntersections thisSourceIntersections = sourceIntersections[i];
-            for (int j = 0; j < thisSourceIntersections.SegmentIntersections.Count; j++)
+            SourceIntersections sourceIntersectionsEntry = sourceIntersections[i];
+            for (int j = 0; j < sourceIntersectionsEntry.SegmentIntersections.Length; j++)
             {
-                // Plot current object's future position
-                GameObject intersectionObjectA = Instantiate(intersectionObjectPrefab, thisSourceIntersections.SegmentIntersections[j].ClosestPoint, Quaternion.identity);
-                SpriteRenderer spriteRenderer = intersectionObjectA.GetComponentInChildren<SpriteRenderer>();
-                spriteRenderer.color = sourceIntersectionColors[i];
-                sourceIntersectionObjectSpriteObjects.Add(intersectionObjectA);
-
-                // Calculate time of flight of current object to destination
-                Vector2 worldDestination = thisSourceIntersections.SegmentIntersections[j].ClosestPoint;
-                Vector2 localDestination = (worldDestination - trajectory.ParentGravitySource.Position).RotateVector(-trajectory.ArgumentOfPeriapsis);
-                float timeOfFlight = OrbitalMechanics.UniversalVariableMethod.CalculateTimeOfFlight(orbitalPosition, orbitalVelocity, localDestination, trajectory.EccentricityVector, trajectory.ParentGravitySource.Mass);
-                
-                // Plot this source object's position at timeOfFlight
-                Vector2 predictedWorldPosition = thisSourceIntersections.Source.PredictPosition(timeOfFlight);
-                GameObject intersectionObjectB = InitiateIntersectionObject(predictedWorldPosition, sourceIntersectionColors[i]);
-
-
-                //Debug
-                IEnumerator timeOfFlightCalc = TimerToPosition(timeOfFlight, thisSourceIntersections.Source, trajectory, intersectionObjectA, intersectionObjectB);
-                StartCoroutine(timeOfFlightCalc);
+                PredictIntersection(sourceIntersectionsEntry, j, orbitalBody, orbitalPosition, orbitalVelocity, timeToPosition, trajectory, intersectionColor);
             }
         }
     }
 
-    private GameObject InitiateIntersectionObject(Vector2 worldPosition, Color color)
+    private void PredictIntersection(SourceIntersections sourceIntersectionsEntry, int segmentIndex, OrbitalBody orbitalBody, Vector2 orbitalPosition, Vector2 orbitalVelocity, float timeToPosition, Trajectory trajectory, Color intersectionColor)
     {
-        GameObject intersectionObjectB = Instantiate(intersectionObjectPrefab, worldPosition, Quaternion.identity);
-        SpriteRenderer spriteRenderer = intersectionObjectB.GetComponentInChildren<SpriteRenderer>();
-        spriteRenderer.color = color;
-        sourceIntersectionObjectSpriteObjects.Add(intersectionObjectB);
-        return intersectionObjectB;
-    }
+        
 
-    private void UpdateIntersectionObject(OrbitalBody otherObject, Trajectory trajectory, GameObject intersectionObjectA, GameObject intersectionObjectB)
-    {
-        if (intersectionObjectA == null || intersectionObjectB == null)
-            return;
-
-        // Calculate time of flight to next closest point
-        if (trajectory.TrajectoryType != OrbitalMechanics.Globals.TrajectoryType.Ellipse)
-        {
-            RemoveIntersectionObjectPair(intersectionObjectA, intersectionObjectB);
+        // Calculate time of flight of current object to destination
+        Vector2 worldDestination = sourceIntersectionsEntry.SegmentIntersections[segmentIndex].ClosestPoint;
+        Vector2 localDestination = (worldDestination - trajectory.ParentGravitySource.Position).RotateVector(-trajectory.ArgumentOfPeriapsis);
+        Debug.LogFormat("pos: {0}, pos-passed: {1},  dest: {2}", orbitalBody.OrbitalPosition, orbitalPosition, localDestination);
+        float timeOfFlight = timeToPosition + OrbitalMechanics.UniversalVariableMethod.CalculateTimeOfFlight(orbitalPosition, orbitalVelocity, localDestination, trajectory.EccentricityVector, trajectory.ParentGravitySource.Mass);
+        Debug.LogFormat("time of flight: {0}", timeOfFlight);
+        if (float.IsNaN(timeOfFlight)){
+            // timeOfFlight not properly calculated. hide sprites.
+            sourceIntersectionsEntry.HideIntersectionObjects(segmentIndex);
             return;
         }
 
-        // Returns to this position in one period.
-        float timeOfFlight = trajectory.Period;
+        // Plot current object's future position
+        sourceIntersectionsEntry.InitiateIntersectionSprite(segmentIndex, sourceIntersectionsEntry.SegmentIntersections[segmentIndex].ClosestPoint, intersectionColor, true);
 
-        // Update intersection object's position
-        intersectionObjectB.transform.position = otherObject.PredictPosition(timeOfFlight);
+        // Plot this source object's position at timeOfFlight
+        Vector2 predictedWorldPosition = sourceIntersectionsEntry.Source.PredictPosition(timeOfFlight);
+        sourceIntersectionsEntry.InitiateIntersectionSprite(segmentIndex, predictedWorldPosition, intersectionColor, false);
 
-        // Kick off another coroutine for tracking time til intersection point.
-        IEnumerator timeOfFlightCalc = TimerToPosition(timeOfFlight, otherObject, trajectory, intersectionObjectA, intersectionObjectB);
-        StartCoroutine(timeOfFlightCalc);
+        StartNewIntersectionCoroutine(orbitalBody, timeOfFlight, trajectory, sourceIntersectionsEntry, segmentIndex);
     }
 
-    private IEnumerator TimerToPosition(float time, OrbitalBody otherObject, Trajectory trajectory, GameObject intersectionObjectA, GameObject intersectionObjectB)
+    private void PredictIntersection(SourceIntersections sourceIntersectionsEntry, int segmentIndex, OrbitalBody orbitalBody, Vector2 orbitalPosition, Vector2 orbitalVelocity, float timeToPosition, Trajectory trajectory)
+    {
+        // Called on completion of coroutine solely. Maintain current sprite color
+        SpriteRenderer spriteRenderer = sourceIntersectionsEntry.baseIntersectionSprites[segmentIndex].GetComponentInChildren<SpriteRenderer>();
+        PredictIntersection(sourceIntersectionsEntry, segmentIndex, orbitalBody, orbitalPosition, orbitalVelocity, timeToPosition, trajectory, spriteRenderer.color);
+    }
+
+    private void StartNewIntersectionCoroutine(OrbitalBody orbitalBody, float timeOfFlight, Trajectory trajectory, SourceIntersections sourceIntersectionsEntry, int segmentIndex)
+    {
+        IEnumerator timeOfFlightEnum = TimerToPosition(orbitalBody, timeOfFlight, trajectory, sourceIntersectionsEntry, segmentIndex);
+        StartCoroutine(timeOfFlightEnum);
+        
+        // Adding reference to this source intersections entry
+        sourceIntersectionsEntry.intersectionCoroutines[segmentIndex] = timeOfFlightEnum;
+    }
+
+    private void UpdateIntersectionSprites(OrbitalBody orbitalBody, Trajectory trajectory, SourceIntersections sourceIntersectionsEntry, int segmentIndex)
+    {
+        // Calculate time of flight to next closest point -- FIXME: Still needed?????
+        if (trajectory.TrajectoryType != OrbitalMechanics.Globals.TrajectoryType.Ellipse)
+        {
+
+            sourceIntersectionsEntry.HideIntersectionObjects(segmentIndex);
+            return;
+        }
+        // Use trajectory period as timeOfFlight
+        float timeOfFlight = trajectory.Period;
+        return;
+        Vector2 predictedWorldPosition = sourceIntersectionsEntry.Source.PredictPosition(timeOfFlight);
+        sourceIntersectionsEntry.InitiateIntersectionSprite(segmentIndex, predictedWorldPosition, false);
+        //StartNewIntersectionCoroutine(orbitalBody, trajectory.Period, trajectory, sourceIntersectionsEntry, segmentIndex);
+
+
+        //Debug.LogFormat("Period: {0}", trajectory.Period);
+        PredictIntersection(sourceIntersectionsEntry, segmentIndex, orbitalBody, orbitalBody.OrbitalPosition, orbitalBody.OrbitalVelocity, 0, trajectory);
+    }
+
+    private IEnumerator TimerToPosition(OrbitalBody orbitalBody, float time, Trajectory trajectory, SourceIntersections sourceIntersectionsEntry, int segmentIndex)
     {
         // Waits until interval expires, then sets bool back to false   
         yield return new WaitForSeconds(time);
 
         // Recalculate time of flight for orbitalBody to reach orbitalBodyPosition and then source's predicted position
-        UpdateIntersectionObject(otherObject, trajectory, intersectionObjectA, intersectionObjectB);
+        UpdateIntersectionSprites(orbitalBody, trajectory, sourceIntersectionsEntry, segmentIndex);
     }
 
-    private void GetNearbySourceIntersections(GravitySource gravitySource)
+    private void UpdateNearbySourceIntersections(GravitySource gravitySource)
     {
-        sourceIntersections.Clear();
-        List<GravitySource> sourcesInSystem = gravitySource.OrbitalBodies;
-        for (int i = 0; i < sourcesInSystem.Count; i++)
+        if (gravitySource != currentGravitySource)
         {
-            GravitySource source = sourcesInSystem[i];
-            TrajectoryHandler trajectoryHandler = source.TrajectoryHandler;
-            if (trajectoryHandler == null)
-                continue;
-            List<SegmentIntersection> sourceSegmentIntersections = GetClosestPointOfSourceIntersections(trajectoryHandler);
-            if (SourceHasNearbySourceIntersections(sourceSegmentIntersections, source))
+            // Gravity source changed. Re-initialize source intersections
+            currentGravitySource = gravitySource;
+            InitializeSourceIntersections();
+            return;
+        }
+        // Update source intersection entries
+        for (int i = 0; i < sourceIntersections.Count; i++)
+        {
+            SourceIntersections thisSourceIntersectionEntry = sourceIntersections[i];
+            
+            // Hide all intersection sprites
+            thisSourceIntersectionEntry.HideIntersectionObjects();
+            // Stop coroutines running for each existing segment intersection
+            for (int j = 0; j < thisSourceIntersectionEntry.IntersectionCount; j++)
             {
-                sourceIntersections.Add(new SourceIntersections(sourceSegmentIntersections, source));
+                IEnumerator thisRoutine = thisSourceIntersectionEntry.intersectionCoroutines[j];
+                if (thisRoutine == null)
+                    continue;
+                StopCoroutine(thisRoutine);
+            }
+            // Update this entry with now valid intersection objects
+            SegmentIntersection[] validIntersections = GetValidSegmentIntersections(thisSourceIntersectionEntry.Source);
+            thisSourceIntersectionEntry.UpdateSegmentIntersections(validIntersections);
+        }
+    }
+
+    private void InitializeSourceIntersections()
+    {
+        ResetNearestSourceIntersections();
+        for (int i = 0; i < currentGravitySource.OrbitalBodies.Count; i++)
+        {
+            GravitySource source = currentGravitySource.OrbitalBodies[i];
+            SegmentIntersection[] validIntersections = GetValidSegmentIntersections(source);
+            sourceIntersections.Add(new SourceIntersections(validIntersections, source, intersectionObjectPrefab));
+        }
+    }
+    private void StopIntersectionCoroutines()
+    {
+        for (int i = 0; i < sourceIntersections.Count; i++)
+        {
+            SourceIntersections thisSourceIntersectionEntry = sourceIntersections[i];
+            for (int j = 0; j < thisSourceIntersectionEntry.IntersectionCount; j++)
+            {
+                StopCoroutine(thisSourceIntersectionEntry.intersectionCoroutines[j]);
             }
         }
     }
 
-    private bool SourceHasNearbySourceIntersections(List<SegmentIntersection> nearestSourceIntersections, GravitySource source)
+    private SegmentIntersection[] GetValidSegmentIntersections(GravitySource source)
     {
-        for (int j = 0; j < nearestSourceIntersections.Count; j++)
+        TrajectoryHandler trajectoryHandler = source.TrajectoryHandler;
+        if (trajectoryHandler == null)
         {
-            if (nearestSourceIntersections[j].MinDistSq < source.RadiusOfInfluenceSq)
-                return true;
+            return new SegmentIntersection[0];
         }
-        return false;
-    }
 
-    private List<SegmentIntersection> GetClosestPointOfSourceIntersections(TrajectoryHandler otherTrajectoryHandler)
-    {
-        List<SegmentIntersection> intersections = MathUtilities.GetClosestPointsBetweenPolygons(trajectoryPlotter.GetVertices(true), otherTrajectoryHandler.GetVertices(true));
-        return intersections;
+        List<SegmentIntersection> intersections = MathUtilities.GetClosestPointsBetweenPolygons(trajectoryPlotter.GetVertices(true), trajectoryHandler.GetVertices(true));
+        Debug.Log(intersections.Count);
+        List<SegmentIntersection> validIntersections = new List<SegmentIntersection>();
+        for (int j = 0; j < intersections.Count; j++)
+        {
+            if (intersections[j].MinDistSq < source.RadiusOfInfluenceSq)
+                validIntersections.Add(intersections[j]);
+        }
+        return validIntersections.ToArray();
     }
 
     private void ResetNearestSourceIntersections()
     {
-        sourceIntersections.Clear();
-        for (int i = 0; i < sourceIntersectionObjectSpriteObjects.Count; i++)
+        StopIntersectionCoroutines();
+        for (int i = 0; i < sourceIntersections.Count; i++)
         {
-            Destroy(sourceIntersectionObjectSpriteObjects[i]);
+            sourceIntersections[i].Destroy();
         }
-        sourceIntersectionObjectSpriteObjects.Clear();
+        sourceIntersections.Clear();
     }
 
-    private void RemoveIntersectionObjectPair(GameObject intersectionObjectA, GameObject intersectionObjectB)
-    {
-        sourceIntersectionObjectSpriteObjects.Remove(intersectionObjectA);
-        sourceIntersectionObjectSpriteObjects.Remove(intersectionObjectB);
-        Destroy(intersectionObjectA);
-        Destroy(intersectionObjectB);
-    }
-
-    public struct SourceIntersections
+    public class SourceIntersections
     {
         // Really more of a "possible intersection" sort of deal..
-        public SourceIntersections(List<SegmentIntersection> segmentIntersections, GravitySource source)
+        public IEnumerator[] intersectionCoroutines;
+        public GameObject[] baseIntersectionSprites;
+        public GameObject[] targetIntersectionSprites;
+        public SegmentIntersection[] SegmentIntersections { get; private set; }
+        public GravitySource Source { get; }
+
+        public int IntersectionCount { get; private set; }
+        public SourceIntersections(SegmentIntersection[] segmentIntersections, GravitySource source, GameObject intersectionObjectPrefab)
         {
             SegmentIntersections = segmentIntersections;
+            IntersectionCount = segmentIntersections.Length;
+            intersectionCoroutines = new IEnumerator[IntersectionCount];
             Source = source;
+
+            baseIntersectionSprites = new GameObject[2];
+            targetIntersectionSprites = new GameObject[2];
+            for (int i = 0; i < baseIntersectionSprites.Length; i++)
+            {
+                AddIntersectionObject(i, baseIntersectionSprites, intersectionObjectPrefab);
+                AddIntersectionObject(i, targetIntersectionSprites, intersectionObjectPrefab);
+            }
         }
-        public List<SegmentIntersection> SegmentIntersections { get; }
-        public GravitySource Source { get; }
+
+        private void AddIntersectionObject(int index, GameObject[] intersectionObjectArray, GameObject intersectionObjectPrefab)
+        {
+            GameObject intersectionObject = Instantiate(intersectionObjectPrefab);
+            intersectionObject.SetActive(false);
+            intersectionObjectArray[index] = intersectionObject;
+        }
+
+        public void InitiateIntersectionSprite(int index, Vector2 worldPosition, bool isBase)
+        {
+            GameObject[] array = isBase
+                ? baseIntersectionSprites
+                : targetIntersectionSprites;
+
+            GameObject thisSpriteObject = array[index];
+            thisSpriteObject.transform.position = worldPosition;
+            thisSpriteObject.SetActive(true);
+        }
+
+        public void InitiateIntersectionSprite(int index, Vector2 worldPosition, Color color, bool isBase)
+        {
+            GameObject[] array = isBase
+                ? baseIntersectionSprites
+                : targetIntersectionSprites;
+
+            GameObject thisSpriteObject = array[index];
+            thisSpriteObject.transform.position = worldPosition;
+
+            SpriteRenderer spriteRenderer = thisSpriteObject.GetComponentInChildren<SpriteRenderer>();
+            spriteRenderer.color = color;
+            thisSpriteObject.SetActive(true);
+        }
+
+        public void HideIntersectionObjects(int i)
+        {
+            baseIntersectionSprites[i].SetActive(false);
+            targetIntersectionSprites[i].SetActive(false);
+        }
+
+        public void HideIntersectionObjects()
+        {
+            for (int i = 0; i < baseIntersectionSprites.Length; i++)
+            {
+                baseIntersectionSprites[i].SetActive(false);
+                targetIntersectionSprites[i].SetActive(false);
+            }
+        }
+
+        public void Destroy()
+        {
+            for (int i = 0; i < baseIntersectionSprites.Length; i++)
+            {
+                Object.Destroy(baseIntersectionSprites[i]);
+                Object.Destroy(targetIntersectionSprites[i]);
+            }
+        }
+
+        public void UpdateSegmentIntersections(SegmentIntersection[] segmentIntersections)
+        {
+            SegmentIntersections = segmentIntersections;
+            IntersectionCount = segmentIntersections.Length;
+            intersectionCoroutines = new IEnumerator[IntersectionCount];
+        }
     }
 }

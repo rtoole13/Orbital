@@ -4,6 +4,9 @@ using UnityEngine;
 using Mechanics = OrbitalMechanics;
 public class ManeuverNode : MonoBehaviour
 {
+    //[HideInInspector]
+    //public float timeToIntersect = 0f;
+
     [Range(0.0f, 0.5f)]
     public float minimumDeltaVelocity;
 
@@ -16,9 +19,9 @@ public class ManeuverNode : MonoBehaviour
     private Color nodeOutlineBaseColor;
     private Vector2 _deltaOrbitalVelocity;
     private float _trueAnomaly;
+    private Vector2 orbitalPosition;
     private Vector2 orbitalDirection;
     private float orbitalSpeed;
-    private Vector2 worldVelocity;
     private Vector2 orthogonalDirection;
     private int rank; //intended to specify whether maneuver is on current trajectory, rank 0, or a future trajectory 1+
     private Trajectory trajectory;
@@ -148,7 +151,7 @@ public class ManeuverNode : MonoBehaviour
         float orbitalRadius = Mechanics.Trajectory.OrbitalRadius(ship.Trajectory.Eccentricity, ship.Trajectory.SemimajorAxis, trueAnomaly);
         orbitalSpeed = Mechanics.Trajectory.OrbitalSpeed(ship.CurrentGravitySource.Mass, orbitalRadius, ship.Trajectory.SemimajorAxis);
 
-        Vector2 orbitalPosition = Mechanics.Trajectory.OrbitalPosition(orbitalRadius, trueAnomaly, ship.Trajectory.ClockWiseOrbit);
+        orbitalPosition = Mechanics.Trajectory.OrbitalPosition(orbitalRadius, trueAnomaly, ship.Trajectory.ClockWiseOrbit);
 
         // Direction and position in world coordinate space
         Vector2 worldPosition = OrbitalPositionToWorld(orbitalPosition);
@@ -262,18 +265,18 @@ public class ManeuverNode : MonoBehaviour
 
     private void UpdateOrbit()
     {
-        
+
         if (DeltaOrbitalVelocity.magnitude < minimumDeltaVelocity)
         {
             return;
         }
-        
+
         if (trajectoryObjectPrefab == null)
         {
             Debug.Log("No trajectory object prefab selected!");
             return;
         }
-        
+
         if (trajectoryObject == null)
         {
             // Instantiate prefab if null
@@ -300,7 +303,16 @@ public class ManeuverNode : MonoBehaviour
         {
             trajectoryPlotter.BuildHyperbolicTrajectory(trajectory.SemimajorAxis, trajectory.SemiminorAxis, trajectory.Eccentricity, trajectory.ArgumentOfPeriapsis);
         }
-        //intersectionCalculator.PlotNearestSourceIntersections();
+        float timeToNode = OrbitalMechanics.UniversalVariableMethod.CalculateTimeOfFlight(ship.OrbitalPosition, ship.OrbitalVelocity, orbitalPosition, ship.Trajectory.EccentricityVector, ship.Trajectory.ParentGravitySource.Mass);
+        intersectionCalculator.PlotNearestSourceIntersections(ship, orbitalPosition, newOrbitalVelocity, timeToNode, trajectory);
+    }
+
+    public void RecalculateIntersections()
+    {
+        if (intersectionCalculator == null)
+            return;
+        Vector2 newOrbitalVelocity = orbitalSpeed * orbitalDirection + DeltaOrbitalVelocity;
+        intersectionCalculator.PlotNearestSourceIntersections(ship, orbitalPosition, newOrbitalVelocity, trajectory.Period, trajectory);
     }
     #endregion
 

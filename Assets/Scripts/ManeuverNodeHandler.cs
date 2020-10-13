@@ -73,18 +73,22 @@ public class ManeuverNodeHandler : MonoBehaviour
             SetManeuverNodeExecution(!executeManeuversBool);
         }
 
-        if (!executeManeuversBool)
-            return;
-
-
         float currentTrueAnomaly = ship.TrueAnomaly;
         for (int i = 0; i < plannedManeuvers.Count; i++)
         {
             ManeuverNode thisNode = plannedManeuvers[i];
             if (AngleInRange(thisNode.TrueAnomaly, lastTrueAnomalyCalculated, currentTrueAnomaly))
             {
-                ExecuteManeuver(thisNode);
-                return;
+                if (executeManeuversBool)
+                {
+                    ExecuteManeuver(thisNode);
+                    return;
+                }
+                else
+                {
+                    thisNode.RecalculateIntersections();
+                }
+                
             }
         }
         lastTrueAnomalyCalculated = currentTrueAnomaly;
@@ -107,6 +111,8 @@ public class ManeuverNodeHandler : MonoBehaviour
     {
         if (Input.GetMouseButtonUp(1))
         {
+            //IEnumerator timer = TimerToPosition(selectedNode.timeToIntersect);
+            //StartCoroutine(timer);
             selectedNode = null;
             activelyDraggingNode = false;
             return;
@@ -211,6 +217,13 @@ public class ManeuverNodeHandler : MonoBehaviour
         plannedManeuvers.Add(newNode);
         return newNode;
     }
+
+    //private IEnumerator TimerToPosition(float time)
+    //{
+    //    yield return new WaitForSeconds(time);
+
+    //    Debug.LogFormat("Waited for {0} seconds", time);
+    //}
 
     private float CalculateTrueAnomalyOfWorldPosition(Vector2 worldPosition)
     {

@@ -40,7 +40,6 @@ public class TrajectoryHandler : MonoBehaviour
             throw new UnityException("Expecting trajectory prefab to have a TrajectoryPlotter script");
         trajectoryPlotter.SetGradient(trajectoryGradient);
         intersectionCalculator = trajectoryObject.GetComponent<IntersectionCalculator>();
-        //intersectionCalculator.SetOrbitalBody(orbitalBody);
     }
 
     private void OnDisable()
@@ -68,7 +67,7 @@ public class TrajectoryHandler : MonoBehaviour
 
         // Plot nearest intersections
         if (intersectionCalculator != null && orbitalBody is GravityAffected)
-            intersectionCalculator.PlotNearestSourceIntersections(orbitalBody.OrbitalPosition, orbitalBody.OrbitalVelocity, orbitalBody.Trajectory);
+            intersectionCalculator.PlotNearestSourceIntersections(orbitalBody);
     }
 
     public Vector3[] GetVertices(bool inWorldCoordinates)
