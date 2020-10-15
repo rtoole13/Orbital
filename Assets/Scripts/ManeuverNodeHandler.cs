@@ -312,7 +312,6 @@ public class ManeuverNodeHandler : MonoBehaviour
         Vector2 deltaVel = node.DeltaVelocity.RotateVector(ship.Trajectory.ArgumentOfPeriapsis);
         if (deltaVel.sqrMagnitude > 0f)
             ship.ExecuteInstantBurn(deltaVel);
-        Debug.LogFormat("Actual orbitalVelocity: {0}", ship.OrbitalVelocity);
         EmptyManeuvers();
         Destroy(node);
     }

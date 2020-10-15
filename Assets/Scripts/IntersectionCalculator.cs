@@ -30,8 +30,13 @@ public class IntersectionCalculator : MonoBehaviour
         sourceIntersectionColorCount = sourceIntersectionColors.Count;
     }
 
+    private void OnDestroy()
+    {
+        ResetNearestSourceIntersections();
+    }
+
     #endregion UNITY
-    
+
     public void PlotNearestSourceIntersections(OrbitalBody orbitalBody)
     {
         // Called by TrajectoryHandlers AND by coroutines on intersection update
@@ -79,13 +84,6 @@ public class IntersectionCalculator : MonoBehaviour
         StartNewIntersectionCoroutine(orbitalBody, timeOfFlight, trajectory, sourceIntersectionsEntry, segmentIndex);
     }
 
-    private void PredictIntersection(SourceIntersections sourceIntersectionsEntry, int segmentIndex, OrbitalBody orbitalBody, Vector2 orbitalPosition, Vector2 orbitalVelocity, float timeToPosition, Trajectory trajectory)
-    {
-        // Called on completion of coroutine solely. Maintain current sprite color
-        SpriteRenderer spriteRenderer = sourceIntersectionsEntry.baseIntersectionSprites[segmentIndex].GetComponentInChildren<SpriteRenderer>();
-        PredictIntersection(sourceIntersectionsEntry, segmentIndex, orbitalBody, orbitalPosition, orbitalVelocity, timeToPosition, trajectory, spriteRenderer.color);
-    }
-
     private void StartNewIntersectionCoroutine(OrbitalBody orbitalBody, float timeOfFlight, Trajectory trajectory, SourceIntersections sourceIntersectionsEntry, int segmentIndex)
     {
         IEnumerator timeOfFlightEnum = TimerToPosition(orbitalBody, timeOfFlight, trajectory, sourceIntersectionsEntry, segmentIndex);
@@ -110,10 +108,6 @@ public class IntersectionCalculator : MonoBehaviour
         Vector2 predictedWorldPosition = sourceIntersectionsEntry.Source.PredictPosition(timeOfFlight);
         sourceIntersectionsEntry.InitiateIntersectionSprite(segmentIndex, predictedWorldPosition, false);
         StartNewIntersectionCoroutine(orbitalBody, trajectory.Period, trajectory, sourceIntersectionsEntry, segmentIndex);
-
-
-        //Debug.LogFormat("Period: {0}", trajectory.Period);
-        //PredictIntersection(sourceIntersectionsEntry, segmentIndex, orbitalBody, orbitalBody.OrbitalPosition, orbitalBody.OrbitalVelocity, 0, trajectory);
     }
 
     private IEnumerator TimerToPosition(OrbitalBody orbitalBody, float time, Trajectory trajectory, SourceIntersections sourceIntersectionsEntry, int segmentIndex)
@@ -121,7 +115,6 @@ public class IntersectionCalculator : MonoBehaviour
         // Waits until interval expires, then sets bool back to false   
         yield return new WaitForSeconds(time);
 
-        Debug.Log("Complete!");
         // Recalculate time of flight for orbitalBody to reach orbitalBodyPosition and then source's predicted position
         UpdateIntersectionSprites(orbitalBody, trajectory, sourceIntersectionsEntry, segmentIndex);
     }

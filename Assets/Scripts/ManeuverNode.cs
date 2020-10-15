@@ -25,6 +25,7 @@ public class ManeuverNode : MonoBehaviour
     private Vector2 orthogonalDirection;
     private int rank; //intended to specify whether maneuver is on current trajectory, rank 0, or a future trajectory 1+
     private Trajectory trajectory;
+    private UniversalVariableSolver trajectorySolver;
 
     private List<ManeuverNode> maneuverNodes;
     private CircleCollider2D nodeCollider;
@@ -81,6 +82,7 @@ public class ManeuverNode : MonoBehaviour
         orthogonalInVectorHandler.DeltaVelocityAdjustedEvent += AdjustVelocityOrthogonallyInward;
 
         trajectory = new Trajectory();
+        trajectorySolver = new UniversalVariableSolver();
         maneuverNodes = new List<ManeuverNode>();
     }
 
@@ -292,7 +294,7 @@ public class ManeuverNode : MonoBehaviour
 
         // Specifically velocity in world coordinates!
         Vector2 newOrbitalVelocity = orbitalSpeed * orbitalDirection + DeltaVelocity;
-        Vector2 relVel = newOrbitalVelocity.RotateVector(-ship.Trajectory.ArgumentOfPeriapsis);
+        Vector2 relVel = newOrbitalVelocity.RotateVector(ship.Trajectory.ArgumentOfPeriapsis);
         Vector2 relPos = (Vector2)transform.position - ship.CurrentGravitySource.Position; // world pos - newSource.pos
         trajectory.CalculateOrbitalParametersFromStateVectors(relPos, relVel, ship.CurrentGravitySource);
         if (trajectory.TrajectoryType == Mechanics.Globals.TrajectoryType.Ellipse)
@@ -304,16 +306,24 @@ public class ManeuverNode : MonoBehaviour
             trajectoryPlotter.BuildHyperbolicTrajectory(trajectory.SemimajorAxis, trajectory.SemiminorAxis, trajectory.Eccentricity, trajectory.ArgumentOfPeriapsis);
         }
         float timeToNode = OrbitalMechanics.UniversalVariableMethod.CalculateTimeOfFlight(ship.OrbitalPosition, ship.OrbitalVelocity, orbitalPosition, ship.Trajectory.EccentricityVector, ship.Trajectory.ParentGravitySource.Mass);
-        Debug.LogFormat("calculated orbitalVelocity: {0}", newOrbitalVelocity);
-        intersectionCalculator.PlotNearestSourceIntersections(ship, orbitalPosition, newOrbitalVelocity, timeToNode, trajectory);
+        UpdateIntersections(timeToNode, relPos, relVel);
     }
     
+    private void UpdateIntersections(float timeToNode, Vector2 relativePosition, Vector2 relativeVelocity)
+    {
+        trajectorySolver.InitializeSolver(relativePosition, relativeVelocity, ship.CurrentGravitySource.Mass, trajectory);
+        intersectionCalculator.PlotNearestSourceIntersections(ship, trajectorySolver.CalculatedPosition, trajectorySolver.CalculatedVelocity, timeToNode, trajectory);
+    }
+
     public void RecalculateIntersections()
     {
         if (intersectionCalculator == null)
             return;
+
         Vector2 newOrbitalVelocity = orbitalSpeed * orbitalDirection + DeltaVelocity;
-        intersectionCalculator.PlotNearestSourceIntersections(ship, orbitalPosition, newOrbitalVelocity, trajectory.Period, trajectory);
+        Vector2 relVel = newOrbitalVelocity.RotateVector(-ship.Trajectory.ArgumentOfPeriapsis);
+        Vector2 relPos = (Vector2)transform.position - ship.CurrentGravitySource.Position; // world pos - newSource.pos
+        UpdateIntersections(trajectory.Period, relPos, relVel);
     }
     #endregion
 
@@ -324,6 +334,6 @@ public class ManeuverNode : MonoBehaviour
 
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(transform.position, nodeCollider.radius);
-        Gizmos.DrawRay(OrbitalPositionToWorld(orbitalPosition), orbitalDirection * 10f);
+        Gizmos.DrawRay(OrbitalPositionToWorld(orbitalPosition), orbitalDirection * 5f);
     }
 }
