@@ -51,7 +51,7 @@ public class ManeuverNode : MonoBehaviour
         get { return _trueAnomaly; }
         private set { _trueAnomaly = value; }
     }
-    public Vector2 DeltaOrbitalVelocity
+    public Vector2 DeltaVelocity
     {
         get { return _deltaOrbitalVelocity; }
         private set { _deltaOrbitalVelocity = value; }
@@ -110,25 +110,25 @@ public class ManeuverNode : MonoBehaviour
     #region GENERAL
     private void AdjustVelocityTangentiallyForward(float velMag)
     {
-        DeltaOrbitalVelocity += velMag * orbitalDirection;
+        DeltaVelocity += velMag * orbitalDirection;
         UpdateOrbit();
     }
 
     private void AdjustVelocityTangentiallyBackward(float velMag)
     {
-        DeltaOrbitalVelocity -= velMag * orbitalDirection;
+        DeltaVelocity -= velMag * orbitalDirection;
         UpdateOrbit();
     }
 
     private void AdjustVelocityOrthogonallyOutward(float velMag)
     {
-        DeltaOrbitalVelocity += velMag * orthogonalDirection;
+        DeltaVelocity += velMag * orthogonalDirection;
         UpdateOrbit();
     }
 
     private void AdjustVelocityOrthogonallyInward(float velMag)
     {
-        DeltaOrbitalVelocity -= velMag * orthogonalDirection;
+        DeltaVelocity -= velMag * orthogonalDirection;
         UpdateOrbit();
     }
 
@@ -170,7 +170,7 @@ public class ManeuverNode : MonoBehaviour
         orthogonalOutVectorHandler.UpdateDirection(worldDirection.RotateVector(-Mathf.PI / 2));
         orthogonalInVectorHandler.UpdateDirection(worldDirection.RotateVector(Mathf.PI / 2));
 
-        DeltaOrbitalVelocity = rotationQuaternion * DeltaOrbitalVelocity;
+        DeltaVelocity = rotationQuaternion * DeltaVelocity;
     }
 
     private Vector2 WorldPositionFromTrueAnomaly(float trueAnomaly)
@@ -266,7 +266,7 @@ public class ManeuverNode : MonoBehaviour
     private void UpdateOrbit()
     {
 
-        if (DeltaOrbitalVelocity.magnitude < minimumDeltaVelocity)
+        if (DeltaVelocity.magnitude < minimumDeltaVelocity)
         {
             return;
         }
@@ -291,8 +291,8 @@ public class ManeuverNode : MonoBehaviour
         trajectoryObject.transform.position = trajectoryObject.transform.parent.position;
 
         // Specifically velocity in world coordinates!
-        Vector2 newOrbitalVelocity = orbitalSpeed * orbitalDirection + DeltaOrbitalVelocity;
-        Vector2 relVel = newOrbitalVelocity.RotateVector(ship.Trajectory.ArgumentOfPeriapsis);
+        Vector2 newOrbitalVelocity = orbitalSpeed * orbitalDirection + DeltaVelocity;
+        Vector2 relVel = newOrbitalVelocity.RotateVector(-ship.Trajectory.ArgumentOfPeriapsis);
         Vector2 relPos = (Vector2)transform.position - ship.CurrentGravitySource.Position; // world pos - newSource.pos
         trajectory.CalculateOrbitalParametersFromStateVectors(relPos, relVel, ship.CurrentGravitySource);
         if (trajectory.TrajectoryType == Mechanics.Globals.TrajectoryType.Ellipse)
@@ -304,14 +304,15 @@ public class ManeuverNode : MonoBehaviour
             trajectoryPlotter.BuildHyperbolicTrajectory(trajectory.SemimajorAxis, trajectory.SemiminorAxis, trajectory.Eccentricity, trajectory.ArgumentOfPeriapsis);
         }
         float timeToNode = OrbitalMechanics.UniversalVariableMethod.CalculateTimeOfFlight(ship.OrbitalPosition, ship.OrbitalVelocity, orbitalPosition, ship.Trajectory.EccentricityVector, ship.Trajectory.ParentGravitySource.Mass);
+        Debug.LogFormat("calculated orbitalVelocity: {0}", newOrbitalVelocity);
         intersectionCalculator.PlotNearestSourceIntersections(ship, orbitalPosition, newOrbitalVelocity, timeToNode, trajectory);
     }
-
+    
     public void RecalculateIntersections()
     {
         if (intersectionCalculator == null)
             return;
-        Vector2 newOrbitalVelocity = orbitalSpeed * orbitalDirection + DeltaOrbitalVelocity;
+        Vector2 newOrbitalVelocity = orbitalSpeed * orbitalDirection + DeltaVelocity;
         intersectionCalculator.PlotNearestSourceIntersections(ship, orbitalPosition, newOrbitalVelocity, trajectory.Period, trajectory);
     }
     #endregion
@@ -323,5 +324,6 @@ public class ManeuverNode : MonoBehaviour
 
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(transform.position, nodeCollider.radius);
+        Gizmos.DrawRay(OrbitalPositionToWorld(orbitalPosition), orbitalDirection * 10f);
     }
 }

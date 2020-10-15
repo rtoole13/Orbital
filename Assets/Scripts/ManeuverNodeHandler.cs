@@ -88,7 +88,6 @@ public class ManeuverNodeHandler : MonoBehaviour
                 {
                     thisNode.RecalculateIntersections();
                 }
-                
             }
         }
         lastTrueAnomalyCalculated = currentTrueAnomaly;
@@ -310,9 +309,10 @@ public class ManeuverNodeHandler : MonoBehaviour
 
     private void ExecuteManeuver(ManeuverNode node)
     {
-        Vector2 deltaVel = node.DeltaOrbitalVelocity.RotateVector(ship.Trajectory.ArgumentOfPeriapsis);
+        Vector2 deltaVel = node.DeltaVelocity.RotateVector(ship.Trajectory.ArgumentOfPeriapsis);
         if (deltaVel.sqrMagnitude > 0f)
             ship.ExecuteInstantBurn(deltaVel);
+        Debug.LogFormat("Actual orbitalVelocity: {0}", ship.OrbitalVelocity);
         EmptyManeuvers();
         Destroy(node);
     }
