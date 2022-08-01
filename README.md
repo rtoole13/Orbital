@@ -1,6 +1,10 @@
 # Orbital
 Orbital Unity sandbox
 
+The work here is very dated! The project has migrated to the private Epicycle repo. Sorry for the inconvenience!
+Build's will still be posted here on occasion.
+
+
 ## Notes
 
 #### 06/18/2020
